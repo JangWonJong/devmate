@@ -4,12 +4,10 @@ import com.devs.devmate.auth.dto.LoginRequest;
 import com.devs.devmate.auth.dto.LoginResponse;
 import com.devs.devmate.auth.service.AuthService;
 import com.devs.devmate.global.common.ApiResponse;
+import com.devs.devmate.global.security.SecurityUtil;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
-import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.RequestBody;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.bind.annotation.*;
 
 @RestController
 @RequiredArgsConstructor
@@ -17,6 +15,12 @@ import org.springframework.web.bind.annotation.RestController;
 public class AuthController {
 
     private final AuthService authService;
+
+    @GetMapping("/me")
+    public ApiResponse<Long> me(){
+        return ApiResponse.ok(SecurityUtil.currentMemberId());
+    }
+
 
     @PostMapping("/login")
     public ApiResponse<LoginResponse> login(@RequestBody @Valid LoginRequest request){

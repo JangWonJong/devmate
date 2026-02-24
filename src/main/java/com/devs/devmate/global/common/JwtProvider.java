@@ -1,5 +1,10 @@
 package com.devs.devmate.global.common;
 
+import com.devs.devmate.global.exception.BusinessException;
+import com.devs.devmate.global.exception.ErrorCode;
+import io.jsonwebtoken.Claims;
+import io.jsonwebtoken.ExpiredJwtException;
+import io.jsonwebtoken.JwtException;
 import io.jsonwebtoken.Jwts;
 import io.jsonwebtoken.security.Keys;
 import org.springframework.beans.factory.annotation.Value;
@@ -54,6 +59,30 @@ public class JwtProvider {
     public Instant getRefreshExpiryInstant(){
 
         return Instant.now().plus(refreshExpDays, ChronoUnit.DAYS);
+    }
+
+    public JwtPrincipal parseAccessToken(String token){
+        try {
+            Claims claims = Jwts.parser()
+                    .verifyWith(key)
+                    .build()
+                    .parseSignedClaims(token)
+                    .getPayload();
+
+            Long memberId = Long.parseLong(claims.getSubject());
+            String role = String.valueOf(claims.get("role"));
+
+            if (role == null || role.isBlank()){
+                throw new BusinessException(ErrorCode.TOKEN_INVALID);
+            }
+
+            return new JwtPrincipal(memberId, role);
+
+        } catch (ExpiredJwtException e){
+            throw new BusinessException(ErrorCode.TOKEN_EXPIRED);
+        } catch (JwtException | IllegalArgumentException e){
+            throw new BusinessException(ErrorCode.TOKEN_INVALID);
+        }
     }
 
 }

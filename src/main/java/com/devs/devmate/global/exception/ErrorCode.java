@@ -19,7 +19,10 @@ public enum ErrorCode {
     // Member
     DUPLICATE_EMAIL(HttpStatus.CONFLICT, "MEMBER_409_1", "Email already exists"),
     DUPLICATE_NICKNAME(HttpStatus.CONFLICT, "MEMBER_409_2", "Nickname already exists"),
-    MEMBER_NOT_FOUND(HttpStatus.NOT_FOUND, "MEMBER_404", "Member not found");
+    MEMBER_NOT_FOUND(HttpStatus.NOT_FOUND, "MEMBER_404", "Member not found"),
+
+    POST_NOT_FOUND(HttpStatus.NOT_FOUND, "POST_404", "Post not found"),
+    FORBIDDEN_POST(HttpStatus.FORBIDDEN, "POST_403", "No permission for this post");
 
     private final HttpStatus status;
     private final String code;
