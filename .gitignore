@@ -35,3 +35,18 @@ out/
 
 ### VS Code ###
 .vscode/
+
+# Backend (Gradle / Spring)
+backend/.gradle/
+backend/build/
+backend/out/
+backend/.classpath
+backend/.project
+backend/.settings/
+
+# Frontend (Node / Vite)
+frontend/node_modules/
+frontend/dist/
+frontend/.vite/
+frontend/.env
+frontend/.env.*
