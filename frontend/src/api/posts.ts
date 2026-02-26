@@ -1,5 +1,5 @@
 import { http } from "./http"
-import type { APiResponse } from "./type"
+import type { ApiResponse } from "./type"
 
 
 export type PostCreateRequest = { title: string, content: string}
@@ -26,7 +26,7 @@ export type Page<T> = {
 
 export async function createPost(req: PostCreateRequest) {
 
-    const {data} = await http.post<APiResponse<number>>("/api/posts", req)
+    const {data} = await http.post<ApiResponse<number>>("/api/posts", req)
     if (!data.success || data.data == null) throw new Error(data.error?.message ?? "Create failed")
     return data.data
     
@@ -34,7 +34,7 @@ export async function createPost(req: PostCreateRequest) {
 
 export async function listPosts() {
 
-    const {data} = await http.get<APiResponse<Page<PostResponse>>>
+    const {data} = await http.get<ApiResponse<Page<PostResponse>>>
     ("/api/posts?page=0&size=10&sort=id,desc")
     if (!data.success || data.data == null) throw new Error(data.error?.message ?? "List failed")
     return data.data
@@ -43,8 +43,8 @@ export async function listPosts() {
 
 export async function getPost(id: string) {
 
-    const {data} = await http.post<APiResponse<PostResponse>>(`/api/posts/${id}`)
-    if (!data.success || data.data == null) throw new Error(data.error?.message ?? "Get failed")
+    const {data} = await http.get<ApiResponse<PostResponse>>(`/api/posts/${id}`)
+    if (!data.success || !data.data) throw new Error(data.error?.message ?? "Get failed")
     return data.data
     
 }

@@ -1,7 +1,7 @@
 
 export type ApiError = {code: string, message: string}
 
-export type APiResponse<T> = {
+export type ApiResponse<T> = {
     success: boolean
     data?: T
     error: ApiError

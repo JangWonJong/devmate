@@ -14,10 +14,8 @@ public class PostResponse {
     private String title;
     private String content;
     private boolean solved;
-
     private Long authorId;
     private String authorNickname;
-
     private LocalDateTime createdAt;
     private LocalDateTime updatedAt;
 
