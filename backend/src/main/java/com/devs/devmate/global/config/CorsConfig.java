@@ -16,15 +16,12 @@ public class CorsConfig {
     public CorsConfigurationSource corsConfigurationSource() {
         CorsConfiguration config = new CorsConfiguration();
 
-        config.setAllowedOrigins(List.of("Http://localhost:5173"));
-
-        config.setAllowedMethods(List.of("GET,","POST","PATCH","DELETE","OPTIONS"));
-
+        config.setAllowedOriginPatterns(List.of("http://localhost:*"));
+        // 오타 확인 주의 GET, ,땜에 CORS에러 발생
+        config.setAllowedMethods(List.of("GET","POST","PUT","PATCH","DELETE","OPTIONS"));
         config.setAllowedHeaders(List.of("*"));
-
-        config.setExposedHeaders(List.of("Authorization"));
-
         config.setAllowCredentials(false);
+        config.setMaxAge(3600L);
 
         UrlBasedCorsConfigurationSource source = new UrlBasedCorsConfigurationSource();
         source.registerCorsConfiguration("/**", config);
