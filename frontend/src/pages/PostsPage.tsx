@@ -30,6 +30,7 @@ export function PostsPage() {
             <div style={{ display: "flex", justifyContent: "space-between" }}>
               <b>{p.title}</b>
               {p.solved && <span>✅</span>}
+              {!p.solved && <span>🕒</span>}
             </div>
             <div style={{ fontSize: 13, color: "#666" }}>{p.authorNickname}</div>
           </Link>

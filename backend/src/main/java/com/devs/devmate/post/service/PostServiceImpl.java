@@ -63,7 +63,7 @@ public class PostServiceImpl implements PostService{
             throw new BusinessException(ErrorCode.FORBIDDEN_POST);
         }
 
-        post.update(request.getTitle(), request.getContent());
+        post.update(request.getTitle(), request.getContent(), request.isSolved());
 
     }
 

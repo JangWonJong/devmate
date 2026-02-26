@@ -14,4 +14,6 @@ public class PostUpdateRequest {
 
     @NotBlank
     private String content;
+
+    private boolean solved;
 }

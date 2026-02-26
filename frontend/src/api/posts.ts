@@ -24,6 +24,12 @@ export type Page<T> = {
     totalPages: number
 }
 
+export type PostUpdateRequest = {
+    title: string
+    content: string
+    solved: boolean
+}
+
 export async function createPost(req: PostCreateRequest) {
 
     const {data} = await http.post<ApiResponse<number>>("/api/posts", req)
@@ -47,4 +53,15 @@ export async function getPost(id: string) {
     if (!data.success || !data.data) throw new Error(data.error?.message ?? "Get failed")
     return data.data
     
+}
+
+export async function deletePost(id:string) {
+    const {data} = await http.delete<ApiResponse<void>>(`/api/posts/${id}`)
+    if (!data.success) throw new Error(data.error?.message ?? "Delete Failed")
+    
+}
+
+export async function updatePost(id:string, req: PostUpdateRequest) {
+    const {data} = await http.patch<ApiResponse<void>>(`/api/posts/${id}`, req)
+    if (!data.success) throw new Error(data.error?.message ?? "Update failed")
 }
