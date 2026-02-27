@@ -1,15 +1,33 @@
 import { useEffect, useState } from "react";
 import { useNavigate, useParams } from "react-router-dom";
 import { deletePost, getPost, type PostResponse } from "../api/posts";
+import { tokenStore } from "../auth/token";
+import { getMeId } from "../api/members";
 
 
 
 export function PostDetailPage() {
+  const nav = useNavigate()
   const { id } = useParams();
   const [post, setPost] = useState<PostResponse | null>(null)
   const [err, setErr] = useState<string | null>(null)
-  const nav = useNavigate()
   const [busy, setBusy] = useState(false)
+  const [meId, setMeId] = useState<number | null>(null)
+  
+  useEffect(() => {
+    (async () => {
+      if (!tokenStore.isLoggedIn()) {
+        setMeId(null)
+        return
+      }
+      try {
+        const id = await getMeId()
+        setMeId(id)
+      }catch {
+        setMeId(null)
+      }
+    })()
+  }, [])
 
   useEffect(() => {
     (async () => {
@@ -25,7 +43,7 @@ export function PostDetailPage() {
 
   if(err) return <div style={{color: "crimson"}}>{err}</div>
   if(!post) return <div >Loading...</div>
-
+  const isMine = meId != null && post.authorId === meId
 
   return ( 
   <div style={{ maxWidth: 720 }}>
@@ -33,8 +51,23 @@ export function PostDetailPage() {
       {post.title}
     </h1>
 
-    <div style={{ color: "#666", marginBottom: 16 }}>
-      작성자: {post.authorNickname} {post.solved ? "· ✅ 해결됨" : "🕒 해결 전"}
+    <div style={{ color: "#666", marginBottom: 16, display: "flex", gap: 8, alignItems: "center", flexWrap: "wrap" }}>
+      <span> 작성자: {post.authorNickname}</span>
+      <span> {post.solved ? "· ✅ 해결됨" : "🕒 해결 전"} </span>
+       {isMine && (
+        <span
+          style={{
+            fontSize: 12,
+            padding: "2px 8px",
+            border: "1px solid #ddd",
+            borderRadius: 999,
+            color: "#111",
+            background: "#fafafa",
+          }}
+        >
+          내 글
+    </span>
+       )} 
     </div>
 
     <div style={{ whiteSpace: "pre-wrap", lineHeight: 1.6 }}>
@@ -50,8 +83,9 @@ export function PostDetailPage() {
       >
         목록
       </button>
-
-      <button
+      {isMine && (
+      <>
+        <button
         disabled={busy}
         style={{ padding: "10px 14px" }}
         onClick={async () => {
@@ -70,16 +104,16 @@ export function PostDetailPage() {
           }
         }}
       >
-        삭제
+      삭제
     </button>
     <button disabled={busy}
             style={{ padding: "10px 14px" }}
             onClick={() => nav(`/posts/${post.id}/edit`)}>
-    수정
-    </button>
-
+      수정
+        </button>
+            </>
+    )}
     </div>
-
   </div>
 )
     

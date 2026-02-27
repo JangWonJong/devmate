@@ -16,12 +16,6 @@ public class AuthController {
 
     private final AuthService authService;
 
-    @GetMapping("/me")
-    public ApiResponse<Long> me(){
-        return ApiResponse.ok(SecurityUtil.currentMemberId());
-    }
-
-
     @PostMapping("/login")
     public ApiResponse<LoginResponse> login(@RequestBody @Valid LoginRequest request){
         System.out.println("###login called###");
