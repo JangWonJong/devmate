@@ -30,8 +30,11 @@ public class PostController {
     public ApiResponse<Page<PostResponse>> list(
             @RequestParam(required = false, defaultValue = "false") boolean mine,
             Pageable pageable){
-            Long memberId = mine ? SecurityUtil.currentMemberId() : null;
-        return ApiResponse.ok(postService.list(pageable, memberId));
+            if (mine) {
+                Long memberId = SecurityUtil.currentMemberId();
+                return ApiResponse.ok(postService.listMine(memberId, pageable));
+            }
+        return ApiResponse.ok(postService.list(pageable));
     }
 
     @GetMapping("/{postId}")

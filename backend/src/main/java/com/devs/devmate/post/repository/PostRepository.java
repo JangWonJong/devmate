@@ -8,8 +8,6 @@ import org.springframework.stereotype.Repository;
 
 
 public interface PostRepository extends JpaRepository<Post, Long> {
-    Page<Post> findAllByOrderByIdDesc(Pageable pageable);
 
-    Page<Post> findByMemberIdOrderByIdDesc(Long memberId, Pageable pageable);
-
+    Page<Post> findByMemberId(Long memberId, Pageable pageable);
 }
