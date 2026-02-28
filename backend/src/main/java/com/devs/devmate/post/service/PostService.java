@@ -10,6 +10,7 @@ public interface PostService {
 
     Long create(Long memberId, PostCreateRequest request);
     Page<PostResponse> list(Pageable pageable);
+    Page<PostResponse> list(Pageable pageable, Long memberIdOrNull);
     PostResponse get(Long postId);
     void update(Long memberId, Long postId, PostUpdateRequest request);
     void delete(Long memberId, Long postId);

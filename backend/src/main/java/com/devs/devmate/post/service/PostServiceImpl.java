@@ -46,6 +46,17 @@ public class PostServiceImpl implements PostService{
 
     @Override
     @Transactional(readOnly = true)
+    public Page<PostResponse> list(Pageable pageable, Long memberIdOrNull) {
+
+        Page<Post> page = (memberIdOrNull == null)
+                ? postRepository.findAllByOrderByIdDesc(pageable)
+                : postRepository.findByMemberIdOrderByIdDesc(memberIdOrNull, pageable);
+
+        return page.map(PostResponse::from);
+    }
+
+    @Override
+    @Transactional(readOnly = true)
     public PostResponse get(Long postId) {
 
         Post post = postRepository.findById(postId)

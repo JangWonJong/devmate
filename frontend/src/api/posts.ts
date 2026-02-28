@@ -15,14 +15,16 @@ export type PostResponse = {
     updatedAt: string
 }
 
-
-export type Page<T> = {
+export type PageResponse<T> = {
     content: T[]
     number: number
     size: number
     totalElements: number
-    totalPages: number
+    totalPages:number
+    first: boolean
+    last: boolean
 }
+
 
 export type PostUpdateRequest = {
     title: string
@@ -38,10 +40,21 @@ export async function createPost(req: PostCreateRequest) {
     
 }
 
-export async function listPosts() {
+export async function listPosts(params?: {
+    page?: number
+    size?: number
+    sort?: string
+    mine?: boolean
+}) {
+    const page = params?.page ?? 0
+    const size = params?.size ?? 10
+    const sort = params?.sort ?? "id,desc"
+    const mine = params?.mine ?? false
 
-    const {data} = await http.get<ApiResponse<Page<PostResponse>>>
-    ("/api/posts?page=0&size=10&sort=id,desc")
+    const {data} = await http.get<ApiResponse<PageResponse<PostResponse>>>(
+        "/api/posts", 
+        {params: {page, size, sort, mine}}
+    )
     if (!data.success || data.data == null) throw new Error(data.error?.message ?? "List failed")
     return data.data
     
