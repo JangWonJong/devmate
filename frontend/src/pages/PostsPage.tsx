@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useMemo, useState } from "react";
+import { useCallback, useEffect, useState } from "react";
 import { listPosts, type PostResponse } from "../api/posts";
 import { Link, useSearchParams } from "react-router-dom";
 import { tokenStore } from "../auth/token";
@@ -10,6 +10,7 @@ type PageInfo = {
 }
 
 type Query = {
+  q?: string
   scope?: "all" | "mine"
   solved?: boolean
   page?: number
@@ -35,20 +36,32 @@ function toSort(v: string | null){
   return "id,desc"
 }
 
+function normalizeSize(v: string | null, def = 10) {
+  const s = toInt(v, def)
+  return s === 5 || s === 10 || s === 20 ? s : def
+}
+
 export function PostsPage() {
   const [sp, setSp] = useSearchParams()
+  
+  const scope = toScope(sp.get("scope"))
+  const onlySolved = toBool(sp.get("solved"), false)
+  const page = toInt(sp.get("page"), 0)
+  const sort = toSort(sp.get("sort"))
+  const size = normalizeSize(sp.get("size"), 10)
+  const q = sp.get("q") ?? ""
+  const hasQuery = q.trim().length > 0
 
   const setQuery = useCallback(
     (next: Query, options?: { replace?: boolean}) => {
+      const curQ = sp.get("q") ?? ""
       const curScope = toScope(sp.get("scope"))
       const curSolved = toBool(sp.get("solved"), false)
       const curPage = toInt(sp.get("page"), 0)
       const curSort = toSort(sp.get("sort"))
-      const curSize = (() => {
-        const s = toInt(sp.get("size"), 10)
-        return s === 5 || s === 10 || s === 20 ? s : 10
-  })()
+      const curSize = normalizeSize(sp.get("size"), 10)
 
+  const nextQ = (next.q ?? curQ)?.trim()
   const nextScope = next.scope ?? curScope
   const nextSolved = next.solved ?? curSolved
   const nextPage = next.page ?? curPage
@@ -56,7 +69,7 @@ export function PostsPage() {
   const nextSort = next.sort ?? curSort
 
   const params: Record<string, string> = {}
-  
+  if (nextQ) params.q = nextQ
   if (nextScope !== "all") params.scope = nextScope
   if (nextSolved) params.solved = "true"
   if (nextPage !== 0) params.page = String(nextPage)
@@ -67,21 +80,14 @@ export function PostsPage() {
   },[sp, setSp]
   )
 
-  const scope = toScope(sp.get("scope"))
-  const onlySolved = toBool(sp.get("solved"), false)
-  const page = toInt(sp.get("page"), 0)
-  const sort = toSort(sp.get("sort"))
-  const size = (()=> {
-    const s = toInt(sp.get("size"), 10)
-    return s === 5 || s === 10 || s === 20 ? s : 10 
-  })()
-  
+  const [loggedIn, setLoggedIn] = useState(tokenStore.isLoggedIn())
   const [meId, setMeId] = useState<number | null>(null)
   const [items, setItems] = useState<PostResponse[]>([])
-  const [err, setErr] = useState<string | null>(null)
   const [pageInfo, setPageInfo] = useState<PageInfo | null>(null)
+  const [err, setErr] = useState<string | null>(null)
   
-  const [loggedIn, setLoggedIn] = useState(tokenStore.isLoggedIn())
+  const [qInput, setQInput] =useState(q)
+  useEffect(() => { setQInput(q) }, [q])
   
   //로그인 상태 폴링
   useEffect(() => {
@@ -116,7 +122,11 @@ export function PostsPage() {
               return
             }
             const res = await listPosts({ 
-            page, size, sort, mine: scope ==="mine"})
+            page, size, sort, 
+            mine: scope ==="mine",
+            keyword: q || undefined,
+            solved: onlySolved ? true : undefined
+            })
             setItems(res.content)
             setPageInfo({ totalPages: res.totalPages, totalElements: res.totalElements})
             if (res.totalPages > 0 && page > res.totalPages -1){
@@ -126,15 +136,13 @@ export function PostsPage() {
             setErr(e.message ?? "목록 조회 실패")
         }
     })()
-  }, [page, size, scope, sort, loggedIn, setQuery])
+  }, [page, size, scope, sort, q, onlySolved, loggedIn, setQuery])
 
-  
-  const visibleItems = useMemo(()=> {
-    return onlySolved ? items.filter(p => p.solved) : items}, [items, onlySolved]) 
-  
-  const emptyText = 
-  scope === "mine"
-  ? loggedIn ? "내 글이 아직 없어요" : "로그인 후 내 글을 확인 할 수 있어요" : "게시글이 아직 없어요"
+  const emptyText = (() => {
+    if (hasQuery) return "검색 결과가 없어요"
+    if (scope === "mine") return loggedIn ? "내 글이 아직 없어요" : "로그인 후 내 글을 확인 할 수 있어요"
+    return "게시글이 아직 없어요"
+  })()
     
   return (
     <div>
@@ -190,6 +198,31 @@ export function PostsPage() {
           </button>
         )}
       </div>
+      <div style={{ display: "flex", gap: 8, marginBottom: 12 }}>
+        <input
+          value={qInput}
+          onChange={(e) => setQInput(e.target.value)}
+          onKeyDown={(e) => {
+            if (e.key === "Enter") setQuery({ q: qInput, page: 0 })
+          }}
+          placeholder="검색어 (제목/내용)"
+          style={{ flex: 1, padding: "8px 10px", border: "1px solid #ddd" }}
+        />
+        <button
+          onClick={() => setQuery({ q: qInput, page: 0 })}
+          style={{ padding: "8px 12px", border: "1px solid #ddd", background: "#fff", cursor: "pointer" }}
+        >
+          검색
+        </button>
+        {q && (
+          <button
+            onClick={() => setQuery({ q: "", page: 0 })}
+            style={{ padding: "8px 12px", border: "1px solid #eee", background: "#f6f6f6", cursor: "pointer" }}
+          >
+            지우기
+          </button>
+        )}
+      </div>
       <div style={{ display: "flex", gap: 8, marginBottom: 12, alignItems: "center" }}>
             <span style={{ fontSize: 13, color: "#666" }}>정렬:</span>
             <select
@@ -206,10 +239,10 @@ export function PostsPage() {
           
       {/* 목록 */}
       <div style={{ display: "grid", gap: 8 }}>
-        {visibleItems.length === 0 ? (
+        {items.length === 0 ? (
           <div style={{ padding: 12, border: "1px solid #eee", color: "#666" }}>{emptyText}</div>
         ) : (
-          visibleItems.map((p) => (
+          items.map((p) => (
             <Link key={p.id} to={`/posts/${p.id}`} style={{ padding: 12, border: "1px solid #eee" }}>
                 <div style={{ display: "flex", justifyContent: "space-between", gap: 8, alignItems: "center" }}>
                 <b>{p.title}</b>

@@ -24,6 +24,12 @@ public class PostServiceImpl implements PostService{
     private final PostRepository postRepository;
     private final MemberRepository memberRepository;
 
+    private String normalize(String keyword) {
+        if (keyword == null) return null;
+        String k = keyword.trim();
+        return k.isEmpty() ? null : k;
+    }
+
     @Override
     public Long create(Long memberId, PostCreateRequest request) {
         Member member = memberRepository.findById(memberId)
@@ -39,16 +45,35 @@ public class PostServiceImpl implements PostService{
 
     @Override
     @Transactional(readOnly = true)
-    public Page<PostResponse> list(Pageable pageable) {
-        return postRepository.findAll(pageable)
-                .map(PostResponse::from);
+    public Page<PostResponse> list( String keyword, Boolean solved, Pageable pageable) {
+        String k = normalize(keyword);
+        if (k == null && solved == null) {
+            return postRepository.findAll(pageable).map(PostResponse::from);
+        }
+        if (k != null && solved == null) {
+            return postRepository.searchAll(k, pageable).map(PostResponse::from);
+        }
+        if (k == null) {
+            return postRepository.findBySolved(solved, pageable).map(PostResponse::from);
+        }
+        return postRepository.searchAllWithSolved(k, solved, pageable).map(PostResponse::from);
     }
 
     @Override
     @Transactional(readOnly = true)
-    public Page<PostResponse> listMine(Long memberId, Pageable pageable) {
-        return postRepository.findByMemberId(memberId, pageable)
-                .map(PostResponse::from);
+    public Page<PostResponse> listMine(Long memberId, String keyword, Boolean solved, Pageable pageable) {
+        String k = normalize(keyword);
+
+        if (k == null && solved == null) {
+            return postRepository.findByMemberId(memberId, pageable).map(PostResponse::from);
+        }
+        if (k != null && solved == null) {
+            return postRepository.searchMine(memberId, k, pageable).map(PostResponse::from);
+        }
+        if (k == null) { // solved != null
+            return postRepository.findByMemberIdAndSolved(memberId, solved, pageable).map(PostResponse::from);
+        }
+        return postRepository.searchMineWithSolved(memberId, k, solved, pageable).map(PostResponse::from);
     }
 
     @Override

@@ -9,8 +9,8 @@ import org.springframework.data.domain.Pageable;
 public interface PostService {
 
     Long create(Long memberId, PostCreateRequest request);
-    Page<PostResponse> list(Pageable pageable);
-    Page<PostResponse> listMine(Long memberId, Pageable pageable);
+    Page<PostResponse> list(String keyword, Boolean solved, Pageable pageable);
+    Page<PostResponse> listMine(Long memberId, String keyword, Boolean solved, Pageable pageable);
     PostResponse get(Long postId);
     void update(Long memberId, Long postId, PostUpdateRequest request);
     void delete(Long memberId, Long postId);

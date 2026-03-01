@@ -45,15 +45,20 @@ export async function listPosts(params?: {
     size?: number
     sort?: string
     mine?: boolean
+    keyword?: string
+    solved?: boolean
+
 }) {
     const page = params?.page ?? 0
     const size = params?.size ?? 10
     const sort = params?.sort ?? "id,desc"
     const mine = params?.mine ?? false
+    const keyword = params?.keyword
+    const solved = params?.solved
 
     const {data} = await http.get<ApiResponse<PageResponse<PostResponse>>>(
         "/api/posts", 
-        {params: {page, size, sort, mine}}
+        {params: {page, size, sort, mine, keyword, solved}}
     )
     if (!data.success || data.data == null) throw new Error(data.error?.message ?? "List failed")
     return data.data

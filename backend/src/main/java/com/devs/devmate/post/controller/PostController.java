@@ -29,12 +29,14 @@ public class PostController {
     @GetMapping
     public ApiResponse<Page<PostResponse>> list(
             @RequestParam(required = false, defaultValue = "false") boolean mine,
+            @RequestParam(required = false) String keyword,
+            @RequestParam(required = false) Boolean solved,
             Pageable pageable){
             if (mine) {
                 Long memberId = SecurityUtil.currentMemberId();
-                return ApiResponse.ok(postService.listMine(memberId, pageable));
+                return ApiResponse.ok(postService.listMine(memberId, keyword, solved, pageable));
             }
-        return ApiResponse.ok(postService.list(pageable));
+        return ApiResponse.ok(postService.list(keyword, solved, pageable));
     }
 
     @GetMapping("/{postId}")
