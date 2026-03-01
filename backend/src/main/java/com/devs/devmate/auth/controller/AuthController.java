@@ -2,6 +2,8 @@ package com.devs.devmate.auth.controller;
 
 import com.devs.devmate.auth.dto.LoginRequest;
 import com.devs.devmate.auth.dto.LoginResponse;
+import com.devs.devmate.auth.dto.ReissueRequest;
+import com.devs.devmate.auth.dto.ReissueResponse;
 import com.devs.devmate.auth.service.AuthService;
 import com.devs.devmate.global.common.ApiResponse;
 import com.devs.devmate.global.security.SecurityUtil;
@@ -20,5 +22,10 @@ public class AuthController {
     public ApiResponse<LoginResponse> login(@RequestBody @Valid LoginRequest request){
         System.out.println("###login called###");
         return ApiResponse.ok(authService.login(request));
+    }
+
+    @PostMapping("reissue")
+    public ApiResponse<ReissueResponse> reissue(@RequestBody ReissueRequest request){
+        return ApiResponse.ok(authService.reissue(request.getRefreshToken()));
     }
 }

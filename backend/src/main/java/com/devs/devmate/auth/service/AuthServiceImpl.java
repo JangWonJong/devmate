@@ -1,5 +1,6 @@
 package com.devs.devmate.auth.service;
 
+import com.devs.devmate.auth.dto.ReissueResponse;
 import com.devs.devmate.global.common.JwtProvider;
 import com.devs.devmate.global.common.TokenHash;
 import com.devs.devmate.auth.dto.LoginRequest;
@@ -16,11 +17,9 @@ import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
-import java.nio.charset.StandardCharsets;
-import java.security.MessageDigest;
 import java.time.LocalDateTime;
-import java.time.ZoneId;
-import java.util.HexFormat;
+
+import static com.devs.devmate.global.common.TokenHash.sha256;
 
 @Service
 @RequiredArgsConstructor
@@ -46,7 +45,7 @@ public class AuthServiceImpl implements AuthService{
 
         String accessToken = jwtProvider.createAccessToken(member.getId(), member.getRole().name());
         String refreshToken = jwtProvider.createRefreshToken(member.getId());
-        String refreshHash = TokenHash.sha256(refreshToken);
+        String refreshHash = sha256(refreshToken);
 
         refreshTokenRepository.deleteByMemberId(member.getId());
 
@@ -62,6 +61,35 @@ public class AuthServiceImpl implements AuthService{
                 .accessToken(accessToken)
                 .refreshToken(refreshToken)
                 .build();
+    }
+
+    @Override
+    @Transactional
+    public ReissueResponse reissue(String refreshToken) {
+        if (refreshToken == null || refreshToken.isBlank()) {
+            throw new BusinessException(ErrorCode.TOKEN_INVALID);
+        }
+
+        Long memberId = jwtProvider.parseRefreshToken(refreshToken);
+
+        RefreshToken saved = refreshTokenRepository.findByMemberId(memberId)
+                .orElseThrow(() -> new BusinessException(ErrorCode.TOKEN_INVALID));
+
+        if (saved.isRevoked()) {
+            throw new BusinessException(ErrorCode.TOKEN_INVALID);
+        }
+        if (saved.isExpired()) {
+            throw new BusinessException(ErrorCode.TOKEN_EXPIRED);
+        }
+
+        String incomingHash = sha256(refreshToken);
+        if (!incomingHash.equals(saved.getTokenHash())) {
+            throw new BusinessException(ErrorCode.TOKEN_INVALID);
+        }
+
+        String role = saved.getMember().getRole().name();
+        String newAccessToken = jwtProvider.createAccessToken(memberId, role);
+        return new ReissueResponse(newAccessToken);
     }
 
 }

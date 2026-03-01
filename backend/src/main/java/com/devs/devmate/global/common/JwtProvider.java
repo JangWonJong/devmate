@@ -57,7 +57,6 @@ public class JwtProvider {
     }
 
     public Instant getRefreshExpiryInstant(){
-
         return Instant.now().plus(refreshExpDays, ChronoUnit.DAYS);
     }
 
@@ -84,5 +83,24 @@ public class JwtProvider {
             throw new BusinessException(ErrorCode.TOKEN_INVALID);
         }
     }
+
+    public Long parseRefreshToken(String token) {
+        try {
+            Claims claims = Jwts.parser()
+                    .verifyWith(key)
+                    .build()
+                    .parseSignedClaims(token)
+                    .getPayload();
+
+            return Long.parseLong(claims.getSubject());
+
+        } catch (ExpiredJwtException e) {
+            throw new BusinessException(ErrorCode.TOKEN_EXPIRED);
+
+        } catch (JwtException | IllegalArgumentException e) {
+            throw new BusinessException(ErrorCode.TOKEN_INVALID);
+        }
+    }
+
 
 }
