@@ -8,6 +8,9 @@ public interface AuthService {
 
     LoginResponse login(LoginRequest request);
 
+    void logout(Long memberId);
+
     ReissueResponse reissue(String refreshToken);
+
 
 }

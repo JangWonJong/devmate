@@ -15,9 +15,30 @@ export async function login(req: LoginRequest) {
     
 }
 
+export async function logout() {
+    const {data} = await http.post("/api/auth/logout")
+    if (!data.success) {
+        throw new Error(data?.error?.message ?? "Logout failed")
+    }
+}
+
 export async function signup(req:SignupRequest) {
     const {data} = await http.post<ApiResponse<SignupRequest>>("/api/members/signup", req)
     if (!data.success || !data.data) throw new Error(data.error.message ?? "Signup failed")
     return data.data
+    
+}
+
+
+export async function reissue(refreshToken: string) {
+    const {data} = await http.post(
+        `${import.meta.env.VITE_API_BASE_URL}/api/auth/reissue`,
+        {refreshToken},
+        {headers: { "Content-Type": "application/json" }}
+        )
+    if (!data.success || !data?.data?.accessToken) {
+        throw new Error(data?.error?.message ?? "Reissue failed")
+    }
+    return data.data.accessToken as string
     
 }

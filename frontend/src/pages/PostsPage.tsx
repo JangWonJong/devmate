@@ -89,10 +89,11 @@ export function PostsPage() {
   const [qInput, setQInput] =useState(q)
   useEffect(() => { setQInput(q) }, [q])
   
-  //로그인 상태 폴링
+
   useEffect(() => {
-    const id = setInterval(() => setLoggedIn(tokenStore.isLoggedIn()), 300)
-    return () => clearInterval(id)
+    const sync  = () => setLoggedIn(tokenStore.isLoggedIn())
+    sync()
+    return tokenStore.subscribe(sync)
   }, [])
 
   // 내글 배지용 meId

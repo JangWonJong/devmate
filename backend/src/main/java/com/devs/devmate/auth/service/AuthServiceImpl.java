@@ -35,6 +35,13 @@ public class AuthServiceImpl implements AuthService{
     private long refreshExpDays;
 
     @Override
+    @Transactional
+    public void logout(Long memberId) {
+        refreshTokenRepository.findByMemberId(memberId)
+                .ifPresent(RefreshToken::revoke);
+    }
+
+    @Override
     public LoginResponse login(LoginRequest request) {
 
         Member member = memberRepository.findByEmail(request.getEmail())

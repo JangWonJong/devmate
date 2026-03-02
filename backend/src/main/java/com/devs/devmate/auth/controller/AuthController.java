@@ -28,4 +28,12 @@ public class AuthController {
     public ApiResponse<ReissueResponse> reissue(@RequestBody ReissueRequest request){
         return ApiResponse.ok(authService.reissue(request.getRefreshToken()));
     }
+
+    @PostMapping("/logout")
+    public ApiResponse<Void> logout() {
+        Long memberId = SecurityUtil.currentMemberId();
+        authService.logout(memberId);
+        return ApiResponse.ok();
+    }
+
 }

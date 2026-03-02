@@ -1,20 +1,49 @@
-import { useEffect, useState } from "react"
+import { useEffect, useRef, useState } from "react"
 import { Link, Outlet, useNavigate } from "react-router-dom"
 import { tokenStore } from "../auth/token"
 import { getMe, type MeResponse } from "../api/members"
+import { logout, reissue } from "../api/auth"
 
 
 export function AppLayout(){
+  const bootedRef = useRef(false)
  
   const nav = useNavigate()
   const [loggedIn, setLoggedIn] = useState(tokenStore.isLoggedIn())
   const [me, setMe] = useState<MeResponse | null>(null)
 
   useEffect(() => {
-    const id = setInterval(() => setLoggedIn(tokenStore.isLoggedIn()), 300)
-    return () => clearInterval(id)
+    const sync  = () => setLoggedIn(tokenStore.isLoggedIn())
+    sync()
+    return tokenStore.subscribe(sync)
   }, [])
   
+  useEffect(() => {
+    if (bootedRef.current) return
+    bootedRef.current = true
+
+    let cancelled = false
+    
+    ;(async ()=> {
+      const access = tokenStore.getAccess()
+      const refresh = tokenStore.getRefresh()
+      if (access || !refresh) return
+      try {
+        const newAccess = await reissue(refresh)
+        if (cancelled) return
+        tokenStore.setAccess(newAccess)
+      } catch {
+        tokenStore.clear()
+      }
+
+    })()
+
+    return () => {
+      cancelled = true
+    }
+  }, [])
+
+
   useEffect(() =>{
     (async () => {
       if (!loggedIn){
@@ -30,6 +59,15 @@ export function AppLayout(){
     })()
   }, [loggedIn])
 
+  const onLogout = async () => {
+    try {
+      await logout()
+    } finally {
+      tokenStore.clear()
+      setLoggedIn(false)
+      nav("/login")
+    }
+  }
 
     return (
      <div style={{ fontFamily: "system-ui, sans-serif" }}>
@@ -57,11 +95,7 @@ export function AppLayout(){
                 </span>
                 <button
                   style={{ padding: "6px 10px", cursor: "pointer" }}
-                  onClick={() => {
-                    tokenStore.clear();
-                    setLoggedIn(false);
-                    nav("/login");
-                  }}
+                  onClick={onLogout}
                 >
                   로그아웃
                 </button>

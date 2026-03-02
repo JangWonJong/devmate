@@ -1,5 +1,10 @@
 const ACCESS_KEY = "devmate_access_token"
 const REFRESH_KEY = "devmate_refresh_token"
+const AUTH_EVENT = "auth-change"
+
+function emitAuthChange() {
+    window.dispatchEvent(new Event(AUTH_EVENT))
+}
 
 export const tokenStore = {
     getAccess(): string | null {
@@ -11,22 +16,31 @@ export const tokenStore = {
 
     setAccess(token: string){
         localStorage.setItem(ACCESS_KEY, token)
+        emitAuthChange()
     },
     setRefresh(token: string){
         localStorage.setItem(REFRESH_KEY, token)
+        emitAuthChange()
     },
 
     setTokens(accessToken: string, refreshToken?: string){
-        this.setAccess(accessToken)
-        if(refreshToken) this.setRefresh(refreshToken)
+        localStorage.setItem(ACCESS_KEY, accessToken)
+        if(refreshToken) localStorage.setItem(REFRESH_KEY, refreshToken)
+        emitAuthChange()
     },
 
     isLoggedIn(): boolean {
-        return !!this.getAccess()
+        return !! this.getAccess()
     },
 
     clear(){
         localStorage.removeItem(ACCESS_KEY)
         localStorage.removeItem(REFRESH_KEY)
+        emitAuthChange()
+    },
+
+    subscribe(cb: () => void) {
+        window.addEventListener(AUTH_EVENT, cb)
+        return () => window.removeEventListener(AUTH_EVENT, cb)
     }
 }

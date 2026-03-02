@@ -6,7 +6,7 @@ export function RequireAuth({ children }: {children: JSX.Element}){
     const loc = useLocation()
 
     if (!tokenStore.isLoggedIn()){
-        return <Navigate to="/login" replace state={{ next: loc.pathname + loc.search + loc.hash}}></Navigate>
+        return <Navigate to="/login" replace state={{ from: loc}}></Navigate>
     }
     return children
 

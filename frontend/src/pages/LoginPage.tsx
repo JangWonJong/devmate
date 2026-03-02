@@ -6,11 +6,18 @@ import { tokenStore } from "../auth/token";
 
 export function LoginPage() {
   const nav = useNavigate()
+  const loc = useLocation()
+  
+  const from = 
+    (loc.state as any)?.from?.pathname
+      ? (loc.state as any).from.pathname +
+        ((loc.state as any).from.search ?? "" ) +
+        ((loc.state as any).from.hash ?? "")
+      : "/"
+
   const [email, setEmail] = useState("")
   const [password, setPassword] = useState("")
   const [err, setErr] = useState<string | null>(null)
-  const loc = useLocation() as any
-  const next = loc.state?.next ?? "/"
   
   return (
   <div style={{ maxWidth: 420 }}>
@@ -45,7 +52,7 @@ export function LoginPage() {
           try {
             const res = await login({ email: e, password: p });
             tokenStore.setTokens(res.accessToken, res.refreshToken);
-            nav(next);
+            nav(from, { replace: true });
           } catch (e: any) {
             const msg = e.response?.data?.error?.message ?? "로그인 실패"
             setErr(msg);
