@@ -6,43 +6,48 @@ import { logout, reissue } from "../api/auth"
 
 
 export function AppLayout(){
-  const bootedRef = useRef(false)
- 
   const nav = useNavigate()
+
   const [loggedIn, setLoggedIn] = useState(tokenStore.isLoggedIn())
   const [me, setMe] = useState<MeResponse | null>(null)
 
-  useEffect(() => {
-    const sync  = () => setLoggedIn(tokenStore.isLoggedIn())
-    sync()
-    return tokenStore.subscribe(sync)
-  }, [])
-  
-  useEffect(() => {
-    if (bootedRef.current) return
-    bootedRef.current = true
+  const syncRef = useRef(false)
 
-    let cancelled = false
-    
-    ;(async ()=> {
+  useEffect(() => {
+    let alive = true
+    const onChange = async () => {
+      if (!alive) return
+      // 1) UI 로그인 상태 반영
+      setLoggedIn(tokenStore.isLoggedIn())
+
+      // 2) access 없고 refresh 있으면 access 복구 시도
+      if (syncRef.current) return
+
       const access = tokenStore.getAccess()
       const refresh = tokenStore.getRefresh()
       if (access || !refresh) return
+
+      syncRef.current = true
       try {
         const newAccess = await reissue(refresh)
-        if (cancelled) return
-        tokenStore.setAccess(newAccess)
+        if (!alive) return
+        tokenStore.setAccess(newAccess) // auth-change 발생 -> 다른 구독자도 반영
       } catch {
         tokenStore.clear()
+      } finally {
+        syncRef.current = false
       }
+    }
 
-    })()
-
+    // 앱 시작 시 1회
+    void onChange()
+    const unsub = tokenStore.subscribe(() => void onChange())
+    // auth-change + storage 변화 구독
     return () => {
-      cancelled = true
+      alive = false
+      unsub()
     }
   }, [])
-
 
   useEffect(() =>{
     (async () => {
@@ -64,8 +69,7 @@ export function AppLayout(){
       await logout()
     } finally {
       tokenStore.clear()
-      setLoggedIn(false)
-      nav("/login")
+      nav("/login", {replace: true})
     }
   }
 

@@ -30,7 +30,7 @@ export const tokenStore = {
     },
 
     isLoggedIn(): boolean {
-        return !! this.getAccess()
+        return !!this.getAccess()
     },
 
     clear(){
@@ -40,7 +40,17 @@ export const tokenStore = {
     },
 
     subscribe(cb: () => void) {
-        window.addEventListener(AUTH_EVENT, cb)
-        return () => window.removeEventListener(AUTH_EVENT, cb)
+        const onAuthChange = () => cb()
+        const onStorage = (e: StorageEvent) => {
+            if (e.key === ACCESS_KEY || e.key === REFRESH_KEY) {
+                cb()
+            }
+        }
+        window.addEventListener(AUTH_EVENT, onAuthChange)
+        window.addEventListener("storage", onStorage)
+        return () => {
+            window.removeEventListener(AUTH_EVENT, onAuthChange)
+            window.removeEventListener("storage", onStorage)
+        }
     }
 }
