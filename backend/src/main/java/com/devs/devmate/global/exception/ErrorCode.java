@@ -21,8 +21,17 @@ public enum ErrorCode {
     DUPLICATE_NICKNAME(HttpStatus.CONFLICT, "MEMBER_409_2", "Nickname already exists"),
     MEMBER_NOT_FOUND(HttpStatus.NOT_FOUND, "MEMBER_404", "Member not found"),
 
+    // POST
     POST_NOT_FOUND(HttpStatus.NOT_FOUND, "POST_404", "Post not found"),
-    FORBIDDEN_POST(HttpStatus.FORBIDDEN, "POST_403", "No permission for this post");
+    FORBIDDEN_POST(HttpStatus.FORBIDDEN, "POST_403", "No permission for this post"),
+
+    //RESERVATION
+    ROOM_NOT_FOUND(HttpStatus.NOT_FOUND, "ROOM_404", "Room not found"),
+    RESERVATION_NOT_FOUND(HttpStatus.NOT_FOUND, "RESERVE_404", "Reservation not found"),
+    RESERVATION_TIME_INVALID(HttpStatus.BAD_REQUEST, "RESERVE_400_1", "Invalid reservation time"),
+    RESERVATION_OVERLAP(HttpStatus.CONFLICT, "RESERVE_409_1", "Reservation overlaps"),
+    FORBIDDEN_RESERVATION(HttpStatus.FORBIDDEN, "RESERVE_403_1", "No permission for this reservation");
+
 
     private final HttpStatus status;
     private final String code;
