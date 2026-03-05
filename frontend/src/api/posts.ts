@@ -1,6 +1,6 @@
 import { http } from "./http"
 import type { ApiResponse } from "./type"
-
+import type { PageResponse } from "./page"
 
 export type PostCreateRequest = { title: string, content: string}
 
@@ -14,17 +14,6 @@ export type PostResponse = {
     createdAt: string,
     updatedAt: string
 }
-
-export type PageResponse<T> = {
-    content: T[]
-    number: number
-    size: number
-    totalElements: number
-    totalPages:number
-    first: boolean
-    last: boolean
-}
-
 
 export type PostUpdateRequest = {
     title: string

@@ -88,8 +88,10 @@ export function AppLayout(){
           <Link to="/" style={{ fontWeight: 700, textDecoration: "none", color: "#111" }}>
             DevMate
           </Link>
-
+          
           <nav style={{ display: "flex", gap: 12, alignItems: "center" }}>
+            <Link to="/reservations">예약</Link>
+
             {loggedIn && <Link to="/posts/new">글쓰기</Link>}
 
             {loggedIn ? (

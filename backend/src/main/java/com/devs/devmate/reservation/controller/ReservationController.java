@@ -13,6 +13,8 @@ import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.web.bind.annotation.*;
 
+import java.time.LocalDate;
+
 @RestController
 @RequiredArgsConstructor
 @RequestMapping("/api/reservations")
@@ -24,6 +26,19 @@ public class ReservationController {
         Long memberId = SecurityUtil.currentMemberId();
         return ApiResponse.ok(reservationService.create(memberId, req));
     }
+
+    @GetMapping
+    public ApiResponse<Page<ReservationResponse>> list(
+            @RequestParam(required = false) Long roomId,
+            @RequestParam LocalDate date,
+            Pageable pageable
+    ) {
+        if (roomId == null) {
+            return ApiResponse.ok(reservationService.listAllByDate(date, pageable)); // 네가 만든 메소드명에 맞춰 수정
+        }
+        return ApiResponse.ok(reservationService.listRoomDate(roomId, date, pageable));
+    }
+
 
     @GetMapping("/mine")
     public ApiResponse<Page<ReservationResponse>> mine(Pageable pageable) {

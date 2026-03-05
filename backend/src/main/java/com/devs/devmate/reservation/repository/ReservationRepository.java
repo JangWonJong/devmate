@@ -33,5 +33,5 @@ public interface ReservationRepository extends JpaRepository<Reservation, Long> 
 
     Page<Reservation> findByRoomIdAndDateAndStatus(Long roomId, LocalDate date, Status status, Pageable pageable);
 
-
+    Page<Reservation> findByDateAndStatus(LocalDate date, Status status, Pageable pageable);
 }
