@@ -77,7 +77,7 @@ export async function listMyReservations(params?:{
 }) {
     const page = params?.page ?? 0
     const size = params?.size ?? 50
-    const sort = params?.sort ?? "id,desc"
+    const sort = params?.sort ?? "date,desc"
 
     const {data} = await http.get<ApiResponse<PageResponse<ReservationResponse>>>(
         "/api/reservations/mine",

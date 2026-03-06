@@ -41,8 +41,9 @@ public class SecurityConfig {
                     .requestMatchers("/error","/api/members/signup", "/api/auth/**").permitAll()
                     .requestMatchers(HttpMethod.GET, "/api/posts/**").permitAll()
                     .requestMatchers(HttpMethod.GET, "/api/rooms/**").permitAll()
-                    .requestMatchers(HttpMethod.GET, "/api/reservations/**").permitAll()
+                    .requestMatchers(HttpMethod.GET, "/api/posts/*/comments").permitAll()
                     .requestMatchers(HttpMethod.GET, "/api/reservations/mine").authenticated()
+                    .requestMatchers(HttpMethod.GET, "/api/reservations/**").permitAll()
                     .anyRequest().authenticated()
             )
             .addFilterBefore(new JwtAuthenticationFilter(jwtProvider),

@@ -32,7 +32,13 @@ public enum ErrorCode {
     RESERVATION_NOT_FOUND(HttpStatus.NOT_FOUND, "RESERVATION_404", "예약을 찾을 수 없습니다."),
     RESERVATION_TIME_INVALID(HttpStatus.BAD_REQUEST, "RESERVATION_400", "예약 시간을 확인해주세요."),
     RESERVATION_OVERLAP(HttpStatus.CONFLICT, "RESERVATION_409", "이미 예약된 시간대입니다."),
-    FORBIDDEN_RESERVATION(HttpStatus.FORBIDDEN, "RESERVATION_403", "예약에 대한 권한이 없습니다.");
+    FORBIDDEN_RESERVATION(HttpStatus.FORBIDDEN, "RESERVATION_403", "예약에 대한 권한이 없습니다."),
+
+    // COMMENT
+    COMMENT_NOT_FOUND(HttpStatus.NOT_FOUND, "COMMENT_404", "댓글을 찾을 수 없습니다."),
+    FORBIDDEN_COMMENT(HttpStatus.FORBIDDEN, "COMMENT_403", "댓글에 대한 권한이 없습니다.");
+
+
 
 
     private final HttpStatus status;
