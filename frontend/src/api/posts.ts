@@ -72,3 +72,10 @@ export async function updatePost(id:string, req: PostUpdateRequest) {
     const {data} = await http.patch<ApiResponse<void>>(`/api/posts/${id}`, req)
     if (!data.success) throw new Error(data.error?.message ?? "Update failed")
 }
+
+
+export async function solvePost(id: string) {
+    const {data} = await http.patch<ApiResponse<void>>(`/api/posts/${id}/solve`)
+    if (!data.success) throw new Error(data.error?.message ?? "Solved failed")
+    
+}

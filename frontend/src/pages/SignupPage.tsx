@@ -53,8 +53,9 @@ export function SignupPage() {
               try {
                 const res = await signup({ email: e, password: p, nickname: n })
                 res.email                
-                nav("/")
+                nav("/login")
               } catch (e: any) {
+                //여기로 받아진다
                 const msg = e.response?.data?.error?.message ?? "회원가입 실패"
                 setErr(msg);
     
