@@ -16,6 +16,7 @@ public class CommentResponse {
     private String authorNickname;
     private String content;
     private LocalDateTime createdAt;
+    private boolean adopted;
 
     public static CommentResponse from(Comment comment) {
         return new CommentResponse(
@@ -23,7 +24,8 @@ public class CommentResponse {
                 comment.getMember().getId(),
                 comment.getMember().getNickname(),
                 comment.getContent(),
-                comment.getCreatedAt()
+                comment.getCreatedAt(),
+                comment.isAdopted()
         );
     }
 

@@ -8,6 +8,7 @@ export type CommentResponse = {
     authorNickname: string
     content: string
     createdAt: string
+    adopted: boolean
 }
 
 export type CommentCreateRequest = {
@@ -50,5 +51,20 @@ export async function deleteComment(id: number | string) {
 
     if (!data.success)
         throw new Error(data.error?.message ?? "댓글 삭제 실패")
+    
+}
+
+
+export async function updateComment(id: number | string, content: string) {
+
+    const {data} = await http.patch<ApiResponse<void>>(`/api/comments/${id}`, {content})
+
+    if (!data.success) throw new Error(data.error?.message ?? "댓글 수정 실패")
+     
+}
+
+export async function adoptComment(id: number | string) {
+    const {data} = await http.patch<ApiResponse<void>>(`/api/comments/${id}/adopt`)
+    if (!data.success) throw new Error(data.error?.message ?? "댓글 채택 실패")
     
 }

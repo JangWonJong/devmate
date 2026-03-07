@@ -7,7 +7,9 @@ import {
   listComments,
   createComment,
   deleteComment,
+  updateComment,
   type CommentResponse,
+  adoptComment,
 } from "../api/comments";
 
 function StatusBadge({ solved }: { solved: boolean }) {
@@ -42,6 +44,9 @@ export function PostDetailPage() {
   const [meId, setMeId] = useState<number | null>(null);
   const [comments, setComments] = useState<CommentResponse[]>([]);
   const [commentInput, setCommentInput] = useState("");
+
+  const [editingCommentId, setEditingCommentId] = useState<number | null>(null);
+  const [editingContent, setEditingContent] = useState("");
 
   useEffect(() => {
     const sync = () => setLoggedIn(tokenStore.isLoggedIn());
@@ -125,8 +130,32 @@ export function PostDetailPage() {
       setCommentErr(null);
       await deleteComment(commentId);
       setComments((prev) => prev.filter((c) => c.id !== commentId));
+
+      if (editingCommentId === commentId) {
+        setEditingCommentId(null);
+        setEditingContent("");
+      }
     } catch (e: any) {
       setCommentErr(e.message ?? "댓글 삭제 실패");
+    }
+  };
+
+  const onUpdateComment = async (commentId: number) => {
+    const content = editingContent.trim();
+    if (!content) return setCommentErr("댓글 내용을 입력하세요");
+
+    try {
+      setCommentErr(null);
+      await updateComment(commentId, content);
+
+      setComments((prev) =>
+        prev.map((c) => (c.id === commentId ? { ...c, content } : c))
+      );
+
+      setEditingCommentId(null);
+      setEditingContent("");
+    } catch (e: any) {
+      setCommentErr(e.message ?? "댓글 수정 실패");
     }
   };
 
@@ -165,6 +194,21 @@ export function PostDetailPage() {
       setBusy(false);
     }
   };
+
+  const onAdoptComment = async (commentId: number) => {
+  try {
+    setCommentErr(null)
+    await adoptComment(commentId)
+
+    const res = await listComments(id!)
+    setComments(res)
+
+    const updatedPost = await getPost(id!)
+    setPost(updatedPost)
+  } catch (e: any) {
+    setCommentErr(e.message ?? "댓글 채택 실패")
+  }
+}
 
   return (
     <div style={{ maxWidth: 720 }}>
@@ -205,7 +249,9 @@ export function PostDetailPage() {
         {post.content}
       </div>
 
-      {actionErr && <div style={{ color: "crimson", marginTop: 12 }}>{actionErr}</div>}
+      {actionErr && (
+        <div style={{ color: "crimson", marginTop: 12 }}>{actionErr}</div>
+      )}
 
       <div style={{ display: "flex", gap: 8, marginTop: 20 }}>
         <button
@@ -285,6 +331,7 @@ export function PostDetailPage() {
           ) : (
             comments.map((c) => {
               const isMyComment = meId != null && c.memberId === meId;
+              const isEditing = editingCommentId === c.id;
 
               return (
                 <div
@@ -292,26 +339,103 @@ export function PostDetailPage() {
                   style={{ border: "1px solid #eee", padding: 10 }}
                 >
                   <div
-                    style={{
-                      display: "flex",
-                      justifyContent: "space-between",
-                      fontSize: 13,
-                      color: "#666",
-                    }}
-                  >
-                    <span>{c.authorNickname}</span>
+                      style={{
+                        display: "flex",
+                        justifyContent: "space-between",
+                        alignItems: "center",
+                        fontSize: 13,
+                        color: "#666",
+                        gap: 8,
+                      }}
+                    >
+                      <div style={{ display: "flex", alignItems: "center", gap: 8, flexWrap: "wrap" }}>
+                        <span>{c.authorNickname}</span>
 
-                    {isMyComment && (
-                      <button
-                        onClick={() => onDeleteComment(c.id)}
-                        style={{ fontSize: 12 }}
-                      >
-                        삭제
-                      </button>
-                    )}
-                  </div>
+                          {c.adopted && (
+                            <span
+                              style={{
+                                fontSize: 12,
+                                padding: "2px 8px",
+                                border: "1px solid #ddd",
+                                borderRadius: 999,
+                                background: "#f3fff6",
+                                color: "#111",
+                              }}
+                            >
+                              채택됨
+                            </span>
+                          )}
+                        </div>
 
-                  <div style={{ marginTop: 6 }}>{c.content}</div>
+                        <div style={{ display: "flex", gap: 8 }}>
+                          {isMine && !c.adopted && (
+                            <button
+                              onClick={() => onAdoptComment(c.id)}
+                              style={{ fontSize: 12 }}
+                            >
+                              채택
+                            </button>
+                          )}
+
+                          {isMyComment && (
+                            <>
+                              <button
+                                onClick={() => {
+                                  setCommentErr(null);
+                                  setEditingCommentId(c.id);
+                                  setEditingContent(c.content);
+                                }}
+                                style={{ fontSize: 12 }}
+                              >
+                                수정
+                              </button>
+
+                              <button
+                                onClick={() => onDeleteComment(c.id)}
+                                style={{ fontSize: 12 }}
+                              >
+                                삭제
+                              </button>
+                            </>
+                          )}
+                        </div>
+                      </div>
+
+                  {isEditing ? (
+                    <div style={{ marginTop: 6 }}>
+                      <input
+                        value={editingContent}
+                        onChange={(e) => setEditingContent(e.target.value)}
+                        style={{
+                          width: "100%",
+                          padding: 8,
+                          border: "1px solid #ddd",
+                          boxSizing: "border-box",
+                        }}
+                      />
+
+                      <div style={{ display: "flex", gap: 8, marginTop: 8 }}>
+                        <button
+                          onClick={() => onUpdateComment(c.id)}
+                          style={{ fontSize: 12 }}
+                        >
+                          저장
+                        </button>
+
+                        <button
+                          onClick={() => {
+                            setEditingCommentId(null);
+                            setEditingContent("");
+                          }}
+                          style={{ fontSize: 12 }}
+                        >
+                          취소
+                        </button>
+                      </div>
+                    </div>
+                  ) : (
+                    <div style={{ marginTop: 6 }}>{c.content}</div>
+                  )}
                 </div>
               );
             })

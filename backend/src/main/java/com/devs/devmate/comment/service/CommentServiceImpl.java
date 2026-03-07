@@ -3,6 +3,7 @@ package com.devs.devmate.comment.service;
 import com.devs.devmate.comment.dto.CommentCreateRequest;
 import com.devs.devmate.comment.dto.CommentResponse;
 import com.devs.devmate.comment.entity.Comment;
+import com.devs.devmate.comment.entity.CommentUpdateRequest;
 import com.devs.devmate.comment.repository.CommentRepository;
 import com.devs.devmate.global.exception.BusinessException;
 import com.devs.devmate.global.exception.ErrorCode;
@@ -63,5 +64,36 @@ public class CommentServiceImpl implements CommentService{
         }
 
         commentRepository.delete(comment);
+    }
+
+    @Override
+    public void update(Long memberId, Long commentId, CommentUpdateRequest request) {
+        Comment comment = commentRepository.findById(commentId)
+                .orElseThrow(() -> new BusinessException(ErrorCode.COMMENT_NOT_FOUND));
+
+        if (!comment.getMember().getId().equals(memberId)) {
+            throw new BusinessException(ErrorCode.FORBIDDEN_COMMENT);
+        }
+
+        comment.updateContent(request.getContent().trim());
+    }
+
+    @Transactional
+    @Override
+    public void adopt(Long memberId, Long commentId) {
+        Comment comment = commentRepository.findById(commentId)
+                .orElseThrow(() -> new BusinessException(ErrorCode.COMMENT_NOT_FOUND));
+
+        Post post = comment.getPost();
+
+        if (!post.getMember().getId().equals(memberId)) {
+            throw new BusinessException(ErrorCode.FORBIDDEN_COMMENT);
+        }
+
+        commentRepository.findByPostIdAndAdoptedTrue(post.getId())
+                .ifPresent(Comment::unadopt);
+
+        comment.adopt();
+        post.markSolved();
     }
 }

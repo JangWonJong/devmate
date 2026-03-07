@@ -35,5 +35,19 @@ public class Comment extends BaseEntity {
     @Column(nullable = false, length = 1000)
     private String content;
 
+    @Column(nullable = false)
+    @Builder.Default
+    private boolean adopted = false;
 
+    public void adopt() {
+        this.adopted = true;
+    }
+
+    public void  unadopt() {
+        this.adopted = false;
+    }
+
+    public void updateContent(String string) {
+        this.content = content;
+    }
 }
