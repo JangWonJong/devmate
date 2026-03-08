@@ -36,8 +36,12 @@ public enum ErrorCode {
 
     // COMMENT
     COMMENT_NOT_FOUND(HttpStatus.NOT_FOUND, "COMMENT_404", "댓글을 찾을 수 없습니다."),
-    FORBIDDEN_COMMENT(HttpStatus.FORBIDDEN, "COMMENT_403", "댓글에 대한 권한이 없습니다.");
+    FORBIDDEN_COMMENT(HttpStatus.FORBIDDEN, "COMMENT_403", "댓글에 대한 권한이 없습니다."),
 
+    // STUDY
+    STUDY_NOT_FOUND(HttpStatus.NOT_FOUND, "STUDY_404", "스터디를 찾을 수 없습니다."),
+    INVALID_STUDY_POST_TYPE(HttpStatus.BAD_REQUEST, "STUDY_400", "스터디 타입 게시글만 스터디를 생성할 수 있습니다."),
+    STUDY_ALREADY_EXISTS(HttpStatus.CONFLICT, "STUDY_409", "이미 스터디가 생성된 게시글입니다.");
 
 
 

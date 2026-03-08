@@ -14,6 +14,11 @@ import lombok.*;
 @Table(name = "posts")
 public class Post extends BaseEntity {
 
+    public enum PostType {
+        QUESTION,
+        STUDY
+    }
+
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
@@ -32,6 +37,10 @@ public class Post extends BaseEntity {
     @JoinColumn(name = "member_id", nullable = false)
     private Member member;
 
+    @Enumerated(EnumType.STRING)
+    @Column(nullable = false, length = 20)
+    private PostType type = PostType.QUESTION;
+
     public void update(String title, String content, boolean solved){
         this.title = title;
         this.content = content;
@@ -44,4 +53,5 @@ public class Post extends BaseEntity {
     public void markUnsolved(){
         this.solved = false;
     }
+
 }
