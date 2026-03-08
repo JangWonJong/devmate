@@ -210,6 +210,11 @@ export function PostDetailPage() {
   }
 }
 
+  const sortedComments = [...comments].sort((a,b) => {
+    if (a.adopted === b.adopted) return 0
+    return a.adopted ? -1 :1
+  })
+
   return (
     <div style={{ maxWidth: 720 }}>
       <h1 style={{ fontSize: 24, fontWeight: 800, marginBottom: 8 }}>
@@ -329,7 +334,7 @@ export function PostDetailPage() {
           {comments.length === 0 ? (
             <div style={{ color: "#666" }}>댓글이 아직 없어요</div>
           ) : (
-            comments.map((c) => {
+            sortedComments.map((c) => {
               const isMyComment = meId != null && c.memberId === meId;
               const isEditing = editingCommentId === c.id;
 

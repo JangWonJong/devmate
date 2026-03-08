@@ -1,5 +1,5 @@
-import { useEffect, useRef, useState } from "react"
-import { Link, Outlet, useNavigate } from "react-router-dom"
+import { useCallback, useEffect, useRef, useState } from "react"
+import { Link, Outlet, useLocation, useNavigate } from "react-router-dom"
 import { tokenStore } from "../auth/token"
 import { getMe, type MeResponse } from "../api/members"
 import { logout, reissue } from "../api/auth"
@@ -7,11 +7,27 @@ import { logout, reissue } from "../api/auth"
 
 export function AppLayout(){
   const nav = useNavigate()
+  const loc = useLocation()
 
   const [loggedIn, setLoggedIn] = useState(tokenStore.isLoggedIn())
   const [me, setMe] = useState<MeResponse | null>(null)
-
+  const [meLoading, setMeLoading] = useState(false)
+  
   const syncRef = useRef(false)
+
+  const moveToLogin = useCallback(() => {
+    if (loc.pathname === "/login" || loc.pathname === "/signup") return
+    nav("/login", {
+      replace: true,
+      state: {
+        from: {
+          pathname: loc.pathname,
+          search: loc.search,
+          hash: loc.hash
+        }
+      }
+    })
+  }, [loc.pathname, loc.search, loc.hash, nav])
 
   useEffect(() => {
     let alive = true
@@ -34,6 +50,7 @@ export function AppLayout(){
         tokenStore.setAccess(newAccess) // auth-change 발생 -> 다른 구독자도 반영
       } catch {
         tokenStore.clear()
+        if (alive) moveToLogin()
       } finally {
         syncRef.current = false
       }
@@ -47,22 +64,33 @@ export function AppLayout(){
       alive = false
       unsub()
     }
-  }, [])
+  }, [moveToLogin])
 
   useEffect(() =>{
     (async () => {
       if (!loggedIn){
         setMe(null)
+        setMeLoading(false)
         return
       }
       try {
+        setMeLoading(true)
         const m = await getMe()
         setMe(m)
-      } catch {
+      } catch (e: any) {
+        const status = e?.response?.status
+        if (status === 401 || status === 403) {
+          tokenStore.clear()
+          setMe(null)
+          moveToLogin()
+          return
+        }
         setMe(null)
-      }
+      } finally {
+        setMeLoading(false)
+       }
     })()
-  }, [loggedIn])
+  }, [loggedIn, moveToLogin])
 
   const onLogout = async () => {
     try {
@@ -72,6 +100,8 @@ export function AppLayout(){
       nav("/login", {replace: true})
     }
   }
+
+  const isAuthenticated = me != null
 
     return (
      <div style={{ fontFamily: "system-ui, sans-serif" }}>
@@ -92,12 +122,14 @@ export function AppLayout(){
           <nav style={{ display: "flex", gap: 12, alignItems: "center" }}>
             <Link to="/reservations">예약</Link>
 
-            {loggedIn && <Link to="/posts/new">글쓰기</Link>}
+            {isAuthenticated && <Link to="/posts/new">글쓰기</Link>}
 
-            {loggedIn ? (
+            {meLoading ? (
+              <span style={{ fontSize: 13, color: "#666" }}>사용자 확인 중</span>
+            ) : isAuthenticated ? (
               <>
                 <span style={{ fontSize: 13, color: "#666" }}>
-                  {me ? `${me.nickname} (${me.email})` : "로그인됨"}
+                  {me.nickname} ({me.email})
                 </span>
                 <button
                   style={{ padding: "6px 10px", cursor: "pointer" }}
