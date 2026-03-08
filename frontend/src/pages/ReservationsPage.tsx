@@ -35,6 +35,20 @@ function toScope(v: string | null): Scope {
   return v === "mine" ? "mine" : "all"
 }
 
+function addOneHour(time: string) {
+  const [h, m] = time.split(":").map(Number)
+  const nextHour = h + 1
+  return `${String(nextHour).padStart(2, "0")}:${String(m).padStart(2,"0")}`
+}
+
+function makeTimeSlots() {
+  const slots: string[] = []
+  for (let hour = 9; hour<=20; hour++) {
+    slots.push(`${String(hour).padStart(2,"0")}:00`)
+  }
+  return slots
+}
+
 export function ReservationsPage() {
   const nav = useNavigate()
   const [sp, setSp] = useSearchParams()
@@ -69,9 +83,7 @@ export function ReservationsPage() {
   const [roomId, setRoomId] = useState<number | null>(null)
 
   const [title, setTitle] = useState("")
-  const [startTime, setStartTime] = useState("19:00")
-  const [endTime, setEndTime] = useState("20:00")
-
+  const [selectedTime, setSelectedTime] = useState<string | null>(null)
   const [loggedIn, setLoggedIn] = useState(tokenStore.isLoggedIn())
   const [meId, setMeId] = useState<number | null>(null)
 
@@ -155,12 +167,27 @@ export function ReservationsPage() {
     })()
   }, [scope, date, loggedIn, setQuery])
 
+  useEffect(() => {
+    setSelectedTime(null)
+  }, [date, roomId, scope])
+
   const emptyText = useMemo(() => {
     if (scope === "mine") {
       return loggedIn ? "내 예약이 없어요" : "로그인 후 내 예약을 확인할 수 있어요"
     }
     return "해당 날짜 예약이 없어요"
   }, [scope, loggedIn])
+
+
+  const timeSlots = useMemo(() => makeTimeSlots(), [])
+
+  const isReservedTime = useCallback(
+    (time: string) => {
+      return items.some((r) => 
+        r.roomId === roomId &&
+        r.startTime.slice(0,5) === time)
+    },[items, roomId]
+  )
 
   const onCreate = async () => {
     if (!loggedIn) {
@@ -173,7 +200,7 @@ export function ReservationsPage() {
 
     const t = title.trim()
     if (!t) return setErr("예약 제목을 입력하세요")
-    if (!(startTime < endTime)) return setErr("시간을 확인하세요")
+    if (!selectedTime) return setErr("예약 시간을 선택하세요")
 
     try {
       setBusy(true)
@@ -182,12 +209,13 @@ export function ReservationsPage() {
       await createReservation({
         roomId,
         date,
-        startTime,
-        endTime,
+        startTime: selectedTime,
+        endTime: addOneHour(selectedTime),
         title: t,
       })
 
       setTitle("")
+      setSelectedTime(null)
 
       if (scope === "mine") await loadMine()
       else await loadAll()
@@ -200,6 +228,7 @@ export function ReservationsPage() {
       setBusy(false)
     }
   }
+ 
 
   const onCancel = async (id: number) => {
     const ok = confirm("예약을 취소할까요?")
@@ -274,52 +303,93 @@ export function ReservationsPage() {
           </button>
         </div>
       </div>
-
+      {scope === "all" && (
       <div style={{ border: "1px solid #eee", padding: 12, marginBottom: 12 }}>
-        <div style={{ fontWeight: 700, marginBottom: 8 }}>예약 만들기</div>
+          <div style={{ fontWeight: 700, marginBottom: 8 }}>예약 만들기</div>
 
-        {!loggedIn && (
-          <div style={{ fontSize: 13, color: "#666", marginBottom: 8 }}>
-            로그인 후 예약할 수 있어요
-          </div>
-        )}
+          {!loggedIn && (
+            <div style={{ fontSize: 13, color: "#666", marginBottom: 8 }}>
+              로그인 후 예약할 수 있어요
+            </div>
+          )}
 
-        <div style={{ display: "flex", gap: 8, flexWrap: "wrap", alignItems: "center" }}>
-          <select
-            value={roomId?.toString() ?? ""}
-            onChange={(e) => setRoomId(e.target.value ? Number(e.target.value) : null)}
-            style={{ padding: "8px 10px", border: "1px solid #ddd" }}
-          >
-            <option value="" disabled>
-              방 선택
-            </option>
-            {rooms.map((r) => (
-              <option key={r.id} value={r.id}>
-                {r.name}
+          <div style={{ display: "flex", gap: 8, flexWrap: "wrap", alignItems: "center", marginBottom: 12 }}>
+            <select
+              value={roomId?.toString() ?? ""}
+              onChange={(e) => setRoomId(e.target.value ? Number(e.target.value) : null)}
+              style={{ padding: "8px 10px", border: "1px solid #ddd" }}
+            >
+              <option value="" disabled>
+                방 선택
               </option>
-            ))}
-          </select>
+              {rooms.map((r) => (
+                <option key={r.id} value={r.id}>
+                  {r.name}
+                </option>
+              ))}
+            </select>
 
-          <input
-            value={title}
-            onChange={(e) => setTitle(e.target.value)}
-            placeholder="예약 제목"
-            style={{ flex: 1, minWidth: 220, padding: "8px 10px", border: "1px solid #ddd" }}
-          />
+            <input
+              value={title}
+              onChange={(e) => setTitle(e.target.value)}
+              placeholder="예약 제목"
+              style={{ flex: 1, minWidth: 220, padding: "8px 10px", border: "1px solid #ddd" }}
+            />
+          </div>
 
-          <input type="time" value={startTime} onChange={(e) => setStartTime(e.target.value)} />
-          <input type="time" value={endTime} onChange={(e) => setEndTime(e.target.value)} />
+          <div style={{ marginBottom: 8, fontSize: 13, color: "#666" }}>
+            시간 선택 (1시간 단위)
+          </div>
 
-          <button
-            disabled={busy}
-            onClick={onCreate}
-            style={{ padding: "8px 12px", border: "1px solid #ddd", background: "#fff", cursor: "pointer" }}
+          <div
+            style={{
+              display: "grid",
+              gridTemplateColumns: "repeat(auto-fit, minmax(90px, 1fr))",
+              gap: 8,
+              marginBottom: 12,
+            }}
           >
-            예약
-          </button>
-        </div>
-      </div>
+            {timeSlots.map((time) => {
+              const reserved = isReservedTime(time)
+              const selected = selectedTime === time
 
+              return (
+                <button
+                  key={time}
+                  type="button"
+                  disabled={reserved || busy}
+                  onClick={() => setSelectedTime(time)}
+                  style={{
+                    padding: "10px 12px",
+                    border: "1px solid #ddd",
+                    background: reserved ? "#f1f1f1" : selected ? "#111" : "#fff",
+                    color: reserved ? "#999" : selected ? "#fff" : "#111",
+                    cursor: reserved ? "not-allowed" : "pointer",
+                  }}
+                >
+                  {time}
+                </button>
+              )
+            })}
+          </div>
+
+          <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", gap: 8, flexWrap: "wrap" }}>
+            <div style={{ fontSize: 13, color: "#666" }}>
+              {selectedTime
+                ? `선택한 시간: ${selectedTime} ~ ${addOneHour(selectedTime)}`
+                : "시간을 선택하세요"}
+            </div>
+
+            <button
+              disabled={busy}
+              onClick={onCreate}
+              style={{ padding: "8px 12px", border: "1px solid #ddd", background: "#fff", cursor: "pointer" }}
+            >
+              예약
+            </button>
+          </div>
+        </div>
+      )}
       <div style={{ display: "grid", gap: 8 }}>
         {items.length === 0 ? (
           <div style={{ padding: 12, border: "1px solid #eee", color: "#666" }}>{emptyText}</div>
@@ -355,6 +425,7 @@ export function ReservationsPage() {
           })
         )}
       </div>
+        
     </div>
   )
 }
