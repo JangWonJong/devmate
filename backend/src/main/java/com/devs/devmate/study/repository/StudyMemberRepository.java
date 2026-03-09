@@ -8,11 +8,13 @@ import java.util.Optional;
 
 public interface StudyMemberRepository extends JpaRepository<StudyMember, Long> {
 
-    Optional<StudyMember> findByStudyIdAndMemberIdAndStatus(
+    long countByStudyIdAndStatus(Long studyId, StudyMember.Status status);
+
+        Optional<StudyMember> findByStudyIdAndMemberIdAndStatus(
             Long studyId, Long memberId, StudyMember.Status status
     );
 
-    long countByStudyIdAndStatus(Long studyId, StudyMember.Status status);
-
     List<StudyMember> findByStudyIdAndStatus(Long studyId, StudyMember.Status status);
+
+    List<StudyMember> findByMemberIdAndStatus(Long memberId, StudyMember.Status status);
 }

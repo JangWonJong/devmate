@@ -41,9 +41,17 @@ public enum ErrorCode {
     // STUDY
     STUDY_NOT_FOUND(HttpStatus.NOT_FOUND, "STUDY_404", "스터디를 찾을 수 없습니다."),
     INVALID_STUDY_POST_TYPE(HttpStatus.BAD_REQUEST, "STUDY_400", "스터디 타입 게시글만 스터디를 생성할 수 있습니다."),
-    STUDY_ALREADY_EXISTS(HttpStatus.CONFLICT, "STUDY_409", "이미 스터디가 생성된 게시글입니다.");
-
-
+    STUDY_ALREADY_EXISTS(HttpStatus.CONFLICT, "STUDY_409", "이미 스터디가 생성된 게시글입니다."),
+    FORBIDDEN_STUDY_CREATE(HttpStatus.FORBIDDEN, "STUDY_403", "해당 게시글의 작성자만 스터디를 생성할 수 있습니다."),
+    STUDY_CLOSED(HttpStatus.BAD_REQUEST, "STUDY_400_2", "모집이 마감된 스터디입니다."),
+    STUDY_FULL(HttpStatus.BAD_REQUEST, "STUDY_400_3", "스터디 정원이 가득 찼습니다."),
+    ALREADY_JOINED_STUDY(HttpStatus.CONFLICT, "STUDY_409_2", "이미 참가 중인 스터디입니다."),
+    STUDY_MEMBER_NOT_FOUND(HttpStatus.NOT_FOUND, "STUDY_404_2", "스터디 참가 정보를 찾을 수 없습니다."),
+    LEADER_CANNOT_LEAVE(HttpStatus.BAD_REQUEST, "STUDY_400_4", "스터디 리더는 탈퇴할 수 없습니다."),
+    FORBIDDEN_STUDY_CLOSE(HttpStatus.FORBIDDEN, "STUDY_403_2", "스터디 리더만 모집을 마감할 수 있습니다."),
+    STUDY_ALREADY_CLOSED(HttpStatus.BAD_REQUEST, "STUDY_400_5", "이미 모집이 마감된 스터디입니다."),
+    FORBIDDEN_STUDY_LEADER_DELEGATE(HttpStatus.FORBIDDEN, "STUDY_403_3", "스터디 리더만 리더를 위임할 수 있습니다."),
+    INVALID_STUDY_LEADER_TARGET(HttpStatus.BAD_REQUEST, "STUDY_400_6", "리더 위임 대상이 올바르지 않습니다.");
 
     private final HttpStatus status;
     private final String code;
