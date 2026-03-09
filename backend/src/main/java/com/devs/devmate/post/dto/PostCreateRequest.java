@@ -1,7 +1,9 @@
 package com.devs.devmate.post.dto;
 
 
+import com.devs.devmate.post.entity.Post;
 import jakarta.validation.constraints.NotBlank;
+import jakarta.validation.constraints.NotNull;
 import jakarta.validation.constraints.Size;
 import lombok.Getter;
 
@@ -14,5 +16,8 @@ public class PostCreateRequest {
 
     @NotBlank
     private String content;
+
+    @NotNull
+    private Post.PostType type;
 
 }

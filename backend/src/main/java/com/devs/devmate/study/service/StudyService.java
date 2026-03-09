@@ -24,4 +24,6 @@ public interface StudyService {
 
     List<StudyResponse> getMyStudies(Long memberId);
 
+    StudyResponse getByPostId(Long postId);
+
 }

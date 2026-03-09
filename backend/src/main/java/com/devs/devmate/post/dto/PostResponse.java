@@ -16,6 +16,7 @@ public class PostResponse {
     private boolean solved;
     private Long authorId;
     private String authorNickname;
+    private String type;
     private LocalDateTime createdAt;
     private LocalDateTime updatedAt;
 
@@ -27,6 +28,7 @@ public class PostResponse {
                 .solved(post.isSolved())
                 .authorId(post.getMember().getId())
                 .authorNickname(post.getMember().getNickname())
+                .type(post.getType().name())
                 .createdAt(post.getCreatedAt())
                 .updatedAt(post.getUpdatedAt())
                 .build();

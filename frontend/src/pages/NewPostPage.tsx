@@ -9,6 +9,7 @@ export function NewPostPage() {
   const [content, setContent] = useState("")
   const [err, setErr] = useState<string | null>(null)
   const [loading, setLoading] = useState(false)
+  const [type, setType] = useState<"QUESTION" | "STUDY">("QUESTION")
 
   const onSubmit = async () => {
     setErr(null)
@@ -21,7 +22,7 @@ export function NewPostPage() {
 
     try {
       setLoading(true)
-      const id = await createPost({ title: t, content: c })
+      const id = await createPost({ title: t, content: c, type })
       nav(`/posts/${id}`)
     } catch (e: any) {
       setErr(e.message ?? "등록 실패")
@@ -33,7 +34,17 @@ export function NewPostPage() {
   return (
     <div style={{ maxWidth: 720 }}>
       <h1 style={{ fontSize: 22, fontWeight: 700, marginBottom: 12 }}>고민 구름</h1>
-
+      <div style={{ marginBottom: 12 }}>
+        <label style={{ display: "block", marginBottom: 6 }}>글 종류</label>
+        <select
+          value={type}
+          onChange={(e) => setType(e.target.value as "QUESTION" | "STUDY")}
+          style={{ padding: 8, border: "1px solid #ddd" }}
+        >
+          <option value="QUESTION">질문</option>
+          <option value="STUDY">스터디</option>
+        </select>
+      </div>
       <div style={{ display: "grid", gap: 8 }}>
         <input
           style={{

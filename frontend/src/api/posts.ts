@@ -2,16 +2,17 @@ import { http } from "./http"
 import type { ApiResponse } from "./type"
 import type { PageResponse } from "./page"
 
-export type PostCreateRequest = { title: string, content: string}
+export type PostCreateRequest = { title: string, content: string, type: "QUESTION" | "STUDY"}
 
 export type PostResponse = {
-    id: number,
-    title: string,
-    content: string,
-    solved: boolean,
-    authorId: number,
-    authorNickname: string,
-    createdAt: string,
+    id: number
+    title: string
+    content: string
+    solved: boolean
+    authorId: number
+    authorNickname: string
+    type: "QUESTION" | "STUDY"
+    createdAt: string
     updatedAt: string
 }
 

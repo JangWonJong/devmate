@@ -23,6 +23,7 @@ public class StudyResponse {
                 .id(study.getId())
                 .postId(study.getPost().getId())
                 .maxMembers(study.getMaxMembers())
+                .status(study.getStatus().name())
                 .currentMembers(currentMembers)
                 .createdAt(study.getCreatedAt())
                 .build();

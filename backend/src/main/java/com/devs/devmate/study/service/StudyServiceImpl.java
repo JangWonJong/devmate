@@ -238,4 +238,20 @@ public class StudyServiceImpl implements StudyService{
                 })
                 .toList();
     }
+
+    @Override
+    @Transactional(readOnly = true)
+    public StudyResponse getByPostId(Long postId) {
+
+        Study study = studyRepository.findByPostId(postId)
+                .orElseThrow(() -> new BusinessException(ErrorCode.STUDY_NOT_FOUND));
+
+        long currentMembers =
+                studyMemberRepository.countByStudyIdAndStatus(
+                        study.getId(),
+                        StudyMember.Status.JOINED
+                );
+
+        return StudyResponse.from(study, currentMembers);
+    }
 }

@@ -68,5 +68,9 @@ public class StudyController {
         return ApiResponse.ok(studyService.getMyStudies(memberId));
     }
 
+    @GetMapping("/post/{postId}")
+    public ApiResponse<StudyResponse> getByPostId(@PathVariable Long postId) {
+        return ApiResponse.ok(studyService.getByPostId(postId));
+    }
 
 }

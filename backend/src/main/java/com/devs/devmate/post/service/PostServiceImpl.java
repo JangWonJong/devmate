@@ -9,6 +9,8 @@ import com.devs.devmate.post.dto.PostResponse;
 import com.devs.devmate.post.dto.PostUpdateRequest;
 import com.devs.devmate.post.entity.Post;
 import com.devs.devmate.post.repository.PostRepository;
+import com.devs.devmate.study.repository.StudyMemberRepository;
+import com.devs.devmate.study.repository.StudyRepository;
 import lombok.*;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
@@ -23,6 +25,8 @@ public class PostServiceImpl implements PostService{
 
     private final PostRepository postRepository;
     private final MemberRepository memberRepository;
+    private final StudyRepository studyRepository;
+    private final StudyMemberRepository studyMemberRepository;
 
     private String normalize(String keyword) {
         if (keyword == null) return null;
@@ -39,7 +43,7 @@ public class PostServiceImpl implements PostService{
                 .title(request.getTitle())
                 .content(request.getContent())
                 .member(member)
-                .type(Post.PostType.QUESTION)
+                .type(request.getType())
                 .build();
         return postRepository.save(post).getId();
     }
@@ -108,6 +112,14 @@ public class PostServiceImpl implements PostService{
         if (!post.getMember().getId().equals(memberId)){
             throw new BusinessException(ErrorCode.FORBIDDEN_POST);
         }
+
+        if (post.getType() == Post.PostType.STUDY) {
+            studyRepository.findByPostId(post.getId()).ifPresent(study -> {
+                studyMemberRepository.deleteByStudyId(study.getId());
+                studyRepository.delete(study);
+            });
+        }
+
         postRepository.delete(post);
     }
 
