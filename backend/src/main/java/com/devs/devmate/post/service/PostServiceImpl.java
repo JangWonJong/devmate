@@ -39,6 +39,7 @@ public class PostServiceImpl implements PostService{
                 .title(request.getTitle())
                 .content(request.getContent())
                 .member(member)
+                .type(Post.PostType.QUESTION)
                 .build();
         return postRepository.save(post).getId();
     }

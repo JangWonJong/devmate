@@ -14,6 +14,7 @@ export function AppLayout(){
   const [meLoading, setMeLoading] = useState(false)
   
   const syncRef = useRef(false)
+  const isAuthenticated = me != null
 
   const moveToLogin = useCallback(() => {
     if (loc.pathname === "/login" || loc.pathname === "/signup") return
@@ -29,6 +30,15 @@ export function AppLayout(){
     })
   }, [loc.pathname, loc.search, loc.hash, nav])
 
+  const onLogout = async () => {
+    try {
+      await logout()
+    } finally {
+      tokenStore.clear()
+      nav("/login", {replace: true})
+    }
+  }
+  
   useEffect(() => {
     let alive = true
     const onChange = async () => {
@@ -91,17 +101,14 @@ export function AppLayout(){
        }
     })()
   }, [loggedIn, moveToLogin])
+  
+  useEffect(() => {
+      if (!isAuthenticated) return
 
-  const onLogout = async () => {
-    try {
-      await logout()
-    } finally {
-      tokenStore.clear()
-      nav("/login", {replace: true})
-    }
-  }
-
-  const isAuthenticated = me != null
+      if (loc.pathname === "/login" || loc.pathname === "/signup") {
+        nav("/", { replace: true })
+      }
+    }, [isAuthenticated, loc.pathname, nav])
 
     return (
      <div style={{ fontFamily: "system-ui, sans-serif" }}>

@@ -9,6 +9,7 @@ import { PostDetailPage } from "./pages/PostDetailPage";
 import { EditPostPage } from "./pages/EditPostPage";
 import { RequireAuth } from "./auth/RequireAuth";
 import { ReservationsPage } from "./pages/ReservationsPage";
+import { PublicOnlyRoute } from "./auth/PublicOnlyRoute";
 
 export const router = createBrowserRouter([
     {
@@ -22,8 +23,8 @@ export const router = createBrowserRouter([
 
             { path: "/reservations", element: <ReservationsPage /> },
 
-            { path: "/login", element: <LoginPage /> },
-            { path: "/signup", element: <SignupPage /> },
+            { path: "/login", element: <PublicOnlyRoute> <LoginPage /></PublicOnlyRoute> },
+            { path: "/signup", element: <PublicOnlyRoute> <SignupPage /></PublicOnlyRoute> },
         ]
     }
 ])

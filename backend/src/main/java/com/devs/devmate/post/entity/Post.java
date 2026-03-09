@@ -39,6 +39,7 @@ public class Post extends BaseEntity {
 
     @Enumerated(EnumType.STRING)
     @Column(nullable = false, length = 20)
+    @Builder.Default
     private PostType type = PostType.QUESTION;
 
     public void update(String title, String content, boolean solved){
