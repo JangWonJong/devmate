@@ -58,6 +58,10 @@ public class StudyMember extends BaseEntity {
         return this.status == Status.JOINED;
     }
 
+    public void reJoin() {
+        this.status = Status.JOINED;
+    }
+
     public void changeRoleToLeader() {
         this.role = Role.LEADER;
     }

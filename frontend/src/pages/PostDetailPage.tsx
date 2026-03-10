@@ -11,7 +11,7 @@ import {
   type CommentResponse,
   adoptComment,
 } from "../api/comments";
-import { getStudyByPostId, getStudyMembers, createStudy, getStudy, joinStudy, leaveStudy, closeStudy,
+import { getStudyByPostId, getStudyMembers, createStudy, getStudy, joinStudy, leaveStudy, closeStudy, delegateStudyLeader,
    type StudyMemberResponse, type StudyResponse } from "../api/study";
 
 
@@ -255,6 +255,27 @@ export function PostDetailPage() {
     }
   }
 
+  const onDelegateLeader = async (targetMemberId: number) => {
+    if (!study || !post) return
+
+    const ok = confirm("이 멤버에게 리더를 위임할까요?")
+    if (!ok) return
+
+    try {
+      setStudyError(null)
+      setStudyLoading(true)
+
+      await delegateStudyLeader(study.id, {targetMemberId})
+      await refreshStudySection(post.id)
+
+    } catch (e: any) {
+      setStudyError(e.message ?? "리더 위임 실패")
+    } finally {
+      setStudyLoading(false)
+    }
+
+  }
+
   const onCreateComment = async () => {
     if (!id) return;
     if (!commentInput.trim()) return;
@@ -452,12 +473,34 @@ export function PostDetailPage() {
                 ) : (
                   <ul style={{ margin: 0, paddingLeft: 18 }}>
                     {studyMembers.map((member) => (
-                      <li key={member.memberId} style={{ marginBottom: 4 }}>
-                        {member.nickname}{" "}
-                        {member.role === "LEADER" && (
-                          <span style={{ color: "#666", fontSize: 13 }}>(리더)</span>
-                        )}
-                      </li>
+                  <li
+                    key={member.memberId}
+                    style={{
+                      marginBottom: 8,
+                      display: "flex",
+                      alignItems: "center",
+                      justifyContent: "space-between",
+                      gap: 8,
+                    }}
+                  >
+                    <div>
+                      {member.nickname}{" "}
+                      {member.role === "LEADER" && (
+                        <span style={{ color: "#666", fontSize: 13 }}>(리더)</span>
+                      )}
+                    </div>
+
+                    {isStudyLeader &&
+                      member.role !== "LEADER" &&
+                      member.memberId !== meId && (
+                        <button
+                          style={{ padding: "4px 8px", fontSize: 12 }}
+                          onClick={() => onDelegateLeader(member.memberId)}
+                        >
+                          리더 위임
+                        </button>
+                      )}
+                  </li>
                     ))}
                   </ul>
                 )}

@@ -13,15 +13,23 @@ public class StudyResponse {
 
     private Long id;
     private Long postId;
+    private String postTitle;
+
+    private String authorNickname;
+    private String leaderNickname;
+
     private Integer maxMembers;
     private String status;
     private Long currentMembers;
     private LocalDateTime createdAt;
 
-    public static StudyResponse from(Study study, long currentMembers) {
+    public static StudyResponse from(Study study, long currentMembers, String leaderNickname) {
         return StudyResponse.builder()
                 .id(study.getId())
                 .postId(study.getPost().getId())
+                .postTitle(study.getPost().getTitle())
+                .authorNickname(study.getPost().getMember().getNickname())
+                .leaderNickname(leaderNickname)
                 .maxMembers(study.getMaxMembers())
                 .status(study.getStatus().name())
                 .currentMembers(currentMembers)

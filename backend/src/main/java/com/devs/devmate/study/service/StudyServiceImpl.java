@@ -31,6 +31,16 @@ public class StudyServiceImpl implements StudyService{
     private final PostRepository postRepository;
     private final MemberRepository memberRepository;
 
+
+    private String findLeaderNickname(Long studyId) {
+        return studyMemberRepository.findByStudyIdAndStatus(studyId, StudyMember.Status.JOINED)
+                .stream()
+                .filter(member -> member.getRole() == StudyMember.Role.LEADER)
+                .findFirst()
+                .map(member -> member.getMember().getNickname())
+                .orElse(null);
+    }
+
     // 게시글 작성자만 해당 Study post로 study 생성 가능
     @Override
     public Long create(Long memberId, StudyCreateRequest request) {
@@ -80,8 +90,8 @@ public class StudyServiceImpl implements StudyService{
                 study.getId(),
                 StudyMember.Status.JOINED
         );
-
-        return StudyResponse.from(study, currentMembers);
+        String leaderNickname = findLeaderNickname(study.getId());
+        return StudyResponse.from(study, currentMembers, leaderNickname);
     }
 
     @Override
@@ -96,12 +106,11 @@ public class StudyServiceImpl implements StudyService{
             throw new BusinessException(ErrorCode.STUDY_CLOSED);
         }
 
-
-        Optional<StudyMember> existing = studyMemberRepository
+        Optional<StudyMember> joined = studyMemberRepository
                 .findByStudyIdAndMemberIdAndStatus(
                         studyId, memberId, StudyMember.Status.JOINED);
 
-        if (existing.isPresent()) {
+        if (joined.isPresent()) {
             throw new BusinessException(ErrorCode.ALREADY_JOINED_STUDY);
         }
 
@@ -113,6 +122,20 @@ public class StudyServiceImpl implements StudyService{
             throw new BusinessException(ErrorCode.STUDY_FULL);
         }
 
+        Optional<StudyMember> existing = studyMemberRepository
+                .findByStudyIdAndMemberId(studyId, memberId);
+
+        long nextMembers = currentMembers + 1;
+
+        if (existing.isPresent()) {
+            StudyMember studyMember = existing.get();
+            studyMember.reJoin();
+            if (nextMembers >= study.getMaxMembers()) {
+                study.close();
+            }
+            return study.getId();
+        }
+
         StudyMember studyMember = StudyMember.builder()
                 .study(study)
                 .member(member)
@@ -120,6 +143,10 @@ public class StudyServiceImpl implements StudyService{
                 .build();
 
         studyMemberRepository.save(studyMember);
+
+        if (nextMembers >= study.getMaxMembers()) {
+            study.close();
+        }
 
         return study.getId();
     }
@@ -137,6 +164,10 @@ public class StudyServiceImpl implements StudyService{
 
         if (studyMember.getRole() == StudyMember.Role.LEADER) {
             throw new BusinessException(ErrorCode.LEADER_CANNOT_LEAVE);
+        }
+
+        if (!study.isRecruiting()) {
+            throw new BusinessException(ErrorCode.STUDY_LEAVE_NOT_ALLOWED_AFTER_CLOSE);
         }
 
         studyMember.cancel();
@@ -220,7 +251,7 @@ public class StudyServiceImpl implements StudyService{
     }
 
     @Override
-    @Transactional
+    @Transactional(readOnly = true)
     public List<StudyResponse> getMyStudies(Long memberId) {
         List<StudyMember> studyMembers = studyMemberRepository.findByMemberIdAndStatus(
                 memberId, StudyMember.Status.JOINED
@@ -234,7 +265,9 @@ public class StudyServiceImpl implements StudyService{
                             study.getId(),
                             StudyMember.Status.JOINED
                     );
-                    return StudyResponse.from(study, currentMembers);
+                    String leaderNickname = findLeaderNickname(study.getId());
+
+                    return StudyResponse.from(study, currentMembers, leaderNickname);
                 })
                 .toList();
     }
@@ -252,6 +285,8 @@ public class StudyServiceImpl implements StudyService{
                         StudyMember.Status.JOINED
                 );
 
-        return StudyResponse.from(study, currentMembers);
+        String leaderNickname = findLeaderNickname(study.getId());
+
+        return StudyResponse.from(study, currentMembers, leaderNickname);
     }
 }

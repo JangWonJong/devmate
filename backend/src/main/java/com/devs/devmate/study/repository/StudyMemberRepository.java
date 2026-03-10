@@ -10,9 +10,11 @@ public interface StudyMemberRepository extends JpaRepository<StudyMember, Long> 
 
     long countByStudyIdAndStatus(Long studyId, StudyMember.Status status);
 
-        Optional<StudyMember> findByStudyIdAndMemberIdAndStatus(
+    Optional<StudyMember> findByStudyIdAndMemberIdAndStatus(
             Long studyId, Long memberId, StudyMember.Status status
     );
+
+    Optional<StudyMember> findByStudyIdAndMemberId(Long studyId, Long memberId);
 
     List<StudyMember> findByStudyIdAndStatus(Long studyId, StudyMember.Status status);
 

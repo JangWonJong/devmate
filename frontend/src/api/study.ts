@@ -9,6 +9,9 @@ export type StudyCreateRequest = {
 export type StudyResponse = {
     id: number
     postId: number
+    postTitle: string
+    authorNickname: string
+    leaderNickname: string
     maxMembers: number
     status: string
     currentMembers: number

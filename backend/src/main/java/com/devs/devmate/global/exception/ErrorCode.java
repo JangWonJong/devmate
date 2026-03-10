@@ -51,7 +51,8 @@ public enum ErrorCode {
     FORBIDDEN_STUDY_CLOSE(HttpStatus.FORBIDDEN, "STUDY_403_2", "스터디 리더만 모집을 마감할 수 있습니다."),
     STUDY_ALREADY_CLOSED(HttpStatus.BAD_REQUEST, "STUDY_400_5", "이미 모집이 마감된 스터디입니다."),
     FORBIDDEN_STUDY_LEADER_DELEGATE(HttpStatus.FORBIDDEN, "STUDY_403_3", "스터디 리더만 리더를 위임할 수 있습니다."),
-    INVALID_STUDY_LEADER_TARGET(HttpStatus.BAD_REQUEST, "STUDY_400_6", "리더 위임 대상이 올바르지 않습니다.");
+    INVALID_STUDY_LEADER_TARGET(HttpStatus.BAD_REQUEST, "STUDY_400_6", "리더 위임 대상이 올바르지 않습니다."),
+    STUDY_LEAVE_NOT_ALLOWED_AFTER_CLOSE(HttpStatus.BAD_REQUEST, "STUDY_400_8", "모집 마감된 스터디는 직접 탈퇴할 수 없습니다.");
 
     private final HttpStatus status;
     private final String code;

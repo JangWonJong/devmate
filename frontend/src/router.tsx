@@ -10,6 +10,7 @@ import { EditPostPage } from "./pages/EditPostPage";
 import { RequireAuth } from "./auth/RequireAuth";
 import { ReservationsPage } from "./pages/ReservationsPage";
 import { PublicOnlyRoute } from "./auth/PublicOnlyRoute";
+import { MyStudiesPage } from "./pages/MyStudiesPage";
 
 export const router = createBrowserRouter([
     {
@@ -25,6 +26,9 @@ export const router = createBrowserRouter([
 
             { path: "/login", element: <PublicOnlyRoute> <LoginPage /></PublicOnlyRoute> },
             { path: "/signup", element: <PublicOnlyRoute> <SignupPage /></PublicOnlyRoute> },
+
+            { path: "/mystudies", element:  <RequireAuth><MyStudiesPage /></RequireAuth> },
+
         ]
     }
 ])
