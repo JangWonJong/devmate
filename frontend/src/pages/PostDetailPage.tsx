@@ -27,7 +27,7 @@ function StatusBadge({ solved }: { solved: boolean }) {
         color: "#111",
       }}
     >
-      {solved ? "해결됨" : "해결 전"}
+      {solved ? "고민 해결됨" : "고민 해결 전"}
     </span>
   );
 }
@@ -565,7 +565,7 @@ export function PostDetailPage() {
                 style={{ padding: "10px 14px" }}
                 onClick={onSolve}
               >
-                해결 처리
+                고민 해결
               </button>
             )}
 

@@ -3,6 +3,7 @@ package com.devs.devmate.reservation.service;
 import com.devs.devmate.reservation.dto.ReservationCreateRequest;
 import com.devs.devmate.reservation.dto.ReservationCreateResponse;
 import com.devs.devmate.reservation.dto.ReservationResponse;
+import com.devs.devmate.reservation.dto.StudyReservationCreateRequest;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 
@@ -19,5 +20,7 @@ public interface ReservationService {
     Page<ReservationResponse> listAllByDate(LocalDate date, Pageable pageable);
 
     void cancel(Long memberId, Long reservationId);
+
+     ReservationCreateResponse createForStudy(Long memberId, Long studyId, StudyReservationCreateRequest req);
 
 }

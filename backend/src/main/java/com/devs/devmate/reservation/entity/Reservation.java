@@ -3,6 +3,7 @@ package com.devs.devmate.reservation.entity;
 
 import com.devs.devmate.global.entity.BaseEntity;
 import com.devs.devmate.member.entity.Member;
+import com.devs.devmate.study.entity.Study;
 import jakarta.persistence.*;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
@@ -21,6 +22,7 @@ import java.time.LocalTime;
         indexes = {
             @Index(name = "idx_res_room_date", columnList = "room_id,res_date"),
             @Index(name = "idx_res_member_date", columnList = "member_id,res_date"),
+            @Index(name = "idx_res_study_date", columnList = "study_id,res_date")
         })
 public class Reservation extends BaseEntity {
 
@@ -37,6 +39,10 @@ public class Reservation extends BaseEntity {
     @ManyToOne(fetch = FetchType.LAZY, optional = false)
     @JoinColumn(name = "room_id", nullable = false)
     private Room room;
+
+    @ManyToOne(fetch = FetchType.LAZY, optional = false)
+    @JoinColumn(name = "study_id", nullable = false)
+    private Study study;
 
     @Column(name = "res_date", nullable = false)
     private LocalDate date;

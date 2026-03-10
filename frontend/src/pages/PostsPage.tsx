@@ -55,7 +55,7 @@ function StatusBadge({ solved }: { solved: boolean }) {
         whiteSpace: "nowrap",
       }}
     >
-      {solved ? "해결됨" : "해결 전"}
+      {solved ? "고민 해결됨" : "고민 해결 전"}
     </span>
   )
 }

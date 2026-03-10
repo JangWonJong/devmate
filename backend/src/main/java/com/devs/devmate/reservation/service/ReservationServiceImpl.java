@@ -7,10 +7,15 @@ import com.devs.devmate.member.repository.MemberRepository;
 import com.devs.devmate.reservation.dto.ReservationCreateRequest;
 import com.devs.devmate.reservation.dto.ReservationCreateResponse;
 import com.devs.devmate.reservation.dto.ReservationResponse;
+import com.devs.devmate.reservation.dto.StudyReservationCreateRequest;
 import com.devs.devmate.reservation.entity.Reservation;
 import com.devs.devmate.reservation.entity.Room;
 import com.devs.devmate.reservation.repository.ReservationRepository;
 import com.devs.devmate.reservation.repository.RoomRepository;
+import com.devs.devmate.study.entity.Study;
+import com.devs.devmate.study.entity.StudyMember;
+import com.devs.devmate.study.repository.StudyMemberRepository;
+import com.devs.devmate.study.repository.StudyRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
@@ -28,6 +33,13 @@ public class ReservationServiceImpl implements ReservationService{
     private final ReservationRepository reservationRepository;
     private final RoomRepository roomRepository;
     private final MemberRepository memberRepository;
+    private final StudyRepository studyRepository;
+    private final StudyMemberRepository studyMemberRepository;
+
+    private Room findRoom(Long roomId) {
+        return roomRepository.findById(roomId)
+                .orElseThrow(() -> new BusinessException(ErrorCode.ROOM_NOT_FOUND));
+    }
 
     @Override
     public ReservationCreateResponse create(Long memberId, ReservationCreateRequest req) {
@@ -35,8 +47,7 @@ public class ReservationServiceImpl implements ReservationService{
             throw new BusinessException(ErrorCode.RESERVATION_TIME_INVALID);
         }
 
-        Room room = roomRepository.findById(req.roomId())
-                .orElseThrow(() -> new BusinessException(ErrorCode.ROOM_NOT_FOUND));
+        Room room = findRoom(req.roomId());
 
         Member member = memberRepository.findById(memberId)
                 .orElseThrow(() -> new BusinessException(ErrorCode.MEMBER_NOT_FOUND));
@@ -101,5 +112,55 @@ public class ReservationServiceImpl implements ReservationService{
             throw new BusinessException(ErrorCode.FORBIDDEN_RESERVATION);
         }
         r.cancel();
+    }
+
+    @Override
+    public ReservationCreateResponse createForStudy(Long memberId, Long studyId, StudyReservationCreateRequest req) {
+        if (!req.startTime().isBefore(req.endTime())) {
+            throw new BusinessException(ErrorCode.RESERVATION_TIME_INVALID);
+        }
+
+        Study study = studyRepository.findById(studyId)
+                .orElseThrow(() -> new BusinessException(ErrorCode.STUDY_NOT_FOUND));
+
+        if (studyMemberRepository.findByStudyIdAndMemberIdAndStatus(
+                studyId, memberId, StudyMember.Status.JOINED
+        ).isEmpty()) {
+            throw new BusinessException(ErrorCode.FORBIDDEN_RESERVATION);
+        }
+
+        Room room = findRoom(req.roomId());
+
+        Member member = memberRepository.findById(memberId)
+                .orElseThrow(() -> new BusinessException(ErrorCode.MEMBER_NOT_FOUND));
+
+        boolean overlap = reservationRepository.existsOverlap(
+                room.getId(),
+                req.date(),
+                req.startTime(),
+                req.endTime(),
+                Reservation.Status.ACTIVE
+        );
+
+        if (overlap) {
+            throw new BusinessException(ErrorCode.RESERVATION_OVERLAP);
+        }
+
+        String title = "[스터디]" + study.getPost().getTitle();
+
+        Reservation saved = reservationRepository.save(
+                Reservation.builder()
+                        .member(member)
+                        .room(room)
+                        .study(study)
+                        .date(req.date())
+                        .startTime(req.startTime())
+                        .endTime(req.endTime())
+                        .title(title)
+                        .status(Reservation.Status.ACTIVE)
+                        .build()
+        );
+
+        return new ReservationCreateResponse(saved.getId());
     }
 }

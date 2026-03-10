@@ -3,6 +3,9 @@ package com.devs.devmate.study.controller;
 
 import com.devs.devmate.global.common.ApiResponse;
 import com.devs.devmate.global.security.SecurityUtil;
+import com.devs.devmate.reservation.dto.ReservationCreateResponse;
+import com.devs.devmate.reservation.dto.StudyReservationCreateRequest;
+import com.devs.devmate.reservation.service.ReservationService;
 import com.devs.devmate.study.dto.StudyCreateRequest;
 import com.devs.devmate.study.dto.StudyLeaderDelegateRequest;
 import com.devs.devmate.study.dto.StudyMemberResponse;
@@ -20,6 +23,7 @@ import java.util.List;
 public class StudyController {
 
     private final StudyService studyService;
+    private final ReservationService reservationService;
 
     @PostMapping
     public ApiResponse<Long> create(@RequestBody @Valid StudyCreateRequest request) {
@@ -71,6 +75,15 @@ public class StudyController {
     @GetMapping("/post/{postId}")
     public ApiResponse<StudyResponse> getByPostId(@PathVariable Long postId) {
         return ApiResponse.ok(studyService.getByPostId(postId));
+    }
+
+    @PostMapping("/{studyId}/reservations")
+    public ApiResponse<ReservationCreateResponse> createReservation(
+            @PathVariable Long studyId,
+            @RequestBody @Valid StudyReservationCreateRequest request
+            ) {
+        Long memberId = SecurityUtil.currentMemberId();
+        return ApiResponse.ok(reservationService.createForStudy(memberId, studyId, request));
     }
 
 }
