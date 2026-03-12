@@ -35,10 +35,10 @@ function toScope(v: string | null): Scope {
   return v === "mine" ? "mine" : "all"
 }
 
-function addOneHour(time: string) {
-  const [h, m] = time.split(":").map(Number)
-  const nextHour = h + 1
-  return `${String(nextHour).padStart(2, "0")}:${String(m).padStart(2,"0")}`
+function addHours(time: string, hours: number) {
+    const [h, m] = time.split(":").map(Number)
+    const nextHour = h + hours
+    return `${String(nextHour).padStart(2, "0")}:${String(m).padStart(2, "0")}`
 }
 
 function makeTimeSlots() {
@@ -81,6 +81,7 @@ export function ReservationsPage() {
 
   const [rooms, setRooms] = useState<RoomResponse[]>([])
   const [roomId, setRoomId] = useState<number | null>(null)
+  const [durationHours, setDurationHours] = useState<number>(1)
 
   const [title, setTitle] = useState("")
   const [selectedTime, setSelectedTime] = useState<string | null>(null)
@@ -169,7 +170,7 @@ export function ReservationsPage() {
 
   useEffect(() => {
     setSelectedTime(null)
-  }, [date, roomId, scope])
+  }, [date, roomId, scope, durationHours])
 
   const emptyText = useMemo(() => {
     if (scope === "mine") {
@@ -181,12 +182,31 @@ export function ReservationsPage() {
 
   const timeSlots = useMemo(() => makeTimeSlots(), [])
 
-  const isReservedTime = useCallback(
-    (time: string) => {
-      return items.some((r) => 
-        r.roomId === roomId &&
-        r.startTime.slice(0,5) === time)
-    },[items, roomId]
+  
+  const canReserveFromTime = useCallback(
+    (startTime: string) => {
+        if (!roomId) return false
+
+        const [hour] = startTime.split(":").map(Number)
+
+        for (let i = 0; i < durationHours; i++) {
+            const currentHour = hour + i
+            if (currentHour > 20) {
+                return false
+            }
+            
+            const currentTime = `${String(currentHour).padStart(2, "0")}:00`
+            const reserved = items.some(
+                (r) => r.roomId === roomId && r.startTime.slice(0, 5) === currentTime
+            )
+
+            if (reserved) {
+                return false
+            }
+        }
+        
+        return true
+    }, [items, roomId, durationHours]
   )
 
   const onCreate = async () => {
@@ -210,12 +230,13 @@ export function ReservationsPage() {
         roomId,
         date,
         startTime: selectedTime,
-        endTime: addOneHour(selectedTime),
+        endTime: addHours(selectedTime, durationHours),
         title: t,
       })
 
       setTitle("")
       setSelectedTime(null)
+      setDurationHours(1)
 
       if (scope === "mine") await loadMine()
       else await loadAll()
@@ -336,7 +357,18 @@ export function ReservationsPage() {
               style={{ flex: 1, minWidth: 220, padding: "8px 10px", border: "1px solid #ddd" }}
             />
           </div>
-
+          <div style={{ marginBottom: 12 }}>
+          <div style={{ marginBottom: 6, fontSize: 13, color: "#666" }}>예약 시간</div>
+          <select
+            value={durationHours}
+            onChange={(e) => setDurationHours(Number(e.target.value))}
+            style={{ padding: "8px 10px", border: "1px solid #ddd" }}
+          >
+            <option value={1}>1시간</option>
+            <option value={2}>2시간</option>
+            <option value={3}>3시간</option>
+          </select>
+        </div>
           <div style={{ marginBottom: 8, fontSize: 13, color: "#666" }}>
             시간 선택 (1시간 단위)
           </div>
@@ -350,22 +382,26 @@ export function ReservationsPage() {
             }}
           >
             {timeSlots.map((time) => {
-              const reserved = isReservedTime(time)
+              const unavailable = !canReserveFromTime(time)
               const selected = selectedTime === time
 
               return (
                 <button
                   key={time}
                   type="button"
-                  disabled={reserved || busy}
+                  disabled={unavailable || busy}
                   onClick={() => setSelectedTime(time)}
                   style={{
                     padding: "10px 12px",
-                    border: "1px solid #ddd",
-                    background: reserved ? "#f1f1f1" : selected ? "#111" : "#fff",
-                    color: reserved ? "#999" : selected ? "#fff" : "#111",
-                    cursor: reserved ? "not-allowed" : "pointer",
-                  }}
+                    border: unavailable
+                      ? "1px solid #ddd"
+                      : selected
+                      ? "2px solid #111"
+                      : "1px solid #ddd",
+                    background: unavailable ? "#f1f1f1" : selected ? "#111" : "#fff",
+                    color: unavailable ? "#999" : selected ? "#fff" : "#111",
+                    cursor: unavailable ? "not-allowed" : "pointer",
+                }}
                 >
                   {time}
                 </button>
@@ -376,7 +412,7 @@ export function ReservationsPage() {
           <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", gap: 8, flexWrap: "wrap" }}>
             <div style={{ fontSize: 13, color: "#666" }}>
               {selectedTime
-                ? `선택한 시간: ${selectedTime} ~ ${addOneHour(selectedTime)}`
+                ? `선택한 시간: ${selectedTime} ~ ${addHours(selectedTime, durationHours)} (${durationHours}시간)`
                 : "시간을 선택하세요"}
             </div>
 

@@ -20,10 +20,10 @@ function makeTimeSlots() {
   return slots
 }
 
-function addOneHour(time: string) {
-  const [h, m] = time.split(":").map(Number)
-  const nextHour = h + 1
-  return `${String(nextHour).padStart(2, "0")}:${String(m).padStart(2, "0")}`
+function addHours(time: string, hours: number) {
+    const [h, m] = time.split(":").map(Number)
+    const nextHour = h + hours
+    return `${String(nextHour).padStart(2, "0")}:${String(m).padStart(2, "0")}`
 }
 
 export function StudyReservationPage() {
@@ -33,6 +33,7 @@ export function StudyReservationPage() {
   const [study, setStudy] = useState<StudyResponse | null>(null)
   const [rooms, setRooms] = useState<RoomResponse[]>([])
   const [roomId, setRoomId] = useState<number | null>(null)
+  const [durationHours, setDurationHours] = useState<number>(1)
 
   const [date, setDate] = useState(todayString())
   const [selectedTime, setSelectedTime] = useState<string>("")
@@ -83,7 +84,7 @@ export function StudyReservationPage() {
 
   useEffect(() => {
     setSelectedTime("")
-  }, [date, roomId])
+  }, [date, roomId, durationHours])
 
   useEffect(() => {
     ;(async () => {
@@ -103,7 +104,7 @@ export function StudyReservationPage() {
     })()
   }, [studyId])
 
-  const isReservedTime = useCallback(
+  /* const isReservedTime = useCallback(
     (time: string) => {
       return items.some(
         (r) => r.roomId === roomId && r.startTime.slice(0, 5) === time
@@ -111,11 +112,38 @@ export function StudyReservationPage() {
     },
     [items, roomId]
   )
+ */
+  const canReserveFromTime = useCallback(
+    (startTime: string) => {
+        if (!roomId) return false
+
+        const [hour] = startTime.split(":").map(Number)
+
+        for (let i = 0; i < durationHours; i++) {
+            const currentHour = hour + i
+            if (currentHour > 20) {
+                return false
+            }
+            
+            const currentTime = `${String(currentHour).padStart(2, "0")}:00`
+
+            const reserved = items.some(
+                (r) => r.roomId === roomId && r.startTime.slice(0, 5) === currentTime
+            )
+
+            if (reserved) {
+                return false
+            }
+        }
+        
+        return true
+    }, [items, roomId, durationHours]
+  )
 
   const endTime = useMemo(() => {
     if (!selectedTime) return ""
-    return addOneHour(selectedTime)
-  }, [selectedTime])
+    return addHours(selectedTime, durationHours)
+  }, [selectedTime, durationHours])
 
   const onSubmit = async () => {
     if (!studyId) return
@@ -227,7 +255,23 @@ export function StudyReservationPage() {
               ))}
             </select>
           </div>
-
+              <div>
+            <label style={{ display: "block", marginBottom: 6 }}>예약 시간</label>
+            <select
+                value={durationHours}
+                onChange={(e) => setDurationHours(Number(e.target.value))}
+                style={{ padding: 8, border: "1px solid #ddd", borderRadius: 8 }}
+            >
+                <option value={1}>1시간</option>
+                <option value={2}>2시간</option>
+                <option value={3}>3시간</option>
+            </select>
+            </div>
+          <div style={{ color: "#666" }}>
+            {selectedTime
+              ? `선택한 시간: ${selectedTime} ~ ${endTime} (${durationHours}시간)`
+              : "시간을 선택해 주세요."}
+          </div>
           <div>
             <div style={{ marginBottom: 10 }}>시간 선택 (1시간 단위)</div>
 
@@ -239,26 +283,26 @@ export function StudyReservationPage() {
               }}
             >
               {timeSlots.map((time) => {
-                const reserved = isReservedTime(time)
+                const unavailableble = !canReserveFromTime(time)
                 const selected = selectedTime === time
 
                 return (
                   <button
                     key={time}
                     type="button"
-                    disabled={reserved || saving}
+                    disabled={unavailableble || saving}
                     onClick={() => setSelectedTime(time)}
                     style={{
                       padding: "16px 12px",
                       borderRadius: 12,
-                      border: reserved
+                      border: unavailableble
                         ? "1px solid #ddd"
                         : selected
                         ? "2px solid #111"
                         : "1px solid #ddd",
-                      background: reserved ? "#f1f1f1" : selected ? "#111" : "#fff",
-                      color: reserved ? "#999" : selected ? "#fff" : "#111",
-                      cursor: reserved ? "not-allowed" : "pointer",
+                      background: unavailableble ? "#f1f1f1" : selected ? "#111" : "#fff",
+                      color: unavailableble ? "#999" : selected ? "#fff" : "#111",
+                      cursor: unavailableble ? "not-allowed" : "pointer",
                     }}
                   >
                     {time}
@@ -267,15 +311,9 @@ export function StudyReservationPage() {
               })}
             </div>
           </div>
-
-          <div style={{ color: "#666" }}>
-            {selectedTime
-              ? `선택한 시간: ${selectedTime} ~ ${endTime}`
-              : "시간을 선택해 주세요."}
-          </div>
-
+            
+          
           {error && <div style={{ color: "crimson" }}>{error}</div>}
-
           <div style={{ display: "flex", gap: 8 }}>
             <button
               type="button"
