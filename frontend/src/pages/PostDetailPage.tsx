@@ -507,23 +507,38 @@ export function PostDetailPage() {
               </div>
             {loggedIn && (
               <div style={{ display: "flex", gap: 8, marginTop: 16, flexWrap: "wrap" }}>
+                {isStudyJoined && study && (
+                  <button
+                    style={{ padding: "8px 12px" }}
+                    onClick={() => nav(`/studies/${study.id}/reservation`)}
+                  >
+                    스터디 예약
+                  </button>
+                )}
+
                 {isRecruiting && !isStudyJoined && (
                   <button
-                    style={{ padding: "8px 12px" }} onClick={onJoinStudy}>
+                    style={{ padding: "8px 12px" }}
+                    onClick={onJoinStudy}
+                  >
                     참가하기
                   </button>
                 )}
 
                 {isRecruiting && isStudyJoined && !isStudyLeader && (
                   <button
-                    style={{ padding: "8px 12px" }} onClick={onLeaveStudy}>
+                    style={{ padding: "8px 12px" }}
+                    onClick={onLeaveStudy}
+                  >
                     탈퇴하기
                   </button>
                 )}
 
-                {isRecruiting && isStudyLeader && (
+                {isRecruiting && isStudyJoined && isStudyLeader && (
                   <button
-                    style={{ padding: "8px 12px" }}  onClick={onCloseStudy}>
+                    style={{ padding: "8px 12px" }}
+                    onClick={onCloseStudy}
+                  >
                     모집 마감
                   </button>
                 )}
