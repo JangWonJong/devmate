@@ -34,6 +34,10 @@ public enum ErrorCode {
     RESERVATION_OVERLAP(HttpStatus.CONFLICT, "RESERVATION_409", "이미 예약된 시간대입니다."),
     FORBIDDEN_RESERVATION(HttpStatus.FORBIDDEN, "RESERVATION_403", "예약에 대한 권한이 없습니다."),
     INVALID_RESERVATION_DURATION(HttpStatus.BAD_REQUEST, "RESERVATION_400_2","예약은 1시간 이상 3시간 이하만 가능합니다."),
+    PAST_RESERVATION_NOT_ALLOWED(HttpStatus.BAD_REQUEST, "RESERVATION_400_3", "지난 시간으로는 예약할 수 없습니다."),
+    RESERVATION_CANCEL_NOT_ALLOWED(HttpStatus.BAD_REQUEST, "RESERVATION_400_4", "예약 시작 1시간 전까지만 취소할 수 있습니다."),
+    RESERVATION_DAILY_LIMIT_EXCEEDED(HttpStatus.BAD_REQUEST, "RESERVATION_400_5", "하루 최대 3개의 예약만 가능합니다."),
+    RESERVATION_DAILY_HOURS_EXCEEDED(HttpStatus.BAD_REQUEST, "RESERVATION_400_6", "하루 총 예약 가능 시간은 최대 5시간입니다."),
 
     // COMMENT
     COMMENT_NOT_FOUND(HttpStatus.NOT_FOUND, "COMMENT_404", "댓글을 찾을 수 없습니다."),

@@ -13,6 +13,7 @@ import org.springframework.data.repository.query.Param;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.time.LocalTime;
+import java.util.List;
 
 public interface ReservationRepository extends JpaRepository<Reservation, Long> {
 
@@ -39,6 +40,10 @@ public interface ReservationRepository extends JpaRepository<Reservation, Long> 
 
     @EntityGraph(attributePaths = {"room", "member", "study"})
     Page<Reservation> findByStudyIdAndStatus(Long studyId, Status status, Pageable pageable);
+
+    List<Reservation> findByMemberIdAndDateAndStatus(
+            Long memberId, LocalDate date, Reservation.Status status
+    );
 
     void deleteAllByStudyId(Long studyId);
 

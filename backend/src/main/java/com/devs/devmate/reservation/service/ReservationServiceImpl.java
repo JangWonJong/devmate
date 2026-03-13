@@ -24,7 +24,9 @@ import org.springframework.transaction.annotation.Transactional;
 
 import java.time.Duration;
 import java.time.LocalDate;
+import java.time.LocalDateTime;
 import java.time.LocalTime;
+import java.util.List;
 
 
 @Service
@@ -68,11 +70,61 @@ public class ReservationServiceImpl implements ReservationService{
         }
     }
 
+    private void validateNotPastReservation(LocalDate date, LocalTime startTime) {
+        if (date == null || startTime == null) {
+            throw new BusinessException(ErrorCode.RESERVATION_TIME_INVALID);
+        }
+
+        LocalDate today = LocalDate.now();
+        LocalTime now = LocalTime.now();
+
+        if (date.isBefore(today)) {
+            throw new BusinessException(ErrorCode.PAST_RESERVATION_NOT_ALLOWED);
+        }
+        if (date.isEqual(today) && !startTime.isAfter(now)) {
+            throw new BusinessException(ErrorCode.PAST_RESERVATION_NOT_ALLOWED);
+        }
+    }
+
+    private void validateCancelable(Reservation reservation) {
+        LocalDateTime reservationStart = LocalDateTime.of(
+                reservation.getDate(), reservation.getStartTime()
+        );
+
+        LocalDateTime cancelDeadline = reservationStart.minusHours(1);
+        LocalDateTime now = LocalDateTime.now();
+
+        if (now.isAfter(cancelDeadline)) {
+            throw new BusinessException(ErrorCode.RESERVATION_CANCEL_NOT_ALLOWED);
+        }
+    }
+
+    private void validateDailyReservationPolicy(Long memberId, LocalDate date, LocalTime startTime, LocalTime endTime) {
+        List<Reservation> reservations = reservationRepository.findByMemberIdAndDateAndStatus(
+                memberId, date, Reservation.Status.ACTIVE
+        );
+
+        if (reservations.size() >= 3) {
+            throw new BusinessException(ErrorCode.RESERVATION_DAILY_LIMIT_EXCEEDED);
+        }
+
+        long reservedMinutes = reservations.stream()
+                .mapToLong(r -> Duration.between(startTime, endTime).toMinutes())
+                .sum();
+
+        long newReservationMinutes = Duration.between(startTime, endTime).toMinutes();
+
+        if (reservedMinutes + newReservationMinutes > 300) {
+            throw new BusinessException(ErrorCode.RESERVATION_DAILY_HOURS_EXCEEDED);
+        }
+    }
+
     @Override
     public ReservationCreateResponse create(Long memberId, ReservationCreateRequest req) {
 
         validateReservationTime(req.startTime(), req.endTime());
-
+        validateNotPastReservation(req.date(), req.startTime());
+        validateDailyReservationPolicy(memberId, req.date(), req.startTime(), req.endTime());
         Room room = findRoom(req.roomId());
 
         Member member = memberRepository.findById(memberId)
@@ -89,6 +141,48 @@ public class ReservationServiceImpl implements ReservationService{
                         .startTime(req.startTime())
                         .endTime(req.endTime())
                         .title(req.title().trim())
+                        .status(Reservation.Status.ACTIVE)
+                        .build()
+        );
+
+        return new ReservationCreateResponse(saved.getId());
+    }
+
+    @Override
+    public ReservationCreateResponse createForStudy(Long memberId, Long studyId, StudyReservationCreateRequest req) {
+
+        validateReservationTime(req.startTime(), req.endTime());
+        validateNotPastReservation(req.date(), req.startTime());
+        validateDailyReservationPolicy(memberId, req.date(), req.startTime(), req.endTime());
+
+        Study study = studyRepository.findById(studyId)
+                .orElseThrow(() -> new BusinessException(ErrorCode.STUDY_NOT_FOUND));
+
+        if (studyMemberRepository.findByStudyIdAndMemberIdAndStatus(
+                studyId, memberId, StudyMember.Status.JOINED
+        ).isEmpty()) {
+            throw new BusinessException(ErrorCode.FORBIDDEN_STUDY_RESERVATION);
+        }
+
+        Room room = findRoom(req.roomId());
+
+        Member member = memberRepository.findById(memberId)
+                .orElseThrow(() -> new BusinessException(ErrorCode.MEMBER_NOT_FOUND));
+
+        validateReservationOverlap(
+                room.getId(), req.date(), req.startTime(), req.endTime());
+
+        String title = "[스터디]" + study.getPost().getTitle();
+
+        Reservation saved = reservationRepository.save(
+                Reservation.builder()
+                        .member(member)
+                        .room(room)
+                        .study(study)
+                        .date(req.date())
+                        .startTime(req.startTime())
+                        .endTime(req.endTime())
+                        .title(title)
                         .status(Reservation.Status.ACTIVE)
                         .build()
         );
@@ -126,52 +220,16 @@ public class ReservationServiceImpl implements ReservationService{
 
     @Override
     public void cancel(Long memberId, Long reservationId) {
-        Reservation r = reservationRepository.findById(reservationId)
+        Reservation reservation = reservationRepository.findById(reservationId)
                 .orElseThrow(() -> new BusinessException(ErrorCode.RESERVATION_NOT_FOUND));
-        if (!r.getMember().getId().equals(memberId)) {
+
+        if (!reservation.getMember().getId().equals(memberId)) {
             throw new BusinessException(ErrorCode.FORBIDDEN_RESERVATION);
         }
-        r.cancel();
-    }
 
-    @Override
-    public ReservationCreateResponse createForStudy(Long memberId, Long studyId, StudyReservationCreateRequest req) {
+        validateCancelable(reservation);
 
-        validateReservationTime(req.startTime(), req.endTime());
-
-        Study study = studyRepository.findById(studyId)
-                .orElseThrow(() -> new BusinessException(ErrorCode.STUDY_NOT_FOUND));
-
-        if (studyMemberRepository.findByStudyIdAndMemberIdAndStatus(
-                studyId, memberId, StudyMember.Status.JOINED
-        ).isEmpty()) {
-            throw new BusinessException(ErrorCode.FORBIDDEN_STUDY_RESERVATION);
-        }
-
-        Room room = findRoom(req.roomId());
-
-        Member member = memberRepository.findById(memberId)
-                .orElseThrow(() -> new BusinessException(ErrorCode.MEMBER_NOT_FOUND));
-
-        validateReservationOverlap(
-                room.getId(), req.date(), req.startTime(), req.endTime());
-
-        String title = "[스터디]" + study.getPost().getTitle();
-
-        Reservation saved = reservationRepository.save(
-                Reservation.builder()
-                        .member(member)
-                        .room(room)
-                        .study(study)
-                        .date(req.date())
-                        .startTime(req.startTime())
-                        .endTime(req.endTime())
-                        .title(title)
-                        .status(Reservation.Status.ACTIVE)
-                        .build()
-        );
-
-        return new ReservationCreateResponse(saved.getId());
+        reservation.cancel();
     }
 
     @Override

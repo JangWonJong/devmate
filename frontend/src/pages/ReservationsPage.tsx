@@ -212,7 +212,7 @@ export function ReservationsPage() {
     } catch (e: any) {
       const status = e?.response?.status
       if (status === 409) setErr("이미 예약된 시간대입니다.")
-      else if (status === 400) setErr("예약 시간을 확인해주세요.")
+      //else if (status === 400) setErr(apiErrorMessage(e, "예약 시간을 확인해주세요."))
       else setErr(apiErrorMessage(e, "예약 생성 실패"))
     } finally {
       setBusy(false)

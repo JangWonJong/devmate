@@ -16,6 +16,7 @@ import {
 import { ReservationTimeline } from "./RservationTimeline"
 import { pageStyle, cardStyle, inputStyle, primaryButtonStyle, secondaryButtonStyle, 
   mutedBoxStyle, errorBoxStyle, getSlotButtonStyle } from "../ui/properties"
+import { apiErrorMessage } from "../api/error"
 
 export function StudyReservationPage() {
   const nav = useNavigate()
@@ -132,7 +133,7 @@ export function StudyReservationPage() {
       alert("스터디 예약이 완료되었습니다.")
       nav(`/posts/${study?.postId}`)
     } catch (e: any) {
-      setErr(e.message ?? "스터디 예약 실패")
+      setErr(apiErrorMessage(e, "스터디 예약 실패"))
     } finally {
       setSaving(false)
     }
