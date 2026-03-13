@@ -22,7 +22,9 @@ import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.time.Duration;
 import java.time.LocalDate;
+import java.time.LocalTime;
 
 
 @Service
@@ -41,25 +43,43 @@ public class ReservationServiceImpl implements ReservationService{
                 .orElseThrow(() -> new BusinessException(ErrorCode.ROOM_NOT_FOUND));
     }
 
-    @Override
-    public ReservationCreateResponse create(Long memberId, ReservationCreateRequest req) {
-        if (!req.startTime().isBefore(req.endTime())) {
+    private void validateReservationTime(LocalTime startTime, LocalTime endTime) {
+        if (startTime == null || endTime == null) {
             throw new BusinessException(ErrorCode.RESERVATION_TIME_INVALID);
         }
+
+        if (!startTime.isBefore(endTime)) {
+            throw new BusinessException(ErrorCode.RESERVATION_TIME_INVALID);
+        }
+
+        long minutes = Duration.between(startTime, endTime).toMinutes();
+        if (minutes < 60 || minutes > 180) {
+            throw new BusinessException(ErrorCode.INVALID_RESERVATION_DURATION);
+        }
+    }
+
+    private void validateReservationOverlap(Long roomId, LocalDate date, LocalTime startTime, LocalTime endTime) {
+        boolean overlap = reservationRepository.existsOverlap(
+                roomId, date, startTime, endTime,
+                Reservation.Status.ACTIVE
+        );
+        if (overlap) {
+            throw new BusinessException(ErrorCode.RESERVATION_OVERLAP);
+        }
+    }
+
+    @Override
+    public ReservationCreateResponse create(Long memberId, ReservationCreateRequest req) {
+
+        validateReservationTime(req.startTime(), req.endTime());
 
         Room room = findRoom(req.roomId());
 
         Member member = memberRepository.findById(memberId)
                 .orElseThrow(() -> new BusinessException(ErrorCode.MEMBER_NOT_FOUND));
 
-        boolean overlap = reservationRepository.existsOverlap(
-                room.getId(),
-                req.date(),
-                req.startTime(),
-                req.endTime(),
-                Reservation.Status.ACTIVE
-        );
-        if (overlap) throw new BusinessException(ErrorCode.RESERVATION_OVERLAP);
+        validateReservationOverlap(
+                room.getId(), req.date(), req.startTime(), req.endTime());
 
         Reservation saved = reservationRepository.save(
                 Reservation.builder()
@@ -116,9 +136,8 @@ public class ReservationServiceImpl implements ReservationService{
 
     @Override
     public ReservationCreateResponse createForStudy(Long memberId, Long studyId, StudyReservationCreateRequest req) {
-        if (!req.startTime().isBefore(req.endTime())) {
-            throw new BusinessException(ErrorCode.RESERVATION_TIME_INVALID);
-        }
+
+        validateReservationTime(req.startTime(), req.endTime());
 
         Study study = studyRepository.findById(studyId)
                 .orElseThrow(() -> new BusinessException(ErrorCode.STUDY_NOT_FOUND));
@@ -126,7 +145,7 @@ public class ReservationServiceImpl implements ReservationService{
         if (studyMemberRepository.findByStudyIdAndMemberIdAndStatus(
                 studyId, memberId, StudyMember.Status.JOINED
         ).isEmpty()) {
-            throw new BusinessException(ErrorCode.FORBIDDEN_RESERVATION);
+            throw new BusinessException(ErrorCode.FORBIDDEN_STUDY_RESERVATION);
         }
 
         Room room = findRoom(req.roomId());
@@ -134,17 +153,8 @@ public class ReservationServiceImpl implements ReservationService{
         Member member = memberRepository.findById(memberId)
                 .orElseThrow(() -> new BusinessException(ErrorCode.MEMBER_NOT_FOUND));
 
-        boolean overlap = reservationRepository.existsOverlap(
-                room.getId(),
-                req.date(),
-                req.startTime(),
-                req.endTime(),
-                Reservation.Status.ACTIVE
-        );
-
-        if (overlap) {
-            throw new BusinessException(ErrorCode.RESERVATION_OVERLAP);
-        }
+        validateReservationOverlap(
+                room.getId(), req.date(), req.startTime(), req.endTime());
 
         String title = "[스터디]" + study.getPost().getTitle();
 

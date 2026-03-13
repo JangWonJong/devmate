@@ -2,6 +2,7 @@ package com.devs.devmate.reservation.repository;
 
 import com.devs.devmate.reservation.entity.Reservation;
 import com.devs.devmate.reservation.entity.Reservation.Status;
+import com.devs.devmate.reservation.entity.Room;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.repository.EntityGraph;
@@ -10,6 +11,7 @@ import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 
 import java.time.LocalDate;
+import java.time.LocalDateTime;
 import java.time.LocalTime;
 
 public interface ReservationRepository extends JpaRepository<Reservation, Long> {
@@ -39,4 +41,5 @@ public interface ReservationRepository extends JpaRepository<Reservation, Long> 
     Page<Reservation> findByStudyIdAndStatus(Long studyId, Status status, Pageable pageable);
 
     void deleteAllByStudyId(Long studyId);
+
 }
