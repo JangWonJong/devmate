@@ -163,4 +163,15 @@ public class ReservationServiceImpl implements ReservationService{
 
         return new ReservationCreateResponse(saved.getId());
     }
+
+    @Override
+    @Transactional(readOnly = true)
+    public Page<ReservationResponse> listByStudy(Long studyId, Pageable pageable) {
+       studyRepository.findById(studyId)
+               .orElseThrow(() -> new BusinessException(ErrorCode.STUDY_NOT_FOUND));
+
+        return reservationRepository
+                .findByStudyIdAndStatus(studyId, Reservation.Status.ACTIVE, pageable)
+                .map(ReservationResponse::from);
+    }
 }

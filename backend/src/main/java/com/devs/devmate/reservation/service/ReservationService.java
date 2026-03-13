@@ -23,4 +23,6 @@ public interface ReservationService {
 
      ReservationCreateResponse createForStudy(Long memberId, Long studyId, StudyReservationCreateRequest req);
 
+     Page<ReservationResponse> listByStudy(Long studyId, Pageable pageable);
+
 }

@@ -7,6 +7,7 @@ export type ReservationResponse = {
     roomId: number
     roomName: string
     memberId: number
+    memberNickname: string
     date: string
     startTime: string
     endTime: string
@@ -106,6 +107,29 @@ export async function createStudyReservation(studyId: number, req: StudyReservat
         throw new Error(data?.error?.message ?? "Study reservation failed")
     }
 
+    return data.data
+    
+}
+
+export async function listStudyReservations(params:{
+    studyId: number
+    page?: number
+    size?: number
+    sort?: string
+}) {
+    const page = params.page ?? 0
+    const size = params.size ?? 20
+    const sort = params.sort ?? "date.asc"
+
+    const {data} = await http.get<ApiResponse<PageResponse<ReservationResponse>>>(
+        `/api/studies/${params.studyId}/reservations`,
+        { params: { page, size, sort} }
+    )
+
+    if (!data.success || !data.data) {
+        throw new Error(data?.error?.message ?? "Study reservations list failed")
+    }
+    
     return data.data
     
 }

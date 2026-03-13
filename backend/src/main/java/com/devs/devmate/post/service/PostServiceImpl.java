@@ -1,5 +1,6 @@
 package com.devs.devmate.post.service;
 
+import com.devs.devmate.comment.repository.CommentRepository;
 import com.devs.devmate.global.exception.BusinessException;
 import com.devs.devmate.global.exception.ErrorCode;
 import com.devs.devmate.member.entity.Member;
@@ -9,6 +10,7 @@ import com.devs.devmate.post.dto.PostResponse;
 import com.devs.devmate.post.dto.PostUpdateRequest;
 import com.devs.devmate.post.entity.Post;
 import com.devs.devmate.post.repository.PostRepository;
+import com.devs.devmate.reservation.repository.ReservationRepository;
 import com.devs.devmate.study.repository.StudyMemberRepository;
 import com.devs.devmate.study.repository.StudyRepository;
 import lombok.*;
@@ -27,6 +29,8 @@ public class PostServiceImpl implements PostService{
     private final MemberRepository memberRepository;
     private final StudyRepository studyRepository;
     private final StudyMemberRepository studyMemberRepository;
+    private final CommentRepository commentRepository;
+    private final ReservationRepository reservationRepository;
 
     private String normalize(String keyword) {
         if (keyword == null) return null;
@@ -114,12 +118,14 @@ public class PostServiceImpl implements PostService{
         }
 
         if (post.getType() == Post.PostType.STUDY) {
-            studyRepository.findByPostId(post.getId()).ifPresent(study -> {
-                studyMemberRepository.deleteByStudyId(study.getId());
+            studyRepository.findByPostId(postId).ifPresent(study -> {
+                reservationRepository.deleteAllByStudyId(study.getId());
+                studyMemberRepository.deleteAllByStudyId(study.getId());
                 studyRepository.delete(study);
             });
         }
 
+        commentRepository.deleteAllByPostId(postId);
         postRepository.delete(post);
     }
 

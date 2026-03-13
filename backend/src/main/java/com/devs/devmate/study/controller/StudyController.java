@@ -4,6 +4,7 @@ package com.devs.devmate.study.controller;
 import com.devs.devmate.global.common.ApiResponse;
 import com.devs.devmate.global.security.SecurityUtil;
 import com.devs.devmate.reservation.dto.ReservationCreateResponse;
+import com.devs.devmate.reservation.dto.ReservationResponse;
 import com.devs.devmate.reservation.dto.StudyReservationCreateRequest;
 import com.devs.devmate.reservation.service.ReservationService;
 import com.devs.devmate.study.dto.StudyCreateRequest;
@@ -13,6 +14,8 @@ import com.devs.devmate.study.dto.StudyResponse;
 import com.devs.devmate.study.service.StudyService;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
@@ -84,6 +87,14 @@ public class StudyController {
             ) {
         Long memberId = SecurityUtil.currentMemberId();
         return ApiResponse.ok(reservationService.createForStudy(memberId, studyId, request));
+    }
+
+    @GetMapping("/{studyId}/reservations")
+    public ApiResponse<Page<ReservationResponse>> listReservations(
+            @PathVariable Long studyId,
+            Pageable pageable
+    ) {
+        return ApiResponse.ok(reservationService.listByStudy(studyId, pageable));
     }
 
 }

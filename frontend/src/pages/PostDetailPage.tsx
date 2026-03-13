@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useEffect, useRef ,useState } from "react";
 import { useNavigate, useParams } from "react-router-dom";
 import { deletePost, getPost, solvePost, type PostResponse } from "../api/posts";
 import { tokenStore } from "../auth/token";
@@ -13,6 +13,7 @@ import {
 } from "../api/comments";
 import { getStudyByPostId, getStudyMembers, createStudy, getStudy, joinStudy, leaveStudy, closeStudy, delegateStudyLeader,
    type StudyMemberResponse, type StudyResponse } from "../api/study";
+import { listStudyReservations, type ReservationResponse } from "../api/reservations";
 
 
 function StatusBadge({ solved }: { solved: boolean }) {
@@ -36,33 +37,41 @@ export function PostDetailPage() {
   const nav = useNavigate();
   const { id } = useParams();
 
-  const [loadErr, setLoadErr] = useState<string | null>(null);
-  const [commentErr, setCommentErr] = useState<string | null>(null);
-  const [actionErr, setActionErr] = useState<string | null>(null);
+  const [loadErr, setLoadErr] = useState<string | null>(null)
+  const [commentErr, setCommentErr] = useState<string | null>(null)
+  const [actionErr, setActionErr] = useState<string | null>(null)
   const [studyError, setStudyError] =useState<string | null>(null)
 
-  const [loggedIn, setLoggedIn] = useState(tokenStore.isLoggedIn());
-  const [post, setPost] = useState<PostResponse | null>(null);
-  const [busy, setBusy] = useState(false);
-  const [loading, setLoading] = useState(true);
-  const [meId, setMeId] = useState<number | null>(null);
-  const [comments, setComments] = useState<CommentResponse[]>([]);
-  const [commentInput, setCommentInput] = useState("");
+  const [loggedIn, setLoggedIn] = useState(tokenStore.isLoggedIn())
+  const [post, setPost] = useState<PostResponse | null>(null)
+  const [busy, setBusy] = useState(false)
+  const [loading, setLoading] = useState(true)
+  const [meId, setMeId] = useState<number | null>(null)
+  const [comments, setComments] = useState<CommentResponse[]>([])
+  const [commentInput, setCommentInput] = useState("")
+  const [deletingPost, setDeletingPost] = useState(false)
 
-  const [editingCommentId, setEditingCommentId] = useState<number | null>(null);
-  const [editingContent, setEditingContent] = useState("");
+  const [editingCommentId, setEditingCommentId] = useState<number | null>(null)
+  const [editingContent, setEditingContent] = useState("")
 
   const [study, setStudy] = useState<StudyResponse | null>(null)
   const [studyLoading, setStudyLoading] = useState(false)
   const [studyMembers, setStudyMembers] = useState<StudyMemberResponse[]>([])
-  //const [membersLoading, setMembersLoading] = useState(false)
 
+  const [studyReservations, setStudyReservations] = useState<ReservationResponse[]>([])
+  const [reservationsLoading, setReservationsLoading] = useState(false)
+
+  const handledNotFoundRef = useRef(false)
 
   useEffect(() => {
     const sync = () => setLoggedIn(tokenStore.isLoggedIn());
     sync();
     return tokenStore.subscribe(sync);
   }, []);
+
+  useEffect(() => {
+    handledNotFoundRef.current = false
+  }, [id])
 
   useEffect(() => {
     (async () => {
@@ -89,12 +98,22 @@ export function PostDetailPage() {
         const p = await getPost(id);
         setPost(p);
       } catch (e: any) {
+        const status = e?.response?.status
+        if (status === 404) {
+          if (handledNotFoundRef.current) return
+          handledNotFoundRef.current = true
+          if(!deletingPost){
+            alert("삭제되었거나 존재하지 않는 게시글입니다.")
+          }
+          nav("/", {replace: true})
+          return
+        }
         setLoadErr(e.message ?? "상세 조회 실패");
       } finally {
         setLoading(false);
       }
     })();
-  }, [id]);
+  }, [id, nav, deletingPost]);
 
   useEffect(() => {
     (async () => {
@@ -104,6 +123,10 @@ export function PostDetailPage() {
         const res = await listComments(id);
         setComments(res);
       } catch (e: any) {
+        const status = e?.response?.status
+        if (status === 404) {
+          return
+        }
         setCommentErr(e.message ?? "댓글 조회 실패");
       }
     })();
@@ -118,6 +141,7 @@ export function PostDetailPage() {
     ;(async () => {
       try {
         setStudyLoading(true)
+        setReservationsLoading(true)
         setStudyError(null)
 
         const s = await getStudyByPostId(post.id)
@@ -127,6 +151,16 @@ export function PostDetailPage() {
         const members = await getStudyMembers(s.id)
         if (cancelled) return
         setStudyMembers(members)
+
+        const reservationPage = await listStudyReservations({
+          studyId: s.id,
+          page: 0,
+          size: 20,
+          sort: "date,asc"
+        })
+
+        if(cancelled) return
+        setStudyReservations(reservationPage.content)
       } catch (e: any) {
         const status = e?.response?.status
 
@@ -134,6 +168,7 @@ export function PostDetailPage() {
           if (cancelled) return
           setStudy(null)
           setStudyMembers([])
+          setStudyReservations([])
           return
         }
 
@@ -142,6 +177,7 @@ export function PostDetailPage() {
       } finally {
         if (!cancelled) {
           setStudyLoading(false)
+          setReservationsLoading(false)
         }
       }
     })()
@@ -199,6 +235,14 @@ export function PostDetailPage() {
 
     const members = await getStudyMembers(s.id)
     setStudyMembers(members)
+
+    const reservationPage = await listStudyReservations({
+      studyId: s.id,
+      page: 0,
+      size: 20,
+      sort: "date,asc"
+    })
+    setStudyReservations(reservationPage.content)
   }
 
   const onJoinStudy = async () => {
@@ -277,91 +321,93 @@ export function PostDetailPage() {
   }
 
   const onCreateComment = async () => {
-    if (!id) return;
-    if (!commentInput.trim()) return;
+    if (!id) return
+    if (!commentInput.trim()) return
 
     try {
-      setCommentErr(null);
-      await createComment(id, { content: commentInput.trim() });
-      setCommentInput("");
+      setCommentErr(null)
+      await createComment(id, { content: commentInput.trim() })
+      setCommentInput("")
 
-      const res = await listComments(id);
-      setComments(res);
+      const res = await listComments(id)
+      setComments(res)
     } catch (e: any) {
-      setCommentErr(e.message ?? "댓글 작성 실패");
+      setCommentErr(e.message ?? "댓글 작성 실패")
     }
   };
 
   const onDeleteComment = async (commentId: number) => {
-    const ok = confirm("댓글을 삭제할까요?");
+    const ok = confirm("댓글을 삭제할까요?")
     if (!ok) return;
 
     try {
-      setCommentErr(null);
-      await deleteComment(commentId);
-      setComments((prev) => prev.filter((c) => c.id !== commentId));
+      setCommentErr(null)
+      await deleteComment(commentId)
+      setComments((prev) => prev.filter((c) => c.id !== commentId))
 
       if (editingCommentId === commentId) {
-        setEditingCommentId(null);
-        setEditingContent("");
+        setEditingCommentId(null)
+        setEditingContent("")
       }
     } catch (e: any) {
-      setCommentErr(e.message ?? "댓글 삭제 실패");
+      setCommentErr(e.message ?? "댓글 삭제 실패")
     }
   };
 
   const onUpdateComment = async (commentId: number) => {
-    const content = editingContent.trim();
-    if (!content) return setCommentErr("댓글 내용을 입력하세요");
+    const content = editingContent.trim()
+    if (!content) return setCommentErr("댓글 내용을 입력하세요")
 
     try {
-      setCommentErr(null);
-      await updateComment(commentId, content);
+      setCommentErr(null)
+      await updateComment(commentId, content)
 
       setComments((prev) =>
         prev.map((c) => (c.id === commentId ? { ...c, content } : c))
       );
 
-      setEditingCommentId(null);
-      setEditingContent("");
+      setEditingCommentId(null)
+      setEditingContent("")
     } catch (e: any) {
-      setCommentErr(e.message ?? "댓글 수정 실패");
+      setCommentErr(e.message ?? "댓글 수정 실패")
     }
   };
 
   const onSolve = async () => {
-    if (!id) return;
-    const ok = confirm("이 글을 해결됨으로 처리할까요?");
-    if (!ok) return;
+    if (!id) return
+    const ok = confirm("이 글을 해결됨으로 처리할까요?")
+    if (!ok) return
 
     try {
-      setBusy(true);
-      setActionErr(null);
+      setBusy(true)
+      setActionErr(null)
 
-      await solvePost(id);
-      const updated = await getPost(id);
-      setPost(updated);
+      await solvePost(id)
+      const updated = await getPost(id)
+      setPost(updated)
     } catch (e: any) {
-      setActionErr(e.message ?? "해결 처리 실패");
+      setActionErr(e.message ?? "해결 처리 실패")
     } finally {
-      setBusy(false);
+      setBusy(false)
     }
-  };
+  }
 
   const onDeletePost = async () => {
-    if (!id) return;
-    const ok = confirm("정말 삭제할까요?");
-    if (!ok) return;
+    if (!id) return
+    const ok = confirm("정말 삭제할까요?")
+    if (!ok) return
 
     try {
-      setBusy(true);
-      setActionErr(null);
-      await deletePost(id);
-      nav("/");
+      setBusy(true)
+      setDeletingPost(true)
+      setActionErr(null)
+      await deletePost(id)
+      nav("/", { replace: true })
     } catch (e: any) {
-      setActionErr(e.message ?? "삭제 실패");
+      setActionErr(e.message ?? "삭제 실패")
+      setDeletingPost(false)
     } finally {
-      setBusy(false);
+      setBusy(false)
     }
   };
 
@@ -467,7 +513,6 @@ export function PostDetailPage() {
 
               <div style={{ marginTop: 16 }}>
                 <h4 style={{ marginBottom: 8 }}>참여 멤버</h4>
-
                 {studyMembers.length === 0 ? (
                   <div style={{ color: "#666" }}>참여 중인 멤버가 없습니다.</div>
                 ) : (
@@ -504,6 +549,39 @@ export function PostDetailPage() {
                     ))}
                   </ul>
                 )}
+                <div style={{ marginTop: 20 }}>
+                  <h4 style={{ marginBottom: 8 }}>스터디 예약 현황</h4>
+
+                  {reservationsLoading ? (
+                    <div style={{ color: "#666" }}>예약 현황을 불러오는 중...</div>
+                  ) : studyReservations.length === 0 ? (
+                    <div style={{ color: "#666" }}>등록된 스터디 예약이 없습니다.</div>
+                  ) : (
+                    <div style={{ display: "grid", gap: 8 }}>
+                      {studyReservations.map((reservation) => (
+                        <div
+                          key={reservation.id}
+                          style={{
+                            border: "1px solid #eee",
+                            borderRadius: 10,
+                            padding: 12,
+                            background: "#fff",
+                          }}
+                        >
+                          <div style={{ fontWeight: 600 }}>
+                            {reservation.date} · {reservation.roomName}
+                          </div>
+                          <div style={{ marginTop: 4, color: "#333" }}>
+                            {reservation.startTime.slice(0, 5)} ~ {reservation.endTime.slice(0, 5)}
+                          </div>
+                          <div style={{ marginTop: 4, color: "#666", fontSize: 14 }}>
+                            예약자: {reservation.memberNickname}
+                          </div>
+                        </div>
+                      ))}
+                    </div>
+                  )}
+                </div>
               </div>
             {loggedIn && (
               <div style={{ display: "flex", gap: 8, marginTop: 16, flexWrap: "wrap" }}>
