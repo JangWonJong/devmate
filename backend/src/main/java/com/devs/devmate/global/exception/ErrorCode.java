@@ -59,8 +59,9 @@ public enum ErrorCode {
     FORBIDDEN_STUDY_LEADER_DELEGATE(HttpStatus.FORBIDDEN, "STUDY_403_3", "스터디 리더만 리더를 위임할 수 있습니다."),
     INVALID_STUDY_LEADER_TARGET(HttpStatus.BAD_REQUEST, "STUDY_400_6", "리더 위임 대상이 올바르지 않습니다."),
     STUDY_LEAVE_NOT_ALLOWED_AFTER_CLOSE(HttpStatus.BAD_REQUEST, "STUDY_400_8", "모집 마감된 스터디는 직접 탈퇴할 수 없습니다."),
-    FORBIDDEN_STUDY_RESERVATION(HttpStatus.FORBIDDEN, "STUDY_403_4", "해당 스터디의 멤버만 예약할 수 있습니다.");
-
+    FORBIDDEN_STUDY_RESERVATION(HttpStatus.FORBIDDEN, "STUDY_403_4", "해당 스터디의 멤버만 예약할 수 있습니다."),
+    STUDY_RESERVATION_MEMBER_CONFLICT(HttpStatus.CONFLICT,"STUDY_409_3","스터디 멤버 중 기존 예약과 시간이 겹치는 인원이 있어 예약할 수 없습니다."),
+    STUDY_JOIN_RESERVATION_CONFLICT(HttpStatus.CONFLICT, "STUDY_409_3", "기존 예약과 시간이 겹쳐 해당 스터디에 참가할 수 없습니다.");
 
 
     private final HttpStatus status;

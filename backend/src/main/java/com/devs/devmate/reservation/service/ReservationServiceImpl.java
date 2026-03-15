@@ -129,6 +129,31 @@ public class ReservationServiceImpl implements ReservationService{
         }
     }
 
+    private void validateStudyMembersReservationConflict(
+            Long studyId, Long requestId,
+            LocalDate date, LocalTime startTime, LocalTime endTime
+    ) {
+        List<StudyMember> studyMembers = studyMemberRepository.findByStudyIdAndStatus(
+                studyId, StudyMember.Status.JOINED
+        );
+
+        for (StudyMember studyMember : studyMembers) {
+            Long studyMemberId = studyMember.getMember().getId();
+
+            if (studyMemberId.equals(requestId)) {
+                continue;
+            }
+
+            boolean overlap = reservationRepository.existsMemberOverlap(
+                    studyMemberId, date, startTime, endTime, Reservation.Status.ACTIVE
+            );
+
+            if (overlap) {
+                throw new BusinessException(ErrorCode.STUDY_RESERVATION_MEMBER_CONFLICT);
+            }
+        }
+    }
+
     @Override
     public ReservationCreateResponse create(Long memberId, ReservationCreateRequest req) {
 
@@ -175,6 +200,10 @@ public class ReservationServiceImpl implements ReservationService{
         ).isEmpty()) {
             throw new BusinessException(ErrorCode.FORBIDDEN_STUDY_RESERVATION);
         }
+
+        validateStudyMembersReservationConflict(
+                studyId, memberId, req.date(), req.startTime(), req.endTime()
+        );
 
         Room room = findRoom(req.roomId());
 

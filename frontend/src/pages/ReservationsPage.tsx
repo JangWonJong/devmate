@@ -20,7 +20,7 @@ import {
 
 import { ReservationTimeline } from "./RservationTimeline"
 import { pageStyle, cardStyle, inputStyle, primaryButtonStyle, secondaryButtonStyle, 
-  mutedBoxStyle, listItemCardStyle, errorBoxStyle, getSlotButtonStyle } from "../ui/properties"
+  mutedBoxStyle, listItemCardStyle, errorBoxStyle, getSlotButtonStyle, getReservationStatusStyle } from "../ui/properties"
 
 type Scope = "all" | "mine"
 
@@ -32,6 +32,20 @@ type Query = {
 function hhmm(t: string) {
   return t?.length >= 5 ? t.slice(0, 5) : t
 }
+
+function getReservationStatus(date: string, endTime: string) {
+  const now = new Date()
+  const end = new Date(`${date}T${endTime}`)
+
+  if (end < now) return "지난 예약"
+
+  const todayStr = new Date().toISOString().slice(0, 10)
+  if (date === todayStr) return "오늘 예약"
+
+  return "예정 예약"
+}
+
+
 
 function toScope(v: string | null): Scope {
   return v === "mine" ? "mine" : "all"
@@ -238,6 +252,35 @@ export function ReservationsPage() {
       setBusy(false)
     }
   }
+
+  const groupedItems = useMemo(() => {
+  return items.reduce<Record<string, ReservationResponse[]>>((acc, item) => {
+    if (!acc[item.date]) acc[item.date] = []
+    acc[item.date].push(item)
+    return acc
+  }, {})
+}, [items])
+
+  const reservationSummary = useMemo(() => {
+    let upcoming = 0
+    let todayCount = 0
+    let past = 0
+
+    for (const item of items) {
+      const status = getReservationStatus(item.date, item.endTime)
+
+      if (status === "예정 예약") upcoming += 1
+      else if (status === "오늘 예약") todayCount += 1
+      else past += 1
+    }
+
+    return {
+      upcoming,
+      todayCount,
+      past,
+    }
+  }, [items])
+
 
   return (
   <div style={pageStyle}>
@@ -473,55 +516,162 @@ export function ReservationsPage() {
     )}
 
     <div style={{ ...cardStyle, display: "grid", gap: 10 }}>
-      <div style={{ fontSize: 20, fontWeight: 800 }}>
-        {scope === "mine" ? "내 예약 목록" : "예약 목록"}
-      </div>
+    <div
+      style={{
+        display: "flex",
+        justifyContent: "space-between",
+        alignItems: "center",
+        gap: 12,
+        flexWrap: "wrap",
+      }}
+    >
+  <div style={{ fontSize: 20, fontWeight: 800 }}>
+    {scope === "mine" ? "내 예약 목록" : "예약 목록"}
+  </div>
 
-      {items.length === 0 ? (
-        <div style={mutedBoxStyle}>{emptyText}</div>
-      ) : (
-        items.map((r) => {
-          const isMine = meId != null && r.memberId === meId
+  {scope === "mine" && (
+    <div
+      style={{
+        display: "flex",
+        gap: 8,
+        flexWrap: "wrap",
+      }}
+    >
+      <span
+        style={{
+          borderRadius: 999,
+          padding: "6px 10px",
+          fontSize: 12,
+          fontWeight: 700,
+          background: "#f0fdf4",
+          color: "#15803d",
+          border: "1px solid #bbf7d0",
+        }}
+      >
+        예정 {reservationSummary.upcoming}건
+      </span>
 
-          return (
-            <div key={r.id} style={listItemCardStyle}>
-              <div
-                style={{
-                  display: "flex",
-                  justifyContent: "space-between",
-                  gap: 8,
-                  alignItems: "center",
-                  flexWrap: "wrap",
-                }}
-              >
-                <div>
-                  <div style={{ fontWeight: 800, fontSize: 16 }}>
-                    {hhmm(r.startTime)} ~ {hhmm(r.endTime)}
-                  </div>
-                  <div style={{ marginTop: 4, fontSize: 13, color: "#777" }}>
-                    {r.roomName}
-                    {scope === "mine" && ` · ${r.date}`}
-                    {scope === "all" && ` · ${r.memberNickname}`}
-                  </div>
-                </div>
+      <span
+        style={{
+          borderRadius: 999,
+          padding: "6px 10px",
+          fontSize: 12,
+          fontWeight: 700,
+          background: "#eef6ff",
+          color: "#1d4ed8",
+          border: "1px solid #bfdbfe",
+        }}
+      >
+        오늘 {reservationSummary.todayCount}건
+      </span>
 
-                {isMine && (
-                  <button
-                    disabled={busy}
-                    onClick={() => onCancel(r.id)}
-                    style={secondaryButtonStyle}
-                  >
-                    취소
-                  </button>
-                )}
-              </div>
-
-              <div style={{ marginTop: 10, fontSize: 15 }}>{r.title}</div>
-            </div>
-          )
-        })
+      <span
+        style={{
+          borderRadius: 999,
+          padding: "6px 10px",
+          fontSize: 12,
+          fontWeight: 700,
+          background: "#f5f5f5",
+          color: "#777",
+          border: "1px solid #e5e5e5",
+        }}
+      >
+        지난 {reservationSummary.past}건
+      </span>
+    </div>
       )}
     </div>
+
+    {items.length === 0 ? (
+      <div style={mutedBoxStyle}>{emptyText}</div>
+    ) : (
+      Object.entries(groupedItems).map(([groupDate, reservations]) => (
+        <div key={groupDate} style={{ display: "grid", gap: 8 }}>
+          <div
+            style={{
+              fontSize: 14,
+              fontWeight: 700,
+              color: "#555",
+              marginTop: 4,
+              paddingLeft: 2,
+            }}
+          >
+            {groupDate}
+          </div>
+
+          {reservations.map((r) => {
+            const isMine = meId != null && r.memberId === meId
+            const statusLabel = getReservationStatus(r.date, r.endTime)
+            const statusStyle = getReservationStatusStyle(statusLabel)
+
+            return (
+              <div
+                key={r.id}
+                style={{
+                  ...listItemCardStyle,
+                  opacity: statusLabel === "지난 예약" ? 0.72 : 1,
+                }}
+              >
+                <div
+                  style={{
+                    display: "flex",
+                    justifyContent: "space-between",
+                    gap: 8,
+                    alignItems: "center",
+                    flexWrap: "wrap",
+                  }}
+                >
+                  <div>
+                    <div
+                      style={{
+                        display: "flex",
+                        alignItems: "center",
+                        gap: 8,
+                        flexWrap: "wrap",
+                      }}
+                    >
+                      <div style={{ fontWeight: 800, fontSize: 16 }}>
+                        {hhmm(r.startTime)} ~ {hhmm(r.endTime)}
+                      </div>
+
+                      <span
+                        style={{
+                          ...statusStyle,
+                          borderRadius: 999,
+                          padding: "4px 10px",
+                          fontSize: 12,
+                          fontWeight: 700,
+                        }}
+                      >
+                        {statusLabel}
+                      </span>
+                    </div>
+
+                    <div style={{ marginTop: 4, fontSize: 13, color: "#777" }}>
+                      {r.roomName}
+                      {scope === "all" && ` · ${r.memberNickname}`}
+                    </div>
+                  </div>
+
+                  {isMine && statusLabel !== "지난 예약" && (
+                    <button
+                      disabled={busy}
+                      onClick={() => onCancel(r.id)}
+                      style={secondaryButtonStyle}
+                    >
+                      취소
+                    </button>
+                  )}
+                </div>
+
+                <div style={{ marginTop: 10, fontSize: 15 }}>{r.title}</div>
+              </div>
+            )
+          })}
+        </div>
+      ))
+    )}
+  </div>
   </div>
 )
 }

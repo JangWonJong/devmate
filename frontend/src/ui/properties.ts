@@ -87,3 +87,28 @@ export function getSlotButtonStyle(unavailable: boolean, selected: boolean): Rea
     cursor: unavailable ? "not-allowed" : "pointer",
   }
 }
+
+
+export function getReservationStatusStyle(status: string) {
+  if (status === "오늘 예약") {
+    return {
+      background: "#eef6ff",
+      color: "#1d4ed8",
+      border: "1px solid #bfdbfe",
+    }
+  }
+
+  if (status === "지난 예약") {
+    return {
+      background: "#f5f5f5",
+      color: "#777",
+      border: "1px solid #e5e5e5",
+    }
+  }
+
+  return {
+    background: "#f0fdf4",
+    color: "#15803d",
+    border: "1px solid #bbf7d0",
+  }
+}

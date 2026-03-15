@@ -48,8 +48,47 @@ public interface ReservationRepository extends JpaRepository<Reservation, Long> 
             @Param("active")Status active);
 
 
-    @EntityGraph(attributePaths = {"room", "member"})
-    Page<Reservation> findByMemberIdAndStatus(Long memberId, Status status, Pageable pageable);
+    @EntityGraph(attributePaths = {"room", "member", "study"})
+    @Query("""
+        select distinct r
+        from Reservation r
+        left join StudyMember sm
+          on sm.study = r.study
+         and sm.member.id = :memberId
+         and sm.status = com.devs.devmate.study.entity.StudyMember.Status.JOINED
+        where r.status = :status
+          and (
+                r.member.id = :memberId
+                or sm.id is not null
+          )
+    """)
+    Page<Reservation> findByMemberIdAndStatus(
+            @Param("memberId") Long memberId,
+            @Param("status") Status status,
+            Pageable pageable);
+
+
+    @EntityGraph(attributePaths = {"room", "member", "study"})
+    @Query("""
+        select distinct r
+        from Reservation r
+        left join StudyMember sm
+          on sm.study = r.study
+         and sm.member.id = :memberId
+         and sm.status = com.devs.devmate.study.entity.StudyMember.Status.JOINED
+        where r.status = :status
+          and r.date = :date
+          and (
+                r.member.id = :memberId
+                or sm.id is not null
+          )
+    """)
+    Page<Reservation> findByMemberIdAndDateAndStatus(
+            @Param("memberId") Long memberId,
+            @Param("date") LocalDate date,
+            @Param("status") Reservation.Status status,
+            Pageable pageable
+    );
 
     @EntityGraph(attributePaths = {"room", "member"})
     Page<Reservation> findByRoomIdAndDateAndStatus(Long roomId, LocalDate date, Status status, Pageable pageable);
@@ -60,10 +99,7 @@ public interface ReservationRepository extends JpaRepository<Reservation, Long> 
     @EntityGraph(attributePaths = {"room", "member", "study"})
     Page<Reservation> findByStudyIdAndStatus(Long studyId, Status status, Pageable pageable);
 
-    @EntityGraph(attributePaths = {"room", "member"})
-    Page<Reservation> findByMemberIdAndDateAndStatus(
-            Long memberId, LocalDate date, Reservation.Status status, Pageable pageable
-    );
+    List<Reservation> findByStudyIdAndStatus(Long studyId, Reservation.Status status);
 
     List<Reservation> findByMemberIdAndDateAndStatus(
             Long memberId,

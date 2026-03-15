@@ -14,6 +14,7 @@ import {
 import { getStudyByPostId, getStudyMembers, createStudy, getStudy, joinStudy, leaveStudy, closeStudy, delegateStudyLeader,
    type StudyMemberResponse, type StudyResponse } from "../api/study";
 import { listStudyReservations, type ReservationResponse } from "../api/reservations";
+import { apiErrorMessage } from "../api/error";
 
 
 function StatusBadge({ solved }: { solved: boolean }) {
@@ -255,7 +256,7 @@ export function PostDetailPage() {
       await joinStudy(study.id)
       await refreshStudySection(post.id)
     } catch (e: any) {
-      setStudyError(e.message ?? "스터디 참가 실패")
+      setStudyError(apiErrorMessage(e, "스터디 참가 실패") )
     } finally {
       setStudyLoading(false)
     }

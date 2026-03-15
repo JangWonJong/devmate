@@ -6,6 +6,8 @@ import com.devs.devmate.member.entity.Member;
 import com.devs.devmate.member.repository.MemberRepository;
 import com.devs.devmate.post.entity.Post;
 import com.devs.devmate.post.repository.PostRepository;
+import com.devs.devmate.reservation.entity.Reservation;
+import com.devs.devmate.reservation.repository.ReservationRepository;
 import com.devs.devmate.study.dto.StudyCreateRequest;
 import com.devs.devmate.study.dto.StudyMemberResponse;
 import com.devs.devmate.study.dto.StudyResponse;
@@ -30,6 +32,7 @@ public class StudyServiceImpl implements StudyService{
     private final StudyMemberRepository studyMemberRepository;
     private final PostRepository postRepository;
     private final MemberRepository memberRepository;
+    private final ReservationRepository reservationRepository;
 
 
     private String findLeaderNickname(Long studyId) {
@@ -41,6 +44,25 @@ public class StudyServiceImpl implements StudyService{
                 .orElse(null);
     }
 
+    private void validateStudyJoinReservationConflict(Long memberId, Long studyId) {
+        List<Reservation> studyReservations = reservationRepository.findByStudyIdAndStatus(
+                studyId, Reservation.Status.ACTIVE
+        );
+
+        for (Reservation studyReservation : studyReservations) {
+            boolean overlap = reservationRepository.existsMemberOverlap(
+                    memberId,
+                    studyReservation.getDate(),
+                    studyReservation.getStartTime(),
+                    studyReservation.getEndTime(),
+                    Reservation.Status.ACTIVE
+            );
+
+            if (overlap) {
+                throw new BusinessException(ErrorCode.STUDY_JOIN_RESERVATION_CONFLICT);
+            }
+        }
+    }
     // 게시글 작성자만 해당 Study post로 study 생성 가능
     @Override
     public Long create(Long memberId, StudyCreateRequest request) {
@@ -113,6 +135,8 @@ public class StudyServiceImpl implements StudyService{
         if (joined.isPresent()) {
             throw new BusinessException(ErrorCode.ALREADY_JOINED_STUDY);
         }
+
+        validateStudyJoinReservationConflict(memberId, studyId);
 
         long currentMembers = studyMemberRepository.countByStudyIdAndStatus(
                 studyId, StudyMember.Status.JOINED

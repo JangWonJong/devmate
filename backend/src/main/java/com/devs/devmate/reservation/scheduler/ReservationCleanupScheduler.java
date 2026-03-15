@@ -18,11 +18,16 @@ public class ReservationCleanupScheduler {
 
     private final ReservationRepository reservationRepository;
 
+    //@Scheduled(cron = "0 * * * * *")
     @Scheduled(cron = "0 0 3 * * *")
     @Transactional
     public void cleanupOldReservation() {
         LocalDateTime canceledCutoff = LocalDateTime.now().minusDays(30);
         LocalDate activeCutoff = LocalDate.now().minusDays(90);
+
+        /*자동만료 테스트
+        LocalDateTime canceledCutoff = LocalDateTime.now().minusHours(1);
+        LocalDate activeCutoff = LocalDate.now().minusDays(1);*/
 
         reservationRepository.deleteByStatusAndUpdatedAtBefore(
                 Reservation.Status.CANCELED,
