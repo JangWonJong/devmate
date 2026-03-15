@@ -204,7 +204,15 @@ public class ReservationServiceImpl implements ReservationService{
 
     @Override
     @Transactional(readOnly = true)
-    public Page<ReservationResponse> listMyReservations(Long memberId, LocalDate date, Pageable pageable) {
+    public Page<ReservationResponse> listMyReservations(Long memberId, Pageable pageable) {
+        return reservationRepository
+                .findByMemberIdAndStatus(memberId, Reservation.Status.ACTIVE, pageable)
+                .map(ReservationResponse::from);
+    }
+
+    @Override
+    @Transactional(readOnly = true)
+    public Page<ReservationResponse> listMyReservationsByDate(Long memberId, LocalDate date, Pageable pageable) {
         return reservationRepository
                 .findByMemberIdAndDateAndStatus(memberId, date, Reservation.Status.ACTIVE, pageable)
                 .map(ReservationResponse::from);

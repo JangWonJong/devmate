@@ -69,6 +69,7 @@ export function ReservationsPage() {
   const [rooms, setRooms] = useState<RoomResponse[]>([])
   const [roomId, setRoomId] = useState<number | null>(null)
   const [durationHours, setDurationHours] = useState<number>(1)
+  const [mineDate, setMineDate] = useState<string>("")
 
   const [title, setTitle] = useState("")
   const [selectedTime, setSelectedTime] = useState<string | null>(null)
@@ -128,10 +129,10 @@ export function ReservationsPage() {
 
   const loadMine = async () => {
     const page = await listMyReservations({
-      date,
+      date: mineDate || undefined,
       page: 0,
       size: 50,
-      sort: "date,desc",
+      sort: mineDate ? "startTime,asc" : "date,desc",
     })
     setItems(page.content)
   }
@@ -155,7 +156,7 @@ export function ReservationsPage() {
         setErr(apiErrorMessage(e, "예약 조회 실패"))
       }
     })()
-  }, [scope, date, roomId, loggedIn, setQuery])
+  }, [scope, date, roomId, mineDate, loggedIn, setQuery])
 
   useEffect(() => {
     setSelectedTime(null)
@@ -286,7 +287,35 @@ export function ReservationsPage() {
     </div>
 
     {err && <div style={errorBoxStyle}>{err}</div>}
-
+    {scope === "mine" && (
+        <div
+          style={{
+            display: "flex",
+            justifyContent: "space-between",
+            alignItems: "center",
+            gap: 12,
+            flexWrap: "wrap",
+            marginBottom: 16,
+          }}
+        >
+          <div style={{ display: "flex", gap: 8, alignItems: "center", flexWrap: "wrap" }}>
+            <span style={{ fontSize: 14, color: "#666" }}>날짜 필터</span>
+            <input
+              type="date"
+              value={mineDate}
+              onChange={(e) => setMineDate(e.target.value)}
+              style={{ ...inputStyle, width: 180 }}
+            />
+            <button
+              type="button"
+              onClick={() => setMineDate("")}
+              style={secondaryButtonStyle}
+            >
+              전체 보기
+            </button>
+          </div>
+        </div>
+      )}
     {scope === "all" && (
       <>
         <div

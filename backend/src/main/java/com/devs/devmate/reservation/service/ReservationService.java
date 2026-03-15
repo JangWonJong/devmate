@@ -15,7 +15,9 @@ public interface ReservationService {
 
     ReservationCreateResponse createForStudy(Long memberId, Long studyId, StudyReservationCreateRequest req);
 
-    Page<ReservationResponse> listMyReservations(Long memberId, LocalDate date, Pageable pageable);
+    Page<ReservationResponse> listMyReservations(Long memberId, Pageable pageable);
+
+    Page<ReservationResponse> listMyReservationsByDate(Long memberId, LocalDate date, Pageable pageable);
 
     Page<ReservationResponse> listRoomReservations(Long roomId, LocalDate date, Pageable pageable);
 

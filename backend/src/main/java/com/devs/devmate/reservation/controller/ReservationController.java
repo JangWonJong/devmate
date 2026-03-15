@@ -42,10 +42,14 @@ public class ReservationController {
 
     @GetMapping("/mine")
     public ApiResponse<Page<ReservationResponse>> mine(
-            @RequestParam LocalDate date,
+            @RequestParam(required = false) LocalDate date,
             Pageable pageable) {
         Long memberId = SecurityUtil.currentMemberId();
-        return ApiResponse.ok(reservationService.listMyReservations(memberId, date, pageable));
+        if (date == null) {
+            return ApiResponse.ok(reservationService.listMyReservations(memberId, pageable));
+        }
+
+        return ApiResponse.ok(reservationService.listMyReservationsByDate(memberId, date, pageable));
     }
 
     @DeleteMapping("/{id}")
