@@ -6,10 +6,12 @@ import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.repository.EntityGraph;
 import org.springframework.data.jpa.repository.JpaRepository;
+import org.springframework.data.jpa.repository.Modifying;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 
 import java.time.LocalDate;
+import java.time.LocalDateTime;
 import java.time.LocalTime;
 import java.util.List;
 
@@ -72,5 +74,18 @@ public interface ReservationRepository extends JpaRepository<Reservation, Long> 
     long countByMemberIdAndDateAndStatus(Long memberId, LocalDate date, Status status);
 
     void deleteAllByStudyId(Long studyId);
+
+    @Modifying
+    @Query("""
+        delete from Reservation r
+                where r.status = :status
+                        and r.date < :cutoffDate
+        """)
+    int deleteByStatusAndDateBefore(
+            @Param("status") Reservation.Status status,
+            @Param("cutoffDate") LocalDate cutoffDate
+        );
+
+    void deleteByStatusAndUpdatedAtBefore(Reservation.Status status, LocalDateTime cutoff);
 
 }
