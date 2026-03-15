@@ -94,7 +94,7 @@ public class StudyController {
             @PathVariable Long studyId,
             Pageable pageable
     ) {
-        return ApiResponse.ok(reservationService.listByStudy(studyId, pageable));
+        return ApiResponse.ok(reservationService.listStudyReservations(studyId, pageable));
     }
 
 }

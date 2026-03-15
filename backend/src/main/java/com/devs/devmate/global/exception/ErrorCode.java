@@ -38,6 +38,7 @@ public enum ErrorCode {
     RESERVATION_CANCEL_NOT_ALLOWED(HttpStatus.BAD_REQUEST, "RESERVATION_400_4", "예약 시작 1시간 전까지만 취소할 수 있습니다."),
     RESERVATION_DAILY_LIMIT_EXCEEDED(HttpStatus.BAD_REQUEST, "RESERVATION_400_5", "하루 최대 3개의 예약만 가능합니다."),
     RESERVATION_DAILY_HOURS_EXCEEDED(HttpStatus.BAD_REQUEST, "RESERVATION_400_6", "하루 총 예약 가능 시간은 최대 5시간입니다."),
+    MEMBER_RESERVATION_TIME_CONFLICT(HttpStatus.CONFLICT, "RESERVATION_409_2", "동일 시간대에 다른 예약이 이미 존재합니다."),
 
     // COMMENT
     COMMENT_NOT_FOUND(HttpStatus.NOT_FOUND, "COMMENT_404", "댓글을 찾을 수 없습니다."),
@@ -59,6 +60,8 @@ public enum ErrorCode {
     INVALID_STUDY_LEADER_TARGET(HttpStatus.BAD_REQUEST, "STUDY_400_6", "리더 위임 대상이 올바르지 않습니다."),
     STUDY_LEAVE_NOT_ALLOWED_AFTER_CLOSE(HttpStatus.BAD_REQUEST, "STUDY_400_8", "모집 마감된 스터디는 직접 탈퇴할 수 없습니다."),
     FORBIDDEN_STUDY_RESERVATION(HttpStatus.FORBIDDEN, "STUDY_403_4", "해당 스터디의 멤버만 예약할 수 있습니다.");
+
+
 
     private final HttpStatus status;
     private final String code;

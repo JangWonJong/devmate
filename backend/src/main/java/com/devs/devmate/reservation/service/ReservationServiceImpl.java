@@ -61,12 +61,22 @@ public class ReservationServiceImpl implements ReservationService{
     }
 
     private void validateReservationOverlap(Long roomId, LocalDate date, LocalTime startTime, LocalTime endTime) {
-        boolean overlap = reservationRepository.existsOverlap(
+        boolean overlap = reservationRepository.existsRoomOverlap(
                 roomId, date, startTime, endTime,
                 Reservation.Status.ACTIVE
         );
         if (overlap) {
             throw new BusinessException(ErrorCode.RESERVATION_OVERLAP);
+        }
+    }
+
+    private void validateMemberOverlap(Long memberId, LocalDate date, LocalTime startTime, LocalTime endTime) {
+        boolean overlap = reservationRepository.existsMemberOverlap(
+                memberId, date, startTime, endTime,
+                Reservation.Status.ACTIVE
+        );
+        if (overlap) {
+            throw new BusinessException(ErrorCode.MEMBER_RESERVATION_TIME_CONFLICT);
         }
     }
 
@@ -109,7 +119,7 @@ public class ReservationServiceImpl implements ReservationService{
         }
 
         long reservedMinutes = reservations.stream()
-                .mapToLong(r -> Duration.between(startTime, endTime).toMinutes())
+                .mapToLong(r -> Duration.between(r.getStartTime(), r.getEndTime()).toMinutes())
                 .sum();
 
         long newReservationMinutes = Duration.between(startTime, endTime).toMinutes();
@@ -125,6 +135,7 @@ public class ReservationServiceImpl implements ReservationService{
         validateReservationTime(req.startTime(), req.endTime());
         validateNotPastReservation(req.date(), req.startTime());
         validateDailyReservationPolicy(memberId, req.date(), req.startTime(), req.endTime());
+        validateMemberOverlap(memberId, req.date(), req.startTime(), req.endTime());
         Room room = findRoom(req.roomId());
 
         Member member = memberRepository.findById(memberId)
@@ -154,6 +165,7 @@ public class ReservationServiceImpl implements ReservationService{
         validateReservationTime(req.startTime(), req.endTime());
         validateNotPastReservation(req.date(), req.startTime());
         validateDailyReservationPolicy(memberId, req.date(), req.startTime(), req.endTime());
+        validateMemberOverlap(memberId, req.date(), req.startTime(), req.endTime());
 
         Study study = studyRepository.findById(studyId)
                 .orElseThrow(() -> new BusinessException(ErrorCode.STUDY_NOT_FOUND));
@@ -192,15 +204,15 @@ public class ReservationServiceImpl implements ReservationService{
 
     @Override
     @Transactional(readOnly = true)
-    public Page<ReservationResponse> listMine(Long memberId, Pageable pageable) {
+    public Page<ReservationResponse> listMyReservations(Long memberId, LocalDate date, Pageable pageable) {
         return reservationRepository
-                .findByMemberIdAndStatus(memberId, Reservation.Status.ACTIVE, pageable)
+                .findByMemberIdAndDateAndStatus(memberId, date, Reservation.Status.ACTIVE, pageable)
                 .map(ReservationResponse::from);
     }
 
     @Override
     @Transactional(readOnly = true)
-    public Page<ReservationResponse> listRoomDate(Long roomId, LocalDate date, Pageable pageable) {
+    public Page<ReservationResponse> listRoomReservations(Long roomId, LocalDate date, Pageable pageable) {
 
         roomRepository.findById(roomId)
                 .orElseThrow(() -> new BusinessException(ErrorCode.ROOM_NOT_FOUND));
@@ -211,8 +223,8 @@ public class ReservationServiceImpl implements ReservationService{
     }
 
     @Override
-    @Transactional
-    public Page<ReservationResponse> listAllByDate(LocalDate date, Pageable pageable) {
+    @Transactional(readOnly = true)
+    public Page<ReservationResponse> listReservationsByDate(LocalDate date, Pageable pageable) {
         return reservationRepository
                 .findByDateAndStatus(date, Reservation.Status.ACTIVE, pageable)
                 .map(ReservationResponse::from);
@@ -234,7 +246,7 @@ public class ReservationServiceImpl implements ReservationService{
 
     @Override
     @Transactional(readOnly = true)
-    public Page<ReservationResponse> listByStudy(Long studyId, Pageable pageable) {
+    public Page<ReservationResponse> listStudyReservations(Long studyId, Pageable pageable) {
        studyRepository.findById(studyId)
                .orElseThrow(() -> new BusinessException(ErrorCode.STUDY_NOT_FOUND));
 

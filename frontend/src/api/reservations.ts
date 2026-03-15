@@ -80,6 +80,7 @@ export async function cancelReservation(id: number | string) {
 
 
 export async function listMyReservations(params?:{
+    date: string
     page?: number
     size?: number
     sort?: string
@@ -90,7 +91,7 @@ export async function listMyReservations(params?:{
 
     const {data} = await http.get<ApiResponse<PageResponse<ReservationResponse>>>(
         "/api/reservations/mine",
-        { params: { page, size, sort}}
+        { params: { date: params?.date, page, size, sort}}
     )
     if (!data.success || data.data == null) throw new Error(data.error?.message ?? "List failed")
     return data.data

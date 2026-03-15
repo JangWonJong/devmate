@@ -13,16 +13,16 @@ public interface ReservationService {
 
     ReservationCreateResponse create(Long memberId, ReservationCreateRequest req);
 
-    Page<ReservationResponse> listMine(Long memberId, Pageable pageable);
+    ReservationCreateResponse createForStudy(Long memberId, Long studyId, StudyReservationCreateRequest req);
 
-    Page<ReservationResponse> listRoomDate(Long roomId, LocalDate date, Pageable pageable);
+    Page<ReservationResponse> listMyReservations(Long memberId, LocalDate date, Pageable pageable);
 
-    Page<ReservationResponse> listAllByDate(LocalDate date, Pageable pageable);
+    Page<ReservationResponse> listRoomReservations(Long roomId, LocalDate date, Pageable pageable);
+
+    Page<ReservationResponse> listReservationsByDate(LocalDate date, Pageable pageable);
+
+    Page<ReservationResponse> listStudyReservations(Long studyId, Pageable pageable);
 
     void cancel(Long memberId, Long reservationId);
-
-     ReservationCreateResponse createForStudy(Long memberId, Long studyId, StudyReservationCreateRequest req);
-
-     Page<ReservationResponse> listByStudy(Long studyId, Pageable pageable);
 
 }

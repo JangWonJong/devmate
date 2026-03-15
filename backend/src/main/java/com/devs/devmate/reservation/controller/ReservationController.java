@@ -34,16 +34,18 @@ public class ReservationController {
             Pageable pageable
     ) {
         if (roomId == null) {
-            return ApiResponse.ok(reservationService.listAllByDate(date, pageable)); // 네가 만든 메소드명에 맞춰 수정
+            return ApiResponse.ok(reservationService.listReservationsByDate(date, pageable)); // 네가 만든 메소드명에 맞춰 수정
         }
-        return ApiResponse.ok(reservationService.listRoomDate(roomId, date, pageable));
+        return ApiResponse.ok(reservationService.listRoomReservations(roomId, date, pageable));
     }
 
 
     @GetMapping("/mine")
-    public ApiResponse<Page<ReservationResponse>> mine(Pageable pageable) {
+    public ApiResponse<Page<ReservationResponse>> mine(
+            @RequestParam LocalDate date,
+            Pageable pageable) {
         Long memberId = SecurityUtil.currentMemberId();
-        return ApiResponse.ok(reservationService.listMine(memberId, pageable));
+        return ApiResponse.ok(reservationService.listMyReservations(memberId, date, pageable));
     }
 
     @DeleteMapping("/{id}")

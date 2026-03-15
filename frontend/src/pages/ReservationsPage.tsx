@@ -128,6 +128,7 @@ export function ReservationsPage() {
 
   const loadMine = async () => {
     const page = await listMyReservations({
+      date,
       page: 0,
       size: 50,
       sort: "date,desc",
