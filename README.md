@@ -95,6 +95,13 @@ DevMate는 **JWT 기반 인증 시스템**을 사용합니다.
 - Access Token
 - Refresh Token (DB 저장)
 
+### 인증 흐름
+
+1. 로그인 성공 시 Access Token / Refresh Token 발급
+2. Access Token 만료 시 Refresh Token으로 재발급
+3. Refresh Token은 DB에 저장
+4. 로그아웃 시 Refresh Token 삭제
+
 ### 보안 설계
 
 - BCrypt 비밀번호 암호화
@@ -108,19 +115,35 @@ DevMate는 **JWT 기반 인증 시스템**을 사용합니다.
 
 ## Member
 
-| 컬럼 | 설명 |
-|----|----|
-| id | PK |
-| email | 로그인 ID |
-| password | BCrypt 암호화 |
-| nickname | 닉네임 |
-| role | USER / ADMIN |
-| created_at | 생성 시간 |
-| updated_at | 수정 시간 |
+| 컬럼         | 설명               |
+| ---------- | ---------------- |
+| id         | PK               |
+| email      | 로그인 ID           |
+| password   | BCrypt 암호화       |
+| name       | 사용자 이름           |
+| nickname   | 닉네임              |
+| phone      | 연락처              |
+| bio        | 한 줄 소개           |
+| status     | ACTIVE / DELETED |
+| role       | USER / ADMIN     |
+| created_at | 생성 시간            |
+| updated_at | 수정 시간            |
+
 
 ---
 
 # ✨ 주요 기능
+
+## 회원 기능
+- 회원가입
+- 로그인 / 로그아웃
+- 내 정보 조회 / 수정
+- 회원탈퇴
+
+## 회원 탈퇴 정책
+- 스터디 리더인 경우 탈퇴 불가
+- 리더 위임 후 탈퇴 가능
+- 탈퇴 시 참여중인 스터디 멤버 상태 정리
 
 ## 게시글 기능
 
@@ -165,6 +188,11 @@ DevMate는 **JWT 기반 인증 시스템**을 사용합니다.
 - 내 예약 조회
 - 예약 취소
 
+## 예약 정책
+ - 1회 예약 최소 1시간 / 최대 3시간
+ - 하루 최대 3회 예약 최대 5시간 가능 (개인당)
+ - 예약 시간 1시간 전까지만 취소가능
+   
   ** 예약 방식 **
 
    DevMate의 예약 시스템은 **시간 슬롯 기반 예약 방식**을 사용합니다.
