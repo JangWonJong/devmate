@@ -1,6 +1,6 @@
 import type { AxiosError } from "axios";
 
-export function apiErrorMessage(e: any, fallback: string) {
+export function apiErrorMessage(e: unknown, fallback: string) {
 
     const err = e as AxiosError<any>
     const msg =
@@ -8,6 +8,6 @@ export function apiErrorMessage(e: any, fallback: string) {
         err?.response?.data?.message ??
         err?.message
 
-    return msg ?? fallback
+    return msg || fallback
 
 }

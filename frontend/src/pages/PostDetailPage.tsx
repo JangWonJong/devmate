@@ -14,7 +14,7 @@ import {
 import { getStudyByPostId, getStudyMembers, createStudy, getStudy, joinStudy, leaveStudy, closeStudy, delegateStudyLeader,
    type StudyMemberResponse, type StudyResponse } from "../api/study";
 import { listStudyReservations, type ReservationResponse } from "../api/reservations";
-import { apiErrorMessage } from "../api/error";
+import { apiErrorMessage } from "../utils/error";
 
 
 function StatusBadge({ solved }: { solved: boolean }) {

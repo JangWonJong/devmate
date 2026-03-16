@@ -16,7 +16,7 @@ import {
 import { ReservationTimeline } from "./RservationTimeline"
 import { pageStyle, cardStyle, inputStyle, primaryButtonStyle, secondaryButtonStyle, 
   mutedBoxStyle, errorBoxStyle, getSlotButtonStyle } from "../ui/properties"
-import { apiErrorMessage } from "../api/error"
+import { apiErrorMessage } from "../utils/error"
 
 export function StudyReservationPage() {
   const nav = useNavigate()

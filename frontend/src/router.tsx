@@ -12,6 +12,7 @@ import { ReservationsPage } from "./pages/ReservationsPage";
 import { PublicOnlyRoute } from "./auth/PublicOnlyRoute";
 import { MyStudiesPage } from "./pages/MyStudiesPage";
 import { StudyReservationPage } from "./pages/StudyReservationPage"
+import { MyPage } from "./pages/MyPage";
 
 export const router = createBrowserRouter([
     {
@@ -27,10 +28,11 @@ export const router = createBrowserRouter([
 
             { path: "/login", element: <PublicOnlyRoute> <LoginPage /></PublicOnlyRoute> },
             { path: "/signup", element: <PublicOnlyRoute> <SignupPage /></PublicOnlyRoute> },
+            { path: "/mypage", element: <RequireAuth><MyPage /></RequireAuth> },
 
             { path: "/mystudies", element:  <RequireAuth><MyStudiesPage /></RequireAuth> },
             { path: "/studies/:studyId/reservation", element:  <RequireAuth><StudyReservationPage /></RequireAuth> },
-
+            
         ]
     }
 ])

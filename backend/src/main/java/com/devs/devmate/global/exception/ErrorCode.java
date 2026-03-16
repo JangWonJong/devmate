@@ -17,10 +17,14 @@ public enum ErrorCode {
     TOKEN_INVALID(HttpStatus.UNAUTHORIZED, "AUTH_401_3", "유효하지 않은 토큰입니다."),
 
     // MEMBER
-    DUPLICATE_EMAIL(HttpStatus.CONFLICT, "MEMBER_409_1", "이미 사용 중인 이메일입니다."),
-    DUPLICATE_NICKNAME(HttpStatus.CONFLICT, "MEMBER_409_2", "이미 사용 중인 닉네임입니다."),
+    PASSWORD_CONFIRM_MISMATCH(HttpStatus.BAD_REQUEST, "MEMBER_400", "비밀번호가 일치하지 않습니다."),
+    EMAIL_ALREADY_EXISTS(HttpStatus.CONFLICT, "MEMBER_409_1", "이미 사용 중인 이메일입니다."),
+    NICKNAME_ALREADY_EXISTS(HttpStatus.CONFLICT, "MEMBER_409_2", "이미 사용 중인 닉네임입니다."),
     MEMBER_NOT_FOUND(HttpStatus.NOT_FOUND, "MEMBER_404", "회원 정보를 찾을 수 없습니다."),
-
+    INVALID_PASSWORD(HttpStatus.BAD_REQUEST, "MEMBER_400_2", "비밀번호가 올바르지 않습니다."),
+    SAME_AS_OLD_PASSWORD(HttpStatus.BAD_REQUEST, "MEMBER_400_3", "새 비밀번호는 현재 비밀번호와 달라야 합니다."),
+    MEMBER_ALREADY_DELETED(HttpStatus.BAD_REQUEST, "MEMBER_400_4", "이미 탈퇴한 회원입니다."),
+    STUDY_LEADER_WITHDRAW_NOT_ALLOWED(HttpStatus.BAD_REQUEST, "MEMBER_400_5", "리더로 참여 중인 스터디가 있습니다. 리더를 위임한 뒤 탈퇴해주세요."),
     // POST
     POST_NOT_FOUND(HttpStatus.NOT_FOUND, "POST_404", "게시글을 찾을 수 없습니다."),
     FORBIDDEN_POST(HttpStatus.FORBIDDEN, "POST_403", "게시글에 대한 권한이 없습니다."),

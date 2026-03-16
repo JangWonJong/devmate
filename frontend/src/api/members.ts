@@ -7,7 +7,28 @@ type ApiResponse<T> = { success: boolean; data?: T; error?: ApiError}
 export type MeResponse = {
     id: number
     email: string
+    name: string
     nickname: string
+    phone: string | null
+    bio: string | null
+    status: "ACTIVE" | "DELETED"
+}
+
+export type UpdateProfileRequest = {
+  name: string
+  nickname: string
+  phone?: string
+  bio?: string
+}
+
+export type ChangePasswordRequest = {
+  currentPassword: string
+  newPassword: string
+  confirmPassword: string
+}
+
+export type WithdrawRequest = {
+  password: string
 }
 
 export async function getMe() {
@@ -20,4 +41,28 @@ export async function getMe() {
 export async function getMeId() {
     const me = await getMe()
     return me.id
+}
+
+export async function updateProfile(req: UpdateProfileRequest) {
+  const { data } = await http.patch<ApiResponse<MeResponse>>("/api/members/me", req)
+  if (!data.success || !data.data) {
+    throw new Error(data.error?.message ?? "회원정보 수정 실패")
+  }
+  return data.data
+}
+
+export async function changePassword(req: ChangePasswordRequest) {
+  const { data } = await http.patch<ApiResponse<null>>("/api/members/me/password", req)
+  if (!data.success) {
+    throw new Error(data.error?.message ?? "비밀번호 변경 실패")
+  }
+}
+
+export async function withdrawMember(req: WithdrawRequest) {
+  const { data } = await http.delete<ApiResponse<null>>("/api/members/me", {
+    data: req,
+  })
+  if (!data.success) {
+    throw new Error(data.error?.message ?? "회원탈퇴 실패")
+  }
 }

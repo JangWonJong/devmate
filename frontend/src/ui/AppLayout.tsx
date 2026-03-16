@@ -130,12 +130,14 @@ export function AppLayout(){
             {isAuthenticated && <Link to="/posts/new">글쓰기</Link>}
             {isAuthenticated && <Link to="/mystudies">내 스터디</Link>}
             <Link to="/reservations">예약</Link>
+            {isAuthenticated && <Link to="/mypage">마이페이지</Link>}
+
             {meLoading ? (
               <span style={{ fontSize: 13, color: "#666" }}>사용자 확인 중</span>
             ) : isAuthenticated ? (
               <>
                 <span style={{ fontSize: 13, color: "#666" }}>
-                  {me.nickname} ({me.email})
+                  {me.nickname}님 ({me.email})
                 </span>
                 <button
                   style={{ padding: "6px 10px", cursor: "pointer" }}

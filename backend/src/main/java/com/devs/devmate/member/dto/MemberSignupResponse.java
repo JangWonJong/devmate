@@ -12,14 +12,8 @@ public class MemberSignupResponse {
 
     private Long id;
     private String email;
+    private String name;
     private  String nickname;
     private Role role;
-
-    /*public MemberSignupResponse(Member member){
-        this.id = member.getId();
-        this.email = member.getEmail();
-        this.nickname = member.getNickname();
-        this.role = member.getRole();
-    }*/
 
 }

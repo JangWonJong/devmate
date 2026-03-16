@@ -10,7 +10,7 @@ import {
 } from "../api/reservations"
 import { tokenStore } from "../auth/token"
 import { getMeId } from "../api/members"
-import { apiErrorMessage } from "../api/error"
+import { apiErrorMessage } from "../utils/error"
 import {
   addHours,
   makeTimeSlots,

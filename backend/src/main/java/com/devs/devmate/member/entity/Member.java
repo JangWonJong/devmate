@@ -22,13 +22,45 @@ public class Member extends BaseEntity {
     @Column(nullable = false, length = 80)
     private String password;
 
+    @Column(nullable = false, length = 30)
+    private String name;
+
     @Column(nullable = false, unique = true, length = 30)
     private String nickname;
+
+    @Column(length = 30)
+    private String phone;
+
+    @Column(length = 30)
+    private String bio;
 
     @Enumerated(EnumType.STRING)
     @Column(nullable = false)
     @Builder.Default
     private Role role = Role.USER;
 
+    @Enumerated(EnumType.STRING)
+    @Column(nullable = false)
+    @Builder.Default
+    private MemberStatus status = MemberStatus.ACTIVE;
+
+    public void updateProfile(String name, String nickname, String phone, String bio) {
+        this.name = name;
+        this.nickname = nickname;
+        this.phone = phone;
+        this.bio = bio;
+    }
+
+    public void changePassword(String encodedPassword) {
+        this.password = encodedPassword;
+    }
+
+    public void withdraw() {
+        this.status = MemberStatus.DELETED;
+    }
+
+    public boolean isDeleted() {
+        return this.status == MemberStatus.DELETED;
+    }
 
 }
