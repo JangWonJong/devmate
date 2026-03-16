@@ -110,7 +110,7 @@ public class ReservationServiceImpl implements ReservationService{
     }
 
     private void validateDailyReservationPolicy(Long memberId, LocalDate date, LocalTime startTime, LocalTime endTime) {
-        List<Reservation> reservations = reservationRepository.findByMemberIdAndDateAndStatus(
+        List<Reservation> reservations = reservationRepository.findPersonalReservationByMemberIdAndDateAndStatus(
                 memberId, date, Reservation.Status.ACTIVE
         );
 
@@ -235,7 +235,7 @@ public class ReservationServiceImpl implements ReservationService{
     @Transactional(readOnly = true)
     public Page<ReservationResponse> listMyReservations(Long memberId, Pageable pageable) {
         return reservationRepository
-                .findByMemberIdAndStatus(memberId, Reservation.Status.ACTIVE, pageable)
+                .findVisibleReservationByMemberIdAndStatus(memberId, Reservation.Status.ACTIVE, pageable)
                 .map(ReservationResponse::from);
     }
 
@@ -243,7 +243,7 @@ public class ReservationServiceImpl implements ReservationService{
     @Transactional(readOnly = true)
     public Page<ReservationResponse> listMyReservationsByDate(Long memberId, LocalDate date, Pageable pageable) {
         return reservationRepository
-                .findByMemberIdAndDateAndStatus(memberId, date, Reservation.Status.ACTIVE, pageable)
+                .findVisibleReservationByMemberIdAndDateAndStatus(memberId, date, Reservation.Status.ACTIVE, pageable)
                 .map(ReservationResponse::from);
     }
 
@@ -288,7 +288,7 @@ public class ReservationServiceImpl implements ReservationService{
                .orElseThrow(() -> new BusinessException(ErrorCode.STUDY_NOT_FOUND));
 
         return reservationRepository
-                .findByStudyIdAndStatus(studyId, Reservation.Status.ACTIVE, pageable)
+                .findPageByStudyIdAndStatus(studyId, Reservation.Status.ACTIVE, pageable)
                 .map(ReservationResponse::from);
     }
 }

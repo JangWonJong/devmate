@@ -45,7 +45,7 @@ public class StudyServiceImpl implements StudyService{
     }
 
     private void validateStudyJoinReservationConflict(Long memberId, Long studyId) {
-        List<Reservation> studyReservations = reservationRepository.findByStudyIdAndStatus(
+        List<Reservation> studyReservations = reservationRepository.findAllByStudyIdAndStatus(
                 studyId, Reservation.Status.ACTIVE
         );
 

@@ -21,7 +21,7 @@ public interface ReservationRepository extends JpaRepository<Reservation, Long> 
         select count(r) > 0 from Reservation r
             where r.room.id = :roomId
                 and r.date = :date
-                and r.status = :active
+                and r.status = :status
                 and r.startTime < :endTime
                 and r.endTime > :startTime
     """)
@@ -29,14 +29,14 @@ public interface ReservationRepository extends JpaRepository<Reservation, Long> 
                           @Param("date") LocalDate date,
                           @Param("startTime")LocalTime startTime,
                           @Param("endTime") LocalTime endTime,
-                          @Param("active")Status active);
+                          @Param("status")Status active);
 
 
     @Query("""
          select count(r) > 0 from Reservation r
             where r.member.id = :memberId
                  and r.date = :date
-                 and r.status = :active
+                 and r.status = :status
                  and r.startTime < :endTime
                  and r.endTime > :startTime
     """)
@@ -45,11 +45,11 @@ public interface ReservationRepository extends JpaRepository<Reservation, Long> 
             @Param("date") LocalDate date,
             @Param("startTime")LocalTime startTime,
             @Param("endTime") LocalTime endTime,
-            @Param("active")Status active);
+            @Param("status")Status active);
 
 
     @EntityGraph(attributePaths = {"room", "member", "study"})
-    @Query("""
+    @Query(value = """
         select distinct r
         from Reservation r
         left join StudyMember sm
@@ -61,13 +61,28 @@ public interface ReservationRepository extends JpaRepository<Reservation, Long> 
                 r.member.id = :memberId
                 or sm.id is not null
           )
-    """)
-    Page<Reservation> findByMemberIdAndStatus(
+    """,
+    countQuery = """
+        select count(distinct r.id)
+        from Reservation r
+        left join StudyMember sm
+          on sm.study = r.study
+         and sm.member.id = :memberId
+         and sm.status = com.devs.devmate.study.entity.StudyMember.Status.JOINED
+        where r.status = :status
+          and (
+                r.member.id = :memberId
+                or sm.id is not null
+          )
+    """
+    )
+    Page<Reservation> findVisibleReservationByMemberIdAndStatus(
             @Param("memberId") Long memberId,
             @Param("status") Status status,
             Pageable pageable);
 
 
+    // 개인 및 내가 참여한 예약
     @EntityGraph(attributePaths = {"room", "member", "study"})
     @Query("""
         select distinct r
@@ -83,11 +98,17 @@ public interface ReservationRepository extends JpaRepository<Reservation, Long> 
                 or sm.id is not null
           )
     """)
-    Page<Reservation> findByMemberIdAndDateAndStatus(
+    Page<Reservation> findVisibleReservationByMemberIdAndDateAndStatus(
             @Param("memberId") Long memberId,
             @Param("date") LocalDate date,
             @Param("status") Reservation.Status status,
             Pageable pageable
+    );
+    // 개인예약만
+    List<Reservation> findPersonalReservationByMemberIdAndDateAndStatus(
+            Long memberId,
+            LocalDate date,
+            Reservation.Status status
     );
 
     @EntityGraph(attributePaths = {"room", "member"})
@@ -97,15 +118,9 @@ public interface ReservationRepository extends JpaRepository<Reservation, Long> 
     Page<Reservation> findByDateAndStatus(LocalDate date, Status status, Pageable pageable);
 
     @EntityGraph(attributePaths = {"room", "member", "study"})
-    Page<Reservation> findByStudyIdAndStatus(Long studyId, Status status, Pageable pageable);
+    Page<Reservation> findPageByStudyIdAndStatus(Long studyId, Status status, Pageable pageable);
 
-    List<Reservation> findByStudyIdAndStatus(Long studyId, Reservation.Status status);
-
-    List<Reservation> findByMemberIdAndDateAndStatus(
-            Long memberId,
-            LocalDate date,
-            Reservation.Status status
-    );
+    List<Reservation> findAllByStudyIdAndStatus(Long studyId, Reservation.Status status);
 
     long countByMemberIdAndDateAndStatus(Long memberId, LocalDate date, Status status);
 
