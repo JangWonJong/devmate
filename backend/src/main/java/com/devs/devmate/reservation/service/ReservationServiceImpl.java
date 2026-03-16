@@ -109,8 +109,8 @@ public class ReservationServiceImpl implements ReservationService{
         }
     }
 
-    private void validateDailyReservationPolicy(Long memberId, LocalDate date, LocalTime startTime, LocalTime endTime) {
-        List<Reservation> reservations = reservationRepository.findPersonalReservationByMemberIdAndDateAndStatus(
+    private void validateDailyCreationLimit(Long memberId, LocalDate date, LocalTime startTime, LocalTime endTime) {
+        List<Reservation> reservations = reservationRepository.findByMemberIdAndDateAndStatus(
                 memberId, date, Reservation.Status.ACTIVE
         );
 
@@ -159,7 +159,7 @@ public class ReservationServiceImpl implements ReservationService{
 
         validateReservationTime(req.startTime(), req.endTime());
         validateNotPastReservation(req.date(), req.startTime());
-        validateDailyReservationPolicy(memberId, req.date(), req.startTime(), req.endTime());
+        validateDailyCreationLimit(memberId, req.date(), req.startTime(), req.endTime());
         validateMemberOverlap(memberId, req.date(), req.startTime(), req.endTime());
         Room room = findRoom(req.roomId());
 
@@ -189,7 +189,7 @@ public class ReservationServiceImpl implements ReservationService{
 
         validateReservationTime(req.startTime(), req.endTime());
         validateNotPastReservation(req.date(), req.startTime());
-        validateDailyReservationPolicy(memberId, req.date(), req.startTime(), req.endTime());
+        validateDailyCreationLimit(memberId, req.date(), req.startTime(), req.endTime());
         validateMemberOverlap(memberId, req.date(), req.startTime(), req.endTime());
 
         Study study = studyRepository.findById(studyId)
@@ -213,7 +213,7 @@ public class ReservationServiceImpl implements ReservationService{
         validateReservationOverlap(
                 room.getId(), req.date(), req.startTime(), req.endTime());
 
-        String title = "[스터디]" + study.getPost().getTitle();
+        String title = "[스터디] " + study.getPost().getTitle();
 
         Reservation saved = reservationRepository.save(
                 Reservation.builder()

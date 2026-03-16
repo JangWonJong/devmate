@@ -21,7 +21,7 @@ public interface ReservationRepository extends JpaRepository<Reservation, Long> 
         select count(r) > 0 from Reservation r
             where r.room.id = :roomId
                 and r.date = :date
-                and r.status = :status
+                and r.status = :active
                 and r.startTime < :endTime
                 and r.endTime > :startTime
     """)
@@ -29,14 +29,14 @@ public interface ReservationRepository extends JpaRepository<Reservation, Long> 
                           @Param("date") LocalDate date,
                           @Param("startTime")LocalTime startTime,
                           @Param("endTime") LocalTime endTime,
-                          @Param("status")Status active);
+                          @Param("active")Status active);
 
 
     @Query("""
          select count(r) > 0 from Reservation r
             where r.member.id = :memberId
                  and r.date = :date
-                 and r.status = :status
+                 and r.status = :active
                  and r.startTime < :endTime
                  and r.endTime > :startTime
     """)
@@ -45,7 +45,7 @@ public interface ReservationRepository extends JpaRepository<Reservation, Long> 
             @Param("date") LocalDate date,
             @Param("startTime")LocalTime startTime,
             @Param("endTime") LocalTime endTime,
-            @Param("status")Status active);
+            @Param("active")Status active);
 
 
     @EntityGraph(attributePaths = {"room", "member", "study"})
@@ -84,7 +84,7 @@ public interface ReservationRepository extends JpaRepository<Reservation, Long> 
 
     // 개인 및 내가 참여한 예약
     @EntityGraph(attributePaths = {"room", "member", "study"})
-    @Query("""
+    @Query(value = """
         select distinct r
         from Reservation r
         left join StudyMember sm
@@ -97,7 +97,22 @@ public interface ReservationRepository extends JpaRepository<Reservation, Long> 
                 r.member.id = :memberId
                 or sm.id is not null
           )
-    """)
+    """,
+    countQuery = """
+        select count(distinct r.id)
+        from Reservation r
+        left join StudyMember sm
+          on sm.study = r.study
+         and sm.member.id = :memberId
+         and sm.status = com.devs.devmate.study.entity.StudyMember.Status.JOINED
+        where r.status = :status
+          and r.date = :date
+          and (
+                r.member.id = :memberId
+                or sm.id is not null
+          )
+    """
+    )
     Page<Reservation> findVisibleReservationByMemberIdAndDateAndStatus(
             @Param("memberId") Long memberId,
             @Param("date") LocalDate date,
@@ -105,7 +120,7 @@ public interface ReservationRepository extends JpaRepository<Reservation, Long> 
             Pageable pageable
     );
     // 개인예약만
-    List<Reservation> findPersonalReservationByMemberIdAndDateAndStatus(
+    List<Reservation> findByMemberIdAndDateAndStatus(
             Long memberId,
             LocalDate date,
             Reservation.Status status
