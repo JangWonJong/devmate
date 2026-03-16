@@ -34,19 +34,23 @@ public class GlobalExceptionHandler {
                 .status(errorcode.getStatus())
                 .body(ApiResponse.fail(ApiError.builder()
                         .code(errorcode.getCode())
-                        .message(errorcode.getMessage())
+                        .message(msg)
                         .build()));
     }
 
     @ExceptionHandler(ConstraintViolationException.class)
     public ResponseEntity<ApiResponse<Void>> handleConstraint(ConstraintViolationException e){
+        String msg = e.getConstraintViolations().stream()
+                .findFirst()
+                .map(v -> v.getMessage())
+                .orElse(ErrorCode.INVALID_REQUEST.getMessage());
 
         ErrorCode errorCode = ErrorCode.INVALID_REQUEST;
         return ResponseEntity
                 .status(errorCode.getStatus())
                 .body(ApiResponse.fail(ApiError.builder()
                         .code(errorCode.getCode())
-                        .message(errorCode.getMessage())
+                        .message(msg)
                         .build()));
     }
 
