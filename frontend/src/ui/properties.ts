@@ -74,6 +74,85 @@ export const listItemCardStyle: CSSProperties = {
   background: "#fff",
 }
 
+/* 추가 */
+export const headerStyle: CSSProperties = {
+  borderBottom: "1px solid #eee",
+  padding: "12px 16px",
+  background: "#fff",
+}
+
+export const headerInnerStyle: CSSProperties = {
+  maxWidth: 900,
+  margin: "0 auto",
+  display: "flex",
+  justifyContent: "space-between",
+  alignItems: "center",
+  gap: 16,
+}
+
+export const logoStyle: CSSProperties = {
+  fontWeight: 700,
+  fontSize: 20,
+  textDecoration: "none",
+  color: "#111",
+  whiteSpace: "nowrap",
+}
+
+export const navStyle: CSSProperties = {
+  display: "flex",
+  gap: 16,
+  alignItems: "center",
+  flexWrap: "wrap",
+}
+
+export const navItemStyle: CSSProperties = {
+  color: "#4c57ff",
+  textDecoration: "none",
+  fontSize: 16,
+  background: "none",
+  border: "none",
+  padding: 0,
+  cursor: "pointer",
+  font: "inherit",
+}
+
+export const mainLayoutStyle: CSSProperties = {
+  maxWidth: 900,
+  margin: "0 auto",
+  padding: "16px",
+}
+
+export const titleHeroStyle: CSSProperties = {
+  fontSize: 56,
+  fontWeight: 800,
+  margin: 0,
+  marginBottom: 12,
+  color: "#24364b",
+  letterSpacing: -1,
+}
+
+export const authPageWrapStyle: CSSProperties = {
+  minHeight: "calc(100vh - 80px)",
+  display: "flex",
+  alignItems: "center",
+  justifyContent: "center",
+  padding: "40px 16px",
+}
+
+export const authFormStyle: CSSProperties = {
+  width: "100%",
+  maxWidth: 420,
+  display: "flex",
+  flexDirection: "column",
+  gap: 12,
+}
+
+export const authButtonRowStyle: CSSProperties = {
+  display: "flex",
+  gap: 10,
+  marginTop: 6,
+}
+
 export function getSlotButtonStyle(unavailable: boolean, selected: boolean): React.CSSProperties {
   return {
     ...slotButtonBaseStyle,
@@ -87,7 +166,6 @@ export function getSlotButtonStyle(unavailable: boolean, selected: boolean): Rea
     cursor: unavailable ? "not-allowed" : "pointer",
   }
 }
-
 
 export function getReservationStatusStyle(status: string) {
   if (status === "오늘 예약") {

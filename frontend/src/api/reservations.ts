@@ -123,7 +123,7 @@ export async function listStudyReservations(params:{
 }) {
     const page = params.page ?? 0
     const size = params.size ?? 20
-    const sort = params.sort ?? "date.asc"
+    const sort = params.sort ?? "date,asc"
 
     const {data} = await http.get<ApiResponse<PageResponse<ReservationResponse>>>(
         `/api/studies/${params.studyId}/reservations`,

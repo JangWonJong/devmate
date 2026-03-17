@@ -3,7 +3,7 @@ import { Link, Outlet, useLocation, useNavigate } from "react-router-dom"
 import { tokenStore } from "../auth/token"
 import { getMe, type MeResponse } from "../api/members"
 import { logout, reissue } from "../api/auth"
-
+import { headerStyle, headerInnerStyle, logoStyle, navStyle, navItemStyle, mainLayoutStyle, secondaryButtonStyle } from "./properties"
 
 export function AppLayout(){
   const nav = useNavigate()
@@ -92,7 +92,6 @@ export function AppLayout(){
         if (status === 401 || status === 403) {
           tokenStore.clear()
           setMe(null)
-          moveToLogin()
           return
         }
         setMe(null)
@@ -100,7 +99,7 @@ export function AppLayout(){
         setMeLoading(false)
        }
     })()
-  }, [loggedIn, moveToLogin])
+  }, [loggedIn])
   
   useEffect(() => {
       if (!isAuthenticated) return
@@ -112,25 +111,53 @@ export function AppLayout(){
 
     return (
      <div style={{ fontFamily: "system-ui, sans-serif" }}>
-      <header style={{ borderBottom: "1px solid #eee", padding: "12px 16px" }}>
-        <div
-          style={{
-            maxWidth: 900,
-            margin: "0 auto",
-            display: "flex",
-            justifyContent: "space-between",
-            alignItems: "center",
-          }}
-        >
-          <Link to="/" style={{ fontWeight: 700, textDecoration: "none", color: "#111" }}>
+      <header style={headerStyle}>
+        <div style={headerInnerStyle}>
+          <Link to="/" style={logoStyle}>
             DevMate
           </Link>
-          
-          <nav style={{ display: "flex", gap: 12, alignItems: "center" }}>
-            {isAuthenticated && <Link to="/posts/new">글쓰기</Link>}
-            {isAuthenticated && <Link to="/mystudies">내 스터디</Link>}
-            <Link to="/reservations">예약</Link>
-            {isAuthenticated && <Link to="/mypage">마이페이지</Link>}
+
+          <nav style={navStyle}>
+            {isAuthenticated ? (
+              <Link to="/posts/new" style={navItemStyle}>
+                글쓰기
+              </Link>
+            ) : (
+              <button
+                type="button"
+                style={navItemStyle}
+                onClick={() => {
+                  alert("로그인 후 게시글 작성이 가능합니다.")
+                  nav("/login", {
+                    state: {
+                      from: {
+                        pathname: loc.pathname,
+                        search: loc.search,
+                        hash: loc.hash,
+                      },
+                    },
+                  })
+                }}
+              >
+                글쓰기
+              </button>
+            )}
+
+            {isAuthenticated && (
+              <Link to="/mystudies" style={navItemStyle}>
+                내 스터디
+              </Link>
+            )}
+
+            <Link to="/reservations" style={navItemStyle}>
+              예약
+            </Link>
+
+            {isAuthenticated && (
+              <Link to="/mypage" style={navItemStyle}>
+                마이페이지
+              </Link>
+            )}
 
             {meLoading ? (
               <span style={{ fontSize: 13, color: "#666" }}>사용자 확인 중</span>
@@ -140,7 +167,7 @@ export function AppLayout(){
                   {me.nickname}님 ({me.email})
                 </span>
                 <button
-                  style={{ padding: "6px 10px", cursor: "pointer" }}
+                  style={{ ...secondaryButtonStyle, padding: "6px 10px" }}
                   onClick={onLogout}
                 >
                   로그아웃
@@ -148,17 +175,21 @@ export function AppLayout(){
               </>
             ) : (
               <>
-                <Link to="/login">로그인</Link>
-                <Link to="/signup">회원가입</Link>
+                <Link to="/login" style={navItemStyle}>
+                  로그인
+                </Link>
+                <Link to="/signup" style={navItemStyle}>
+                  회원가입
+                </Link>
               </>
             )}
           </nav>
         </div>
       </header>
 
-      <main style={{ maxWidth: 900, margin: "0 auto", padding: "16px" }}>
+      <main style={mainLayoutStyle}>
         <Outlet />
       </main>
     </div>
-    )
+  )
 }

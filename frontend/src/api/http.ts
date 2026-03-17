@@ -52,30 +52,40 @@ http.interceptors.response.use(
   async (err) => {
     const status = err?.response?.status
     const originalRequest = err?.config
-
     const url = originalRequest?.url ?? ""
+    const method = (originalRequest?.method ?? "").toUpperCase()
+
     const isAuthRequest =
       url.includes("/api/auth/login") || url.includes("/api/auth/reissue")
 
-    // 401이 아니거나, auth 요청이면 그대로 실패 처리
-    if (status !== 401 && status !== 403 || isAuthRequest) {
+    const isPublicGet =
+      method === "GET" &&
+      (
+        url.startsWith("/api/posts") ||
+        url.startsWith("/api/studies") ||
+        url.startsWith("/api/rooms") ||
+        url.startsWith("/api/reservations")
+      )
+
+    if ((status !== 401 && status !== 403) || isAuthRequest) {
       return Promise.reject(err)
     }
 
-    // 무한 루프 방지: 같은 요청을 두 번 이상 재시도하지 않기
+    if (isPublicGet && !tokenStore.getRefresh()) {
+      return Promise.reject(err)
+    }
+
     if (originalRequest?._retry) {
       logoutToLogin()
       return Promise.reject(err)
     }
     originalRequest._retry = true
 
-    // refreshToken 없으면 즉시 로그아웃
     if (!tokenStore.getRefresh()) {
       logoutToLogin()
       return Promise.reject(err)
     }
 
-    // 이미 refresh 중이면, 새 토큰 나올 때까지 대기했다가 재시도
     if (isRefreshing) {
       return new Promise((resolve, reject) => {
         subscribe((newToken) => {
@@ -91,21 +101,17 @@ http.interceptors.response.use(
       })
     }
 
-    // refresh 시작
     isRefreshing = true
     try {
       const newAccessToken = await requestReissue()
       tokenStore.setAccess(newAccessToken)
 
-      // 대기중 요청들 깨우기
       notifyAll(newAccessToken)
 
-      // 본인 요청도 재시도
       originalRequest.headers = originalRequest.headers ?? {}
       originalRequest.headers.Authorization = `Bearer ${newAccessToken}`
       return http(originalRequest)
-    } catch (e) {
-      // refresh 실패 -> 모두 실패 처리 + 로그아웃
+    } catch {
       notifyAll(null)
       logoutToLogin()
       return Promise.reject(err)

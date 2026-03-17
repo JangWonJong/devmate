@@ -188,7 +188,7 @@ export function PostDetailPage() {
         }
 
         if (cancelled) return
-        setStudyError("스터디 정보를 불러오지 못했습니다.")
+        setStudyError(apiErrorMessage(e,"스터디 정보를 불러오지 못했습니다."))
       } finally {
         if (!cancelled) {
           setStudyLoading(false)
@@ -254,7 +254,7 @@ export function PostDetailPage() {
       const members = await getStudyMembers(studyId)
       setStudyMembers(members)
     } catch (e: any) {
-      setStudyError(e.message ?? "스터디 생성 실패")
+      setStudyError(apiErrorMessage(e, "스터디 생성 실패"))
     } finally {
       setStudyLoading(false)
     }
@@ -314,7 +314,7 @@ export function PostDetailPage() {
       await leaveStudy(study.id)
       await refreshStudySection(post.id)
     } catch (e: any) {
-      setStudyError(e.message ?? "스터디 탈퇴 실패")
+      setStudyError(apiErrorMessage(e, "스터디 탈퇴 실패"))
     } finally {
       setStudyLoading(false)
     }
@@ -333,7 +333,7 @@ export function PostDetailPage() {
       await closeStudy(study.id)
       await refreshStudySection(post.id)
     } catch (e: any) {
-      setStudyError(e.message ?? "스터디 모집 마감 실패")
+      setStudyError(apiErrorMessage(e, "스터디 모집 마감 실패"))
     } finally {
       setStudyLoading(false)
     }
@@ -637,7 +637,7 @@ export function PostDetailPage() {
                   )}
                 </div>
               </div>
-            {loggedIn && (
+            {loggedIn ? (
             <div style={{ display: "flex", gap: 8, marginTop: 16, flexWrap: "wrap" }}>
               {isStudyJoined && study && (
                 <button
@@ -683,6 +683,10 @@ export function PostDetailPage() {
                   정원 수정
                 </button>
               )}
+            </div>
+          ): (
+            <div style={{ color: "#666", marginTop: 16 }}>
+              로그인 후 스터디 참가 및 예약이 가능합니다.
             </div>
           )}
           </>
