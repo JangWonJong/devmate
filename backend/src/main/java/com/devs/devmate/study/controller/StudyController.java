@@ -7,10 +7,7 @@ import com.devs.devmate.reservation.dto.ReservationCreateResponse;
 import com.devs.devmate.reservation.dto.ReservationResponse;
 import com.devs.devmate.reservation.dto.StudyReservationCreateRequest;
 import com.devs.devmate.reservation.service.ReservationService;
-import com.devs.devmate.study.dto.StudyCreateRequest;
-import com.devs.devmate.study.dto.StudyLeaderDelegateRequest;
-import com.devs.devmate.study.dto.StudyMemberResponse;
-import com.devs.devmate.study.dto.StudyResponse;
+import com.devs.devmate.study.dto.*;
 import com.devs.devmate.study.service.StudyService;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
@@ -95,6 +92,18 @@ public class StudyController {
             Pageable pageable
     ) {
         return ApiResponse.ok(reservationService.listStudyReservations(studyId, pageable));
+    }
+
+    @PatchMapping("/{studyId}/capacity")
+    public ApiResponse<Long> updateCapacity(
+            @PathVariable Long studyId,
+            @RequestBody @Valid StudyCapacityUpdateRequest request
+            ) {
+        Long memberId = SecurityUtil.currentMemberId();
+
+        return ApiResponse.ok(
+                studyService.updateCapacity(memberId, studyId, request.maxMembers())
+        );
     }
 
 }

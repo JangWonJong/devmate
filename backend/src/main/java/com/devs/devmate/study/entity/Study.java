@@ -57,4 +57,8 @@ public class Study extends BaseEntity {
     public void reopen(){
         this.status = Status.RECRUITING;
     }
+
+    public void updateMaxMembers(Integer maxMembers) {
+        this.maxMembers = maxMembers;
+    }
 }

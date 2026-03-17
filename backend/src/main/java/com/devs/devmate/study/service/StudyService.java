@@ -26,4 +26,5 @@ public interface StudyService {
 
     StudyResponse getByPostId(Long postId);
 
+    Long updateCapacity(Long memberId, Long studyId, Integer maxMembers);
 }

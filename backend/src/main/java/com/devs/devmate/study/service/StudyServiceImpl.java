@@ -206,10 +206,6 @@ public class StudyServiceImpl implements StudyService{
             throw new BusinessException(ErrorCode.LEADER_CANNOT_LEAVE);
         }
 
-        if (study.isClosedByLeader()) {
-            throw new BusinessException(ErrorCode.STUDY_LEAVE_NOT_ALLOWED_AFTER_CLOSE);
-        }
-
         studyMember.cancel();
         reopenStudyIfNeeded(study);
 
@@ -329,5 +325,37 @@ public class StudyServiceImpl implements StudyService{
         String leaderNickname = findLeaderNickname(study.getId());
 
         return StudyResponse.from(study, currentMembers, leaderNickname);
+    }
+
+    @Override
+    public Long updateCapacity(Long memberId, Long studyId, Integer maxMembers) {
+        Study study = studyRepository.findById(studyId)
+                .orElseThrow(() -> new BusinessException(ErrorCode.STUDY_NOT_FOUND));
+
+        StudyMember studyMember = studyMemberRepository
+                .findByStudyIdAndMemberIdAndStatus(
+                        studyId, memberId, StudyMember.Status.JOINED
+                )
+                .orElseThrow(() -> new BusinessException(ErrorCode.STUDY_MEMBER_NOT_FOUND));
+
+        if (studyMember.getRole() != StudyMember.Role.LEADER) {
+            throw new BusinessException(ErrorCode.FORBIDDEN_STUDY_UPDATE);
+        }
+
+        long currentMembers = studyMemberRepository.countByStudyIdAndStatus(
+                studyId, StudyMember.Status.JOINED
+        );
+
+        if (maxMembers < currentMembers) {
+            throw new BusinessException(ErrorCode.INVALID_STUDY_CAPACITY);
+        }
+
+        study.updateMaxMembers(maxMembers);
+
+        if (study.isClosedByCapacity() && currentMembers < study.getMaxMembers()) {
+            study.reopen();
+        }
+
+        return study.getId();
     }
 }
