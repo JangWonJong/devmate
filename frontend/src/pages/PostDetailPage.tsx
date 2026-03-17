@@ -11,7 +11,8 @@ import {
   type CommentResponse,
   adoptComment,
 } from "../api/comments";
-import { getStudyByPostId, getStudyMembers, createStudy, getStudy, joinStudy, leaveStudy, closeStudy, delegateStudyLeader,
+import { getStudyByPostId, getStudyMembers, createStudy, getStudy, joinStudy,
+         leaveStudy, closeStudy, delegateStudyLeader, updateStudyCapacity,
    type StudyMemberResponse, type StudyResponse } from "../api/study";
 import { listStudyReservations, type ReservationResponse } from "../api/reservations";
 import { apiErrorMessage } from "../utils/error";
@@ -32,6 +33,19 @@ function StatusBadge({ solved }: { solved: boolean }) {
       {solved ? "고민 해결됨" : "고민 해결 전"}
     </span>
   );
+}
+
+function studyStatusLabel(status: string) {
+  switch (status) {
+    case "RECRUITING":
+      return "모집중"
+    case "CLOSED_BY_CAPACITY":
+      return "정원 마감"
+    case "CLOSED_BY_LEADER":
+      return "모집 마감"
+    default:
+      return status
+  }
 }
 
 export function PostDetailPage() {
@@ -196,6 +210,22 @@ export function PostDetailPage() {
   const isMine = meId != null && post.authorId === meId;
   const canSolve = isMine && !post.solved;
 
+  const refreshStudySection = async (postId: number) => {
+    const s = await getStudyByPostId(postId)
+    setStudy(s)
+
+    const members = await getStudyMembers(s.id)
+    setStudyMembers(members)
+
+    const reservationPage = await listStudyReservations({
+      studyId: s.id,
+      page: 0,
+      size: 20,
+      sort: "date,asc"
+    })
+    setStudyReservations(reservationPage.content)
+  }
+
   const onCreateStudy = async () => {
     if (!post) return
 
@@ -230,20 +260,29 @@ export function PostDetailPage() {
     }
   }
 
-  const refreshStudySection = async (postId: number) => {
-    const s = await getStudyByPostId(postId)
-    setStudy(s)
+  const onUpdateStudyCapacity = async () => {
+    if (!study || !post) return
 
-    const members = await getStudyMembers(s.id)
-    setStudyMembers(members)
+    const input = prompt("변경할 최대 인원을 입력하세요", String(study.maxMembers))
+    if (!input) return
 
-    const reservationPage = await listStudyReservations({
-      studyId: s.id,
-      page: 0,
-      size: 20,
-      sort: "date,asc"
-    })
-    setStudyReservations(reservationPage.content)
+    const maxMembers = Number(input)
+
+    if (!Number.isInteger(maxMembers) || maxMembers <2) {
+      setStudyError("최대 인원은 2명 이상이어야 합니다.")
+      return
+    }
+
+    try {
+      setStudyError(null)
+      setStudyLoading(true)
+      await updateStudyCapacity(study.id, { maxMembers })
+      await refreshStudySection(post.id)
+    } catch (e: any) {
+      setStudyError(apiErrorMessage(e, "스터디 정원 수정 실패"))
+    } finally {
+      setStudyLoading(false)
+    }
   }
 
   const onJoinStudy = async () => {
@@ -432,7 +471,9 @@ export function PostDetailPage() {
     return a.adopted ? -1 :1
   })
 
-  
+  const isRecruiting = study?.status === "RECRUITING"
+  const isClosedByCapacity = study?.status === "CLOSED_BY_CAPACITY"
+  const isClosedByLeader = study?.status === "CLOSED_BY_LEADER"
   
   const isAuthor = meId != null && post.authorId === meId
   const isStudyPost = post.type === "STUDY"
@@ -443,8 +484,10 @@ export function PostDetailPage() {
     (member) => member.memberId === meId
   )
 
-  const isRecruiting = study?.status === "RECRUITING"
-
+  const canJoin = !!study && !isStudyJoined && isRecruiting
+  const canLeave = !!study && isStudyJoined && !isStudyLeader
+  const canClose = !!study && isStudyJoined && isStudyLeader && isRecruiting
+  const canUpdateCapacity = !!study && isStudyJoined && isStudyLeader
 
   return (
     <div style={{ maxWidth: 720 }}>
@@ -504,9 +547,19 @@ export function PostDetailPage() {
             <>
               <div style={{ display: "grid", gap: 8 }}>
                 <div>
-                  <strong>상태:</strong>{" "}
-                  {study.status === "RECRUITING" ? "모집중" : "모집 마감"}
+                  <strong>상태:</strong> {studyStatusLabel(study.status)}
                 </div>
+                {isClosedByCapacity && (
+                    <div style={{ color: "#666", fontSize: 14, marginTop: 4 }}>
+                      현재 정원이 가득 차 있어 참가할 수 없습니다.
+                    </div>
+                  )}
+
+                  {isClosedByLeader && (
+                    <div style={{ color: "#666", fontSize: 14, marginTop: 4 }}>
+                      리더가 모집을 마감한 상태입니다.
+                    </div>
+                  )}
                 <div>
                   <strong>현재 인원:</strong> {study.currentMembers} / {study.maxMembers}
                 </div>
@@ -585,44 +638,53 @@ export function PostDetailPage() {
                 </div>
               </div>
             {loggedIn && (
-              <div style={{ display: "flex", gap: 8, marginTop: 16, flexWrap: "wrap" }}>
-                {isStudyJoined && study && (
-                  <button
-                    style={{ padding: "8px 12px" }}
-                    onClick={() => nav(`/studies/${study.id}/reservation`)}
-                  >
-                    스터디 예약
-                  </button>
-                )}
+            <div style={{ display: "flex", gap: 8, marginTop: 16, flexWrap: "wrap" }}>
+              {isStudyJoined && study && (
+                <button
+                  style={{ padding: "8px 12px" }}
+                  onClick={() => nav(`/studies/${study.id}/reservation`)}
+                >
+                  스터디 예약
+                </button>
+              )}
 
-                {isRecruiting && !isStudyJoined && (
-                  <button
-                    style={{ padding: "8px 12px" }}
-                    onClick={onJoinStudy}
-                  >
-                    참가하기
-                  </button>
-                )}
+              {canJoin && (
+                <button
+                  style={{ padding: "8px 12px" }}
+                  onClick={onJoinStudy}
+                >
+                  참가하기
+                </button>
+              )}
 
-                {isRecruiting && isStudyJoined && !isStudyLeader && (
-                  <button
-                    style={{ padding: "8px 12px" }}
-                    onClick={onLeaveStudy}
-                  >
-                    탈퇴하기
-                  </button>
-                )}
+              {canLeave && (
+                <button
+                  style={{ padding: "8px 12px" }}
+                  onClick={onLeaveStudy}
+                >
+                  탈퇴하기
+                </button>
+              )}
 
-                {isRecruiting && isStudyJoined && isStudyLeader && (
-                  <button
-                    style={{ padding: "8px 12px" }}
-                    onClick={onCloseStudy}
-                  >
-                    모집 마감
-                  </button>
-                )}
-              </div>
-            )}
+              {canClose && (
+                <button
+                  style={{ padding: "8px 12px" }}
+                  onClick={onCloseStudy}
+                >
+                  모집 마감
+                </button>
+              )}
+
+              {canUpdateCapacity && (
+                <button
+                  style={{ padding: "8px 12px" }}
+                  onClick={onUpdateStudyCapacity}
+                >
+                  정원 수정
+                </button>
+              )}
+            </div>
+          )}
           </>
           ) : (
             <div>

@@ -118,3 +118,16 @@ export async function getStudyByPostId(postId: number) {
 
   return data.data
 }
+
+
+export async function updateStudyCapacity(studyId: number, req: { maxMembers: number}) {
+
+  const {data} = await http.patch<ApiResponse<number>>(`/api/studies/${studyId}/capacity`, req)
+  
+  if (!data.success || !data.data) {
+    throw new Error(data.error?.message ?? "스터디 정원 수정 실패")
+  }
+
+  return data.data
+  
+}
