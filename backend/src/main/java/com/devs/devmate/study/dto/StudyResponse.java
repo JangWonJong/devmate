@@ -24,11 +24,15 @@ public class StudyResponse {
     private LocalDateTime createdAt;
 
     public static StudyResponse from(Study study, long currentMembers, String leaderNickname) {
+        String authorNickname = study.getPost().getMember().isDeleted()
+                ? "탈퇴한 회원"
+                : study.getPost().getMember().getNickname();
+
         return StudyResponse.builder()
                 .id(study.getId())
                 .postId(study.getPost().getId())
                 .postTitle(study.getPost().getTitle())
-                .authorNickname(study.getPost().getMember().getNickname())
+                .authorNickname(authorNickname)
                 .leaderNickname(leaderNickname)
                 .maxMembers(study.getMaxMembers())
                 .status(study.getStatus().name())

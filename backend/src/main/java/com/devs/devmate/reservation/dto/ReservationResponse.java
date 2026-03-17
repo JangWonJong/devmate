@@ -18,18 +18,21 @@ public record ReservationResponse(
         String title,
         String status
 ) {
-    public static ReservationResponse from(Reservation r) {
+    public static ReservationResponse from(Reservation reservation) {
+        String memberNickname = reservation.getMember().isDeleted()
+                ? "탈퇴한 회원"
+                : reservation.getMember().getNickname();
         return new ReservationResponse(
-                r.getId(),
-                r.getRoom().getId(),
-                r.getRoom().getName(),
-                r.getMember().getId(),
-                r.getMember().getNickname(),
-                r.getDate(),
-                r.getStartTime(),
-                r.getEndTime(),
-                r.getTitle(),
-                r.getStatus().name()
+                reservation.getId(),
+                reservation.getRoom().getId(),
+                reservation.getRoom().getName(),
+                reservation.getMember().getId(),
+                memberNickname,
+                reservation.getDate(),
+                reservation.getStartTime(),
+                reservation.getEndTime(),
+                reservation.getTitle(),
+                reservation.getStatus().name()
         );
     }
 }

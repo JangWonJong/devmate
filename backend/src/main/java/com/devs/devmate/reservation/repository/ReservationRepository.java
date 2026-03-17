@@ -137,6 +137,8 @@ public interface ReservationRepository extends JpaRepository<Reservation, Long> 
 
     List<Reservation> findAllByStudyIdAndStatus(Long studyId, Reservation.Status status);
 
+    List<Reservation> findByMemberIdAndStatus(Long memberId, Reservation.Status status);
+
     long countByMemberIdAndDateAndStatus(Long memberId, LocalDate date, Status status);
 
     void deleteAllByStudyId(Long studyId);

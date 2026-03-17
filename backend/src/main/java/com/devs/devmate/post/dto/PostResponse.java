@@ -21,13 +21,16 @@ public class PostResponse {
     private LocalDateTime updatedAt;
 
     public static PostResponse from(Post post){
+        String authorNickname = post.getMember().isDeleted()
+                ? "탈퇴한 회원"
+                : post.getMember().getNickname();
         return PostResponse.builder()
                 .id(post.getId())
                 .title(post.getTitle())
                 .content(post.getContent())
                 .solved(post.isSolved())
                 .authorId(post.getMember().getId())
-                .authorNickname(post.getMember().getNickname())
+                .authorNickname(authorNickname)
                 .type(post.getType().name())
                 .createdAt(post.getCreatedAt())
                 .updatedAt(post.getUpdatedAt())

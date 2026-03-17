@@ -16,7 +16,6 @@ import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
-import java.util.List;
 
 @Service
 @RequiredArgsConstructor
@@ -166,6 +165,14 @@ public class MemberServiceImpl implements MemberService{
                     && currentMembers < study.getMaxMembers()) {
                 study.reopen();
             }
+        }
+
+        var activeReservations = reservationRepository.findByMemberIdAndStatus(
+                memberId, Reservation.Status.ACTIVE
+        );
+
+        for (Reservation reservation : activeReservations) {
+            reservation.cancel();
         }
 
         member.withdraw();
