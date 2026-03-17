@@ -15,7 +15,8 @@ public class Study extends BaseEntity {
 
     public enum Status {
         RECRUITING,
-        CLOSED
+        CLOSED_BY_CAPACITY,
+        CLOSED_BY_LEADER
     }
 
     @Id
@@ -34,12 +35,26 @@ public class Study extends BaseEntity {
     @Builder.Default
     private Status status = Status.RECRUITING;
 
-    public void close() {
-        this.status = Status.CLOSED;
-    }
-
     public boolean isRecruiting() {
         return this.status == Status.RECRUITING;
     }
 
+    public boolean isClosedByCapacity() {
+        return this.status == Status.CLOSED_BY_CAPACITY;
+    }
+
+    public boolean isClosedByLeader() {
+        return this.status == Status.CLOSED_BY_LEADER;
+    }
+    public void closeByCapacity() {
+        this.status = Status.CLOSED_BY_CAPACITY;
+    }
+
+    public void closeByLeader() {
+        this.status = Status.CLOSED_BY_LEADER;
+    }
+
+    public void reopen(){
+        this.status = Status.RECRUITING;
+    }
 }

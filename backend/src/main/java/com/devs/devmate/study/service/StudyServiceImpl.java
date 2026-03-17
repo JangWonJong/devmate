@@ -63,6 +63,28 @@ public class StudyServiceImpl implements StudyService{
             }
         }
     }
+
+    private void closeStudyIfCapacityFull(Study study) {
+        long currentMembers = studyMemberRepository.countByStudyIdAndStatus(
+                study.getId(),
+                StudyMember.Status.JOINED
+        );
+
+        if (currentMembers >= study.getMaxMembers()) {
+            study.closeByCapacity();
+        }
+    }
+
+    private void reopenStudyIfNeeded(Study study) {
+        long currentMembers = studyMemberRepository.countByStudyIdAndStatus(
+                study.getId(),
+                StudyMember.Status.JOINED
+        );
+        if (study.isClosedByCapacity() && currentMembers < study.getMaxMembers()) {
+            study.reopen();
+        }
+    }
+
     // 게시글 작성자만 해당 Study post로 study 생성 가능
     @Override
     public Long create(Long memberId, StudyCreateRequest request) {
@@ -149,14 +171,10 @@ public class StudyServiceImpl implements StudyService{
         Optional<StudyMember> existing = studyMemberRepository
                 .findByStudyIdAndMemberId(studyId, memberId);
 
-        long nextMembers = currentMembers + 1;
-
         if (existing.isPresent()) {
             StudyMember studyMember = existing.get();
             studyMember.reJoin();
-            if (nextMembers >= study.getMaxMembers()) {
-                study.close();
-            }
+            closeStudyIfCapacityFull(study);
             return study.getId();
         }
 
@@ -168,9 +186,7 @@ public class StudyServiceImpl implements StudyService{
 
         studyMemberRepository.save(studyMember);
 
-        if (nextMembers >= study.getMaxMembers()) {
-            study.close();
-        }
+        closeStudyIfCapacityFull(study);
 
         return study.getId();
     }
@@ -190,11 +206,12 @@ public class StudyServiceImpl implements StudyService{
             throw new BusinessException(ErrorCode.LEADER_CANNOT_LEAVE);
         }
 
-        if (!study.isRecruiting()) {
+        if (study.isClosedByLeader()) {
             throw new BusinessException(ErrorCode.STUDY_LEAVE_NOT_ALLOWED_AFTER_CLOSE);
         }
 
         studyMember.cancel();
+        reopenStudyIfNeeded(study);
 
         return study.getId();
     }
@@ -214,11 +231,11 @@ public class StudyServiceImpl implements StudyService{
             throw new BusinessException(ErrorCode.FORBIDDEN_STUDY_CLOSE);
         }
 
-        if (!study.isRecruiting()) {
+        if (study.isClosedByLeader()) {
             throw new BusinessException(ErrorCode.STUDY_ALREADY_CLOSED);
         }
 
-        study.close();
+        study.closeByLeader();
 
         return study.getId();
     }

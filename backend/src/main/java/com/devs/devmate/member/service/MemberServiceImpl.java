@@ -6,12 +6,17 @@ import com.devs.devmate.global.exception.ErrorCode;
 import com.devs.devmate.member.dto.*;
 import com.devs.devmate.member.entity.Member;
 import com.devs.devmate.member.repository.MemberRepository;
+import com.devs.devmate.reservation.entity.Reservation;
+import com.devs.devmate.reservation.repository.ReservationRepository;
+import com.devs.devmate.study.entity.Study;
 import com.devs.devmate.study.entity.StudyMember;
 import com.devs.devmate.study.repository.StudyMemberRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+
+import java.util.List;
 
 @Service
 @RequiredArgsConstructor
@@ -21,6 +26,7 @@ public class MemberServiceImpl implements MemberService{
     private final MemberRepository memberRepository;
     private final PasswordEncoder passwordEncoder;
     private final StudyMemberRepository studyMemberRepository;
+    private final ReservationRepository reservationRepository;
 
     private Member findActiveMember(Long memberId) {
         Member member = memberRepository.findById(memberId)
@@ -149,7 +155,17 @@ public class MemberServiceImpl implements MemberService{
                 memberId, StudyMember.Status.JOINED
         );
         for (StudyMember studyMember : joinedStudyMembers) {
+            Study study = studyMember.getStudy();
             studyMember.cancel();
+
+            long currentMembers = studyMemberRepository.countByStudyIdAndStatus(
+                    study.getId(), StudyMember.Status.JOINED
+            );
+
+            if (study.getStatus() == Study.Status.CLOSED_BY_CAPACITY
+                    && currentMembers < study.getMaxMembers()) {
+                study.reopen();
+            }
         }
 
         member.withdraw();
