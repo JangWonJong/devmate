@@ -1,5 +1,7 @@
 package com.devs.devmate.comment.controller;
 
+import com.devs.devmate.comment.dto.CommentResponse;
+import com.devs.devmate.comment.dto.MyCommentResponse;
 import com.devs.devmate.comment.entity.CommentUpdateRequest;
 import com.devs.devmate.comment.service.CommentService;
 import com.devs.devmate.global.common.ApiResponse;
@@ -7,6 +9,8 @@ import com.devs.devmate.global.security.SecurityUtil;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.web.bind.annotation.*;
+
+import java.util.List;
 
 @RestController
 @RequiredArgsConstructor
@@ -35,5 +39,11 @@ public class CommentController {
         Long memberId = SecurityUtil.currentMemberId();
         commentService.adopt(memberId, commentId);
         return ApiResponse.ok();
+    }
+
+    @GetMapping("/me")
+    public ApiResponse<List<MyCommentResponse>> getMyComments() {
+        Long memberId = SecurityUtil.currentMemberId();
+        return ApiResponse.ok(commentService.getMyComments(memberId));
     }
 }

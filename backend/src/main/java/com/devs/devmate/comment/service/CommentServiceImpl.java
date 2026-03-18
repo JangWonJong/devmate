@@ -2,6 +2,7 @@ package com.devs.devmate.comment.service;
 
 import com.devs.devmate.comment.dto.CommentCreateRequest;
 import com.devs.devmate.comment.dto.CommentResponse;
+import com.devs.devmate.comment.dto.MyCommentResponse;
 import com.devs.devmate.comment.entity.Comment;
 import com.devs.devmate.comment.entity.CommentUpdateRequest;
 import com.devs.devmate.comment.repository.CommentRepository;
@@ -95,5 +96,15 @@ public class CommentServiceImpl implements CommentService{
 
         comment.adopt();
         post.markSolved();
+    }
+
+    @Override
+    @Transactional(readOnly = true)
+    public List<MyCommentResponse> getMyComments(Long memberId) {
+        List<Comment> comments = commentRepository.findByMemberIdOrderByCreatedAtDesc(memberId);
+
+        return comments.stream()
+                .map(MyCommentResponse::from)
+                .toList();
     }
 }

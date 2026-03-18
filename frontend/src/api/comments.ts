@@ -15,6 +15,15 @@ export type CommentCreateRequest = {
     content: string
 }
 
+export type MyCommentResponse = {
+    commentId: number
+    postId: number
+    postTitle: string
+    content: string
+    createdAt: string
+    adopted: boolean
+}
+
 export async function listComments(postId: string | number) {
 
     const {data} = await http.get<ApiResponse<CommentResponse[]>>(
@@ -67,4 +76,15 @@ export async function adoptComment(id: number | string) {
     const {data} = await http.patch<ApiResponse<void>>(`/api/comments/${id}/adopt`)
     if (!data.success) throw new Error(data.error?.message ?? "댓글 채택 실패")
     
+}
+
+export async function listMyComments() {
+
+    const {data} = await http.get<ApiResponse<MyCommentResponse[]>>("/api/comments/me")
+    
+    if (!data.success || data.data == null) {
+        throw new Error(data.error?.message ?? "내 댓글 조회 실패")
+    } 
+
+    return data.data
 }

@@ -153,6 +153,22 @@ export const authButtonRowStyle: CSSProperties = {
   marginTop: 6,
 }
 
+export const sectionStyle: React.CSSProperties = {
+  ...cardStyle,
+  display: "grid",
+  gap: 12,
+  marginBottom: 24,
+}
+
+export const buttonStyle: React.CSSProperties = {
+  padding: "10px 14px",
+  border: "1px solid #ddd",
+  borderRadius: 10,
+  background: "#fff",
+  fontWeight: 700,
+  cursor: "pointer",
+}
+
 export function getSlotButtonStyle(unavailable: boolean, selected: boolean): React.CSSProperties {
   return {
     ...slotButtonBaseStyle,
@@ -190,3 +206,4 @@ export function getReservationStatusStyle(status: string) {
     border: "1px solid #bbf7d0",
   }
 }
+
