@@ -13,6 +13,7 @@ export type StudyResponse = {
     authorNickname: string
     leaderNickname: string
     maxMembers: number
+    notice: string | null
     status: string
     currentMembers: number
     createdAt: string
@@ -126,6 +127,20 @@ export async function updateStudyCapacity(studyId: number, req: { maxMembers: nu
   
   if (!data.success || !data.data) {
     throw new Error(data.error?.message ?? "스터디 정원 수정 실패")
+  }
+
+  return data.data
+  
+}
+
+export async function updateStudyNotice(studyId: number, notice:string) {
+  
+  const {data} = await http.patch<ApiResponse<number>>(
+    `/api/studies/${studyId}/notice`, { notice}
+  )
+
+  if (!data.success || !data.data) {
+    throw new Error(data.error?.message ?? "공지 수정 실패")
   }
 
   return data.data

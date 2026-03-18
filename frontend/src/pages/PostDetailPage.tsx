@@ -1,8 +1,8 @@
-import { useEffect, useRef ,useState } from "react";
-import { useNavigate, useParams } from "react-router-dom";
-import { deletePost, getPost, solvePost, type PostResponse } from "../api/posts";
-import { tokenStore } from "../auth/token";
-import { getMeId } from "../api/members";
+import { useEffect, useRef ,useState } from "react" 
+import { useNavigate, useParams } from "react-router-dom"
+import { deletePost, getPost, solvePost, type PostResponse } from "../api/posts"
+import { tokenStore } from "../auth/token"
+import { getMeId } from "../api/members"
 import {
   listComments,
   createComment,
@@ -10,12 +10,13 @@ import {
   updateComment,
   type CommentResponse,
   adoptComment,
-} from "../api/comments";
+} from "../api/comments"
 import { getStudyByPostId, getStudyMembers, createStudy, getStudy, joinStudy,
          leaveStudy, closeStudy, delegateStudyLeader, updateStudyCapacity,
-   type StudyMemberResponse, type StudyResponse } from "../api/study";
-import { listStudyReservations, type ReservationResponse } from "../api/reservations";
-import { apiErrorMessage } from "../utils/error";
+   type StudyMemberResponse, type StudyResponse, 
+   updateStudyNotice} from "../api/study"
+import { listStudyReservations, type ReservationResponse } from "../api/reservations"
+import { apiErrorMessage } from "../utils/error"
 
 
 function StatusBadge({ solved }: { solved: boolean }) {
@@ -32,7 +33,7 @@ function StatusBadge({ solved }: { solved: boolean }) {
     >
       {solved ? "고민 해결됨" : "고민 해결 전"}
     </span>
-  );
+  )
 }
 
 function studyStatusLabel(status: string) {
@@ -49,8 +50,8 @@ function studyStatusLabel(status: string) {
 }
 
 export function PostDetailPage() {
-  const nav = useNavigate();
-  const { id } = useParams();
+  const nav = useNavigate()
+  const { id } = useParams()
 
   const [loadErr, setLoadErr] = useState<string | null>(null)
   const [commentErr, setCommentErr] = useState<string | null>(null)
@@ -79,10 +80,10 @@ export function PostDetailPage() {
   const handledNotFoundRef = useRef(false)
 
   useEffect(() => {
-    const sync = () => setLoggedIn(tokenStore.isLoggedIn());
-    sync();
-    return tokenStore.subscribe(sync);
-  }, []);
+    const sync = () => setLoggedIn(tokenStore.isLoggedIn())
+    sync()
+    return tokenStore.subscribe(sync)
+  }, [])
 
   useEffect(() => {
     handledNotFoundRef.current = false
@@ -91,27 +92,27 @@ export function PostDetailPage() {
   useEffect(() => {
     (async () => {
       if (!loggedIn) {
-        setMeId(null);
-        return;
+        setMeId(null)
+        return
       }
       try {
-        const id = await getMeId();
-        setMeId(id);
+        const id = await getMeId()
+        setMeId(id)
       } catch {
-        setMeId(null);
+        setMeId(null)
       }
-    })();
-  }, [loggedIn]);
+    })()
+  }, [loggedIn])
 
   useEffect(() => {
     (async () => {
       try {
-        setLoadErr(null);
-        setLoading(true);
+        setLoadErr(null)
+        setLoading(true)
 
-        if (!id) return;
-        const p = await getPost(id);
-        setPost(p);
+        if (!id) return
+        const p = await getPost(id)
+        setPost(p)
       } catch (e: any) {
         const status = e?.response?.status
         if (status === 404) {
@@ -123,29 +124,29 @@ export function PostDetailPage() {
           nav("/", {replace: true})
           return
         }
-        setLoadErr(e.message ?? "상세 조회 실패");
+        setLoadErr(apiErrorMessage(e, "상세 조회 실패"))
       } finally {
-        setLoading(false);
+        setLoading(false)
       }
-    })();
-  }, [id, nav, deletingPost]);
+    })()
+  }, [id, nav, deletingPost])
 
   useEffect(() => {
     (async () => {
-      if (!id) return;
+      if (!id) return
       try {
-        setCommentErr(null);
-        const res = await listComments(id);
-        setComments(res);
+        setCommentErr(null)
+        const res = await listComments(id)
+        setComments(res)
       } catch (e: any) {
         const status = e?.response?.status
         if (status === 404) {
           return
         }
-        setCommentErr(e.message ?? "댓글 조회 실패");
+        setCommentErr(apiErrorMessage(e, "댓글 조회 실패"))
       }
-    })();
-  }, [id]);
+    })()
+  }, [id])
 
   useEffect(() => {
     if (!post) return
@@ -203,12 +204,12 @@ export function PostDetailPage() {
   }, [post])
 
 
-  if (loading) return <div style={{ color: "#666" }}>게시글 불러오는 중...</div>;
-  if (loadErr) return <div style={{ color: "crimson" }}>{loadErr}</div>;
-  if (!post) return <div style={{ color: "#666" }}>게시글이 없어요.</div>;
+  if (loading) return <div style={{ color: "#666" }}>게시글 불러오는 중...</div>
+  if (loadErr) return <div style={{ color: "crimson" }}>{loadErr}</div>
+  if (!post) return <div style={{ color: "#666" }}>게시글이 없어요.</div>
   
-  const isMine = meId != null && post.authorId === meId;
-  const canSolve = isMine && !post.solved;
+  const isMine = meId != null && post.authorId === meId
+  const canSolve = isMine && !post.solved
 
   const refreshStudySection = async (postId: number) => {
     const s = await getStudyByPostId(postId)
@@ -353,7 +354,7 @@ export function PostDetailPage() {
       await refreshStudySection(post.id)
 
     } catch (e: any) {
-      setStudyError(e.message ?? "리더 위임 실패")
+      setStudyError(apiErrorMessage(e, "리더 위임 실패"))
     } finally {
       setStudyLoading(false)
     }
@@ -372,13 +373,13 @@ export function PostDetailPage() {
       const res = await listComments(id)
       setComments(res)
     } catch (e: any) {
-      setCommentErr(e.message ?? "댓글 작성 실패")
+      setCommentErr(apiErrorMessage(e, "댓글 작성 실패"))
     }
-  };
+  }
 
   const onDeleteComment = async (commentId: number) => {
     const ok = confirm("댓글을 삭제할까요?")
-    if (!ok) return;
+    if (!ok) return
 
     try {
       setCommentErr(null)
@@ -390,9 +391,9 @@ export function PostDetailPage() {
         setEditingContent("")
       }
     } catch (e: any) {
-      setCommentErr(e.message ?? "댓글 삭제 실패")
+      setCommentErr(apiErrorMessage(e, "댓글 삭제 실패"))
     }
-  };
+  }
 
   const onUpdateComment = async (commentId: number) => {
     const content = editingContent.trim()
@@ -404,14 +405,14 @@ export function PostDetailPage() {
 
       setComments((prev) =>
         prev.map((c) => (c.id === commentId ? { ...c, content } : c))
-      );
+      )
 
       setEditingCommentId(null)
       setEditingContent("")
     } catch (e: any) {
-      setCommentErr(e.message ?? "댓글 수정 실패")
+      setCommentErr(apiErrorMessage(e, "댓글 수정 실패"))
     }
-  };
+  }
 
   const onSolve = async () => {
     if (!id) return
@@ -426,7 +427,7 @@ export function PostDetailPage() {
       const updated = await getPost(id)
       setPost(updated)
     } catch (e: any) {
-      setActionErr(e.message ?? "해결 처리 실패")
+      setActionErr(apiErrorMessage(e, "해결 처리 실패"))
     } finally {
       setBusy(false)
     }
@@ -444,12 +445,12 @@ export function PostDetailPage() {
       await deletePost(id)
       nav("/", { replace: true })
     } catch (e: any) {
-      setActionErr(e.message ?? "삭제 실패")
+      setActionErr(apiErrorMessage(e, "삭제 실패"))
       setDeletingPost(false)
     } finally {
       setBusy(false)
     }
-  };
+  }
 
   const onAdoptComment = async (commentId: number) => {
   try {
@@ -462,9 +463,28 @@ export function PostDetailPage() {
     const updatedPost = await getPost(id!)
     setPost(updatedPost)
   } catch (e: any) {
-    setCommentErr(e.message ?? "댓글 채택 실패")
+    setCommentErr(apiErrorMessage(e, "댓글 채택 실패"))
   }
 }
+
+  const onUpdateNotice = async () => {
+    if (!study || !post) return
+
+    const input = prompt("공지 내용을 입력하세요", study.notice ?? "")
+    if (input === null) return
+
+    try {
+      setStudyError(null)
+      setStudyLoading(true)
+
+      await updateStudyNotice(study.id, input)
+      await refreshStudySection(post.id)
+    } catch (e: any) {
+      setStudyError(apiErrorMessage(e, "공지 수정 실패"))
+    } finally {
+      setStudyLoading(false)
+    }
+  }
 
   const sortedComments = [...comments].sort((a,b) => {
     if (a.adopted === b.adopted) return 0
@@ -488,7 +508,7 @@ export function PostDetailPage() {
   const canLeave = !!study && isStudyJoined && !isStudyLeader
   const canClose = !!study && isStudyJoined && isStudyLeader && isRecruiting
   const canUpdateCapacity = !!study && isStudyJoined && isStudyLeader
-
+  const canUpdateNotice = !!study && isStudyJoined && isStudyLeader
   return (
     <div style={{ maxWidth: 720 }}>
       <h1 style={{ fontSize: 24, fontWeight: 800, marginBottom: 8 }}>
@@ -537,14 +557,13 @@ export function PostDetailPage() {
             background: "#fafafa",
           }}
         >
-          <h3 style={{ marginTop: 0, marginBottom: 12 }}>스터디 정보</h3>
-
+          <h3 style={{ marginTop: 0, marginBottom: 12 }}>스터디 정보</h3>           
           {studyLoading ? (
             <div style={{ color: "#666" }}>스터디 정보를 불러오는 중...</div>
           ) : studyError ? (
             <div style={{ color: "crimson" }}>{studyError}</div>
           ) : study ? (
-            <>
+            <>            
               <div style={{ display: "grid", gap: 8 }}>
                 <div>
                   <strong>상태:</strong> {studyStatusLabel(study.status)}
@@ -563,6 +582,14 @@ export function PostDetailPage() {
                 <div>
                   <strong>현재 인원:</strong> {study.currentMembers} / {study.maxMembers}
                 </div>
+                {study.notice && (
+                    <div style={{ marginTop: 12 }}>
+                      <strong>스터디 공지</strong>
+                      <div style={{ marginTop: 4, color: "#3b0cf5", whiteSpace: "pre-wrap" }}>
+                        {study.notice}
+                      </div>
+                    </div>
+                  )}  
               </div>
 
               <div style={{ marginTop: 16 }}>
@@ -674,7 +701,14 @@ export function PostDetailPage() {
                   모집 마감
                 </button>
               )}
-
+              {canUpdateNotice && (
+                              <button
+                                style={{ padding: "8px 12px" }}
+                                onClick={onUpdateNotice}
+                              >
+                                공지 수정
+                              </button>
+                            )}
               {canUpdateCapacity && (
                 <button
                   style={{ padding: "8px 12px" }}
@@ -702,9 +736,11 @@ export function PostDetailPage() {
                 </button>
               )}
             </div>
+            
           )}
         </section>
       )}
+      
       {actionErr && (
         <div style={{ color: "crimson", marginTop: 12 }}>{actionErr}</div>
       )}
@@ -758,8 +794,8 @@ export function PostDetailPage() {
         {loggedIn ? (
           <form
             onSubmit={(e) => {
-              e.preventDefault();
-              onCreateComment();
+              e.preventDefault()
+              onCreateComment()
             }}
             style={{ display: "flex", gap: 8, marginBottom: 16 }}
           >
@@ -785,9 +821,8 @@ export function PostDetailPage() {
             <div style={{ color: "#666" }}>댓글이 아직 없어요</div>
           ) : (
             sortedComments.map((c) => {
-              const isMyComment = meId != null && c.memberId === meId;
-              const isEditing = editingCommentId === c.id;
-
+              const isMyComment = meId != null && c.memberId === meId
+              const isEditing = editingCommentId === c.id
               return (
                 <div
                   key={c.id}
@@ -836,9 +871,9 @@ export function PostDetailPage() {
                             <>
                               <button
                                 onClick={() => {
-                                  setCommentErr(null);
-                                  setEditingCommentId(c.id);
-                                  setEditingContent(c.content);
+                                  setCommentErr(null)
+                                  setEditingCommentId(c.id)
+                                  setEditingContent(c.content)
                                 }}
                                 style={{ fontSize: 12 }}
                               >
@@ -879,8 +914,8 @@ export function PostDetailPage() {
 
                         <button
                           onClick={() => {
-                            setEditingCommentId(null);
-                            setEditingContent("");
+                            setEditingCommentId(null)
+                            setEditingContent("")
                           }}
                           style={{ fontSize: 12 }}
                         >
@@ -892,11 +927,11 @@ export function PostDetailPage() {
                     <div style={{ marginTop: 6 }}>{c.content}</div>
                   )}
                 </div>
-              );
+              )
             })
           )}
         </div>
       </div>
     </div>
-  );
+  )
 }

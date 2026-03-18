@@ -19,6 +19,7 @@ public class StudyResponse {
     private String leaderNickname;
 
     private Integer maxMembers;
+    private String notice;
     private String status;
     private Long currentMembers;
     private LocalDateTime createdAt;
@@ -35,6 +36,7 @@ public class StudyResponse {
                 .authorNickname(authorNickname)
                 .leaderNickname(leaderNickname)
                 .maxMembers(study.getMaxMembers())
+                .notice(study.getNotice())
                 .status(study.getStatus().name())
                 .currentMembers(currentMembers)
                 .createdAt(study.getCreatedAt())

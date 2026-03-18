@@ -35,6 +35,9 @@ public class Study extends BaseEntity {
     @Builder.Default
     private Status status = Status.RECRUITING;
 
+    @Column(length = 1000)
+    private String notice;
+
     public boolean isRecruiting() {
         return this.status == Status.RECRUITING;
     }
@@ -60,5 +63,9 @@ public class Study extends BaseEntity {
 
     public void updateMaxMembers(Integer maxMembers) {
         this.maxMembers = maxMembers;
+    }
+
+    public void updateNotice(String notice) {
+        this.notice = notice;
     }
 }

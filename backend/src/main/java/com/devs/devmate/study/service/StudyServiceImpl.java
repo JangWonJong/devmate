@@ -358,4 +358,24 @@ public class StudyServiceImpl implements StudyService{
 
         return study.getId();
     }
+
+    @Override
+    public Long updateNotice(Long memberId, Long studyId, String notice) {
+        Study study = studyRepository.findById(studyId)
+                .orElseThrow(() -> new BusinessException(ErrorCode.STUDY_NOT_FOUND));
+
+        StudyMember studyMember = studyMemberRepository
+                .findByStudyIdAndMemberIdAndStatus(
+                        studyId, memberId, StudyMember.Status.JOINED
+                )
+                .orElseThrow(() -> new BusinessException(ErrorCode.STUDY_MEMBER_NOT_FOUND));
+
+        if (studyMember.getRole() != StudyMember.Role.LEADER) {
+            throw new BusinessException(ErrorCode.FORBIDDEN_STUDY_NOTICE_UPDATE);
+        }
+
+        study.updateNotice(notice.trim());
+
+        return study.getId();
+    }
 }
