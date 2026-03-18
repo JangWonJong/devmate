@@ -1,18 +1,19 @@
 import React from "react";
-import { createBrowserRouter } from "react-router-dom";
+import { createBrowserRouter } from "react-router-dom"
 import {AppLayout} from "./ui/AppLayout"
-import { PostsPage } from "./pages/PostsPage";
-import { NewPostPage } from "./pages/NewPostPage";
-import { LoginPage } from "./pages/LoginPage";
-import { SignupPage } from "./pages/SignupPage";
-import { PostDetailPage } from "./pages/PostDetailPage";
-import { EditPostPage } from "./pages/EditPostPage";
-import { RequireAuth } from "./auth/RequireAuth";
-import { ReservationsPage } from "./pages/ReservationsPage";
-import { PublicOnlyRoute } from "./auth/PublicOnlyRoute";
-import { MyStudiesPage } from "./pages/MyStudiesPage";
+import { PostsPage } from "./pages/PostsPage"
+import { NewPostPage } from "./pages/NewPostPage"
+import { LoginPage } from "./pages/LoginPage"
+import { SignupPage } from "./pages/SignupPage"
+import { PostDetailPage } from "./pages/PostDetailPage"
+import { EditPostPage } from "./pages/EditPostPage"
+import { RequireAuth } from "./auth/RequireAuth"
+import { ReservationsPage } from "./pages/ReservationsPage"
+import { PublicOnlyRoute } from "./auth/PublicOnlyRoute"
+import { MyStudiesPage } from "./pages/MyStudiesPage"
 import { StudyReservationPage } from "./pages/StudyReservationPage"
-import { MyPage } from "./pages/MyPage";
+import { MyPage } from "./pages/MyPage"
+import { AccountSettingsPage } from "./pages/AccountSettingsPage"
 
 export const router = createBrowserRouter([
     {
@@ -29,6 +30,7 @@ export const router = createBrowserRouter([
             { path: "/login", element: <PublicOnlyRoute> <LoginPage /></PublicOnlyRoute> },
             { path: "/signup", element: <PublicOnlyRoute> <SignupPage /></PublicOnlyRoute> },
             { path: "/mypage", element: <RequireAuth><MyPage /></RequireAuth> },
+            { path: "/mypage/settings", element: <RequireAuth><AccountSettingsPage /></RequireAuth> },
 
             { path: "/mystudies", element:  <RequireAuth><MyStudiesPage /></RequireAuth> },
             { path: "/studies/:studyId/reservation", element:  <RequireAuth><StudyReservationPage /></RequireAuth> },
