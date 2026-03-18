@@ -16,12 +16,21 @@ public record ReservationResponse(
         LocalTime startTime,
         LocalTime endTime,
         String title,
-        String status
+        String status,
+        Long studyId,
+        Long postId
 ) {
     public static ReservationResponse from(Reservation reservation) {
         String memberNickname = reservation.getMember().isDeleted()
                 ? "탈퇴한 회원"
                 : reservation.getMember().getNickname();
+        Long studyId = reservation.getStudy() == null
+                ? null
+                : reservation.getStudy().getId();
+        Long postId = reservation.getStudy() == null
+                ? null
+                : reservation.getStudy().getPost().getId();
+
         return new ReservationResponse(
                 reservation.getId(),
                 reservation.getRoom().getId(),
@@ -32,7 +41,9 @@ public record ReservationResponse(
                 reservation.getStartTime(),
                 reservation.getEndTime(),
                 reservation.getTitle(),
-                reservation.getStatus().name()
+                reservation.getStatus().name(),
+                studyId,
+                postId
         );
     }
 }

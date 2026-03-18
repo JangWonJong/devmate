@@ -13,6 +13,8 @@ export type ReservationResponse = {
     endTime: string
     title: string
     status: string
+    studyId: number | null
+    postId: number | null
 }
 
 export type ReservationCreateRequest = {

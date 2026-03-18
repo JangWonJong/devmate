@@ -51,6 +51,13 @@ function toScope(v: string | null): Scope {
   return v === "mine" ? "mine" : "all"
 }
 
+function isCancelable(date: string, startTime: string) {
+  const now = new Date()
+  const start = new Date(`${date}T${startTime}`)
+  const diff = (start.getTime() - now.getTime()) / (1000 * 60)
+  return diff >= 60
+}
+
 export function ReservationsPage() {
   const nav = useNavigate()
   const [sp, setSp] = useSearchParams()
@@ -259,7 +266,7 @@ export function ReservationsPage() {
     acc[item.date].push(item)
     return acc
   }, {})
-}, [items])
+  }, [items])
 
   const reservationSummary = useMemo(() => {
     let upcoming = 0
@@ -281,6 +288,10 @@ export function ReservationsPage() {
     }
   }, [items])
 
+  const onMoveToStudyPost = (postId: number | null) => {
+    if (!postId) return
+    nav(`/posts/${postId}`)
+  }
 
   return (
   <div style={pageStyle}>
@@ -603,6 +614,7 @@ export function ReservationsPage() {
             const isMine = meId != null && r.memberId === meId
             const statusLabel = getReservationStatus(r.date, r.endTime)
             const statusStyle = getReservationStatusStyle(statusLabel)
+            const cancelable = isCancelable(r.date, r.startTime)
 
             return (
               <div
@@ -646,14 +658,42 @@ export function ReservationsPage() {
                         {statusLabel}
                       </span>
                     </div>
-
-                    <div style={{ marginTop: 4, fontSize: 13, color: "#777" }}>
-                      {r.roomName}
-                      {scope === "all" && ` · ${r.memberNickname}`}
+                  <div style={{ marginTop: 10, fontSize: 15, fontWeight: 600 }}>{r.title}</div>
+                  <div style={{ marginTop: 4, fontSize: 13, color: "#777", display: "flex", gap: 6, alignItems: "center", flexWrap: "wrap" }}>
+                      <span>{r.roomName}</span>
+                      {scope === "all" && <span>· {r.memberNickname}</span>}
+                      {r.studyId ? (
+                        <button type="button" onClick={() => onMoveToStudyPost(r.postId)}
+                          style={{
+                            fontSize: 11,
+                            padding: "2px 6px",
+                            borderRadius: 6,
+                            background: "#eef4ff",
+                            border: "1px solid #d0dcff",
+                            color: "#1d4ed8",
+                            fontWeight: 600,
+                          }}
+                        >
+                          스터디
+                        </button>
+                      ) : (
+                        <span
+                          style={{
+                            fontSize: 11,
+                            padding: "2px 6px",
+                            borderRadius: 6,
+                            background: "#f5f5f5",
+                            border: "1px solid #ddd",
+                            color: "#555",
+                            fontWeight: 600,
+                          }}
+                        >
+                          개인
+                        </span>
+                      )}
                     </div>
                   </div>
-
-                  {isMine && statusLabel !== "지난 예약" && (
+                  {isMine && cancelable && (
                     <button
                       disabled={busy}
                       onClick={() => onCancel(r.id)}
@@ -664,7 +704,36 @@ export function ReservationsPage() {
                   )}
                 </div>
 
-                <div style={{ marginTop: 10, fontSize: 15 }}>{r.title}</div>
+                <div style={{ marginTop: 6, fontSize: 12 }}>
+                {cancelable ? (
+                  <span style={{ color: "#15803d", fontWeight: 600 }}>
+                    취소 가능
+                  </span>
+                ) : (
+                  <span style={{ color: "#999" }}>
+                    취소 불가
+                  </span>
+                )}
+                {r.studyId && r.postId && (
+                <div style={{ marginTop: 6 }}>
+                  <button
+                    type="button"
+                    onClick={() => onMoveToStudyPost(r.postId)}
+                    style={{
+                      background: "none",
+                      border: "none",
+                      padding: 0,
+                      color: "#1d4ed8",
+                      cursor: "pointer",
+                      fontSize: 12,
+                      textDecoration: "underline",
+                    }}
+                  >
+                    스터디 글 보기
+                  </button>
+                </div>
+              )}
+              </div>
               </div>
             )
           })}

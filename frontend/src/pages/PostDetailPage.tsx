@@ -585,7 +585,7 @@ export function PostDetailPage() {
                 {study.notice && (
                     <div style={{ marginTop: 12 }}>
                       <strong>스터디 공지</strong>
-                      <div style={{ marginTop: 4, color: "#3b0cf5", whiteSpace: "pre-wrap" }}>
+                      <div style={{ marginTop: 4, color: "#404040", whiteSpace: "pre-wrap" }}>
                         {study.notice}
                       </div>
                     </div>
