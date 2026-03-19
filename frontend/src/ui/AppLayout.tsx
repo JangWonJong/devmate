@@ -4,7 +4,8 @@ import { tokenStore } from "../auth/token"
 import { getMe, type MeResponse } from "../api/members"
 import { logout, reissue } from "../api/auth"
 import { headerStyle, headerInnerStyle, logoStyle, navStyle, navItemStyle, mainLayoutStyle, secondaryButtonStyle } from "./properties"
-import { getUnreadNotificationCount, listNotifications, readAllNotifications, readNotification, type NotificationResponse} from "../api/notifications"
+import { getUnreadNotificationCount, listNotifications, readAllNotifications, readNotification, getNotificationLabel, getNotificationLabelStyle,
+   type NotificationResponse} from "../api/notifications"
 
 
 export function AppLayout(){
@@ -23,6 +24,7 @@ export function AppLayout(){
   const notificationRef = useRef<HTMLDivElement | null>(null)
   const syncRef = useRef(false)
   const isAuthenticated = me != null
+  const hasUnreadNotifications = notifications.some((item) => !item.isRead)
 
   const moveToLogin = useCallback(() => {
     if (loc.pathname === "/login" || loc.pathname === "/signup") return
@@ -125,6 +127,17 @@ export function AppLayout(){
   const formatNotificationTime = (value: string) => {
     const date = new Date(value)
     if (Number.isNaN(date.getTime())) return value
+
+    const now = new Date()
+    const diffMs = now.getTime() - date.getTime()
+    const diffMin = Math.floor(diffMs / 1000 / 60)
+    const diffHour = Math.floor(diffMin / 60)
+    const diffDay = Math.floor(diffHour / 24)
+
+    if (diffMin < 1) return "방금 전"
+    if (diffMin < 60) return `${diffMin}분 전`
+    if (diffHour < 24) return `${diffHour}시간 전`
+    if (diffDay < 7) return `${diffDay}일 전`
 
     return date.toLocaleString("ko-KR", {
       month: "2-digit",
@@ -299,15 +312,15 @@ export function AppLayout(){
                     <span
                       style={{
                         position: "absolute",
-                        top: -6,
-                        right: -10,
-                        minWidth: 18,
-                        height: 18,
-                        padding: "0 5px",
+                        top: -10,
+                        right: -12,
+                        minWidth: 16,
+                        height: 16,
+                        padding: "0 4px",
                         borderRadius: 999,
                         background: "#ef4444",
                         color: "#fff",
-                        fontSize: 11,
+                        fontSize: 10,
                         lineHeight: "18px",
                         textAlign: "center",
                         fontWeight: 700,
@@ -323,8 +336,8 @@ export function AppLayout(){
                     style={{
                       position: "absolute",
                       top: "calc(100% + 10px)",
-                      right: 0,
-                      width: 360,
+                      left: 0,
+                      width: 400,
                       background: "#fff",
                       border: "1px solid #e5e7eb",
                       borderRadius: 12,
@@ -332,29 +345,34 @@ export function AppLayout(){
                       overflow: "hidden",
                       zIndex: 1000,
                     }}
-                  >
+                  > 
                     <div
                       style={{
                         display: "flex",
                         alignItems: "center",
                         justifyContent: "space-between",
-                        padding: "12px 14px",
+                        padding: "14px 16px",
                         borderBottom: "1px solid #f1f5f9",
+                        background: "#fcfcfd",
                       }}
                     >
-                      <strong style={{ fontSize: 14 }}>알림</strong>
+                      <strong style={{ fontSize: 15, color: "#111827" }}>알림</strong>
                       <button
                         type="button"
                         onClick={() => void handleReadAllNotifications()}
+                        disabled={!hasUnreadNotifications}
                         style={{
                           border: "none",
                           background: "transparent",
-                          color: "#2563eb",
+                          color: hasUnreadNotifications ? "#2563eb" : "#9ca3af",
                           fontSize: 12,
-                          cursor: "pointer",
+                          cursor: hasUnreadNotifications ? "pointer" : "default",
+                          fontWeight: 600,
+                          textDecoration: hasUnreadNotifications ? "underline" : "none",
+                          textUnderlineOffset: 2,
                         }}
                       >
-                        전체 읽음
+                        모두 읽음 처리
                       </button>
                     </div>
 
@@ -364,11 +382,14 @@ export function AppLayout(){
                           알림 불러오는 중...
                         </div>
                       ) : notifications.length === 0 ? (
-                        <div style={{ padding: 16, fontSize: 13, color: "#666" }}>
-                          알림이 없습니다.
+                        <div style={{ padding: 24, fontSize: 13, color: "#666", lineHeight: 1.6, textAlign: "center" }}>
+                          새로운 알림이 없습니다.
                         </div>
                       ) : (
-                        notifications.map((item) => (
+                        notifications.map((item) => {
+                        const labelStyle = getNotificationLabelStyle(item.type)
+
+                        return (
                           <button
                             key={item.id}
                             type="button"
@@ -379,9 +400,16 @@ export function AppLayout(){
                               textAlign: "left",
                               border: "none",
                               borderBottom: "1px solid #f8fafc",
-                              background: item.isRead ? "#fff" : "#eff6ff",
+                              background: item.isRead ? "#fff" : "#f8fafc",
                               padding: "14px 16px",
                               cursor: "pointer",
+                              transition: "background 0.15s ease",
+                            }}
+                            onMouseEnter={(e) => {
+                              e.currentTarget.style.background = item.isRead ? "#f9fafb" : "#f1f5f9"
+                            }}
+                            onMouseLeave={(e) => {
+                              e.currentTarget.style.background = item.isRead ? "#fff" : "#f8fafc"
                             }}
                           >
                             <div
@@ -395,15 +423,31 @@ export function AppLayout(){
                               <div style={{ flex: 1 }}>
                                 <div
                                   style={{
-                                    fontSize: 13,
+                                    display: "inline-flex",
+                                    alignItems: "center",
+                                    padding: "4px 8px",
+                                    borderRadius: 999,
+                                    fontSize: 11,
+                                    fontWeight: 700,
+                                    marginBottom: 8,
+                                    ...labelStyle,
+                                  }}
+                                >
+                                  {getNotificationLabel(item.type)}
+                                </div>
+
+                                <div
+                                  style={{
+                                    fontSize: 14,
                                     fontWeight: item.isRead ? 400 : 700,
-                                    color: "#111827",
+                                    color: item.isRead ? "#4b5563" : "#111827",
                                     marginBottom: 6,
                                     lineHeight: 1.45,
                                   }}
                                 >
                                   {item.content}
                                 </div>
+
                                 <div
                                   style={{
                                     fontSize: 12,
@@ -421,14 +465,15 @@ export function AppLayout(){
                                     height: 8,
                                     borderRadius: 999,
                                     background: "#2563eb",
-                                    marginTop: 6,
+                                    marginTop: 10,
                                     flexShrink: 0,
                                   }}
                                 />
                               )}
                             </div>
                           </button>
-                        ))
+                        )
+                      })
                       )}
                     </div>
                   </div>

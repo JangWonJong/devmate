@@ -8,6 +8,44 @@ export type NotificationType =
     | "STUDY_NOTICE_UPDATED"
 
 
+export const getNotificationLabel = (type: NotificationResponse["type"]) => {
+    switch (type) {
+      case "COMMENT_CREATED":
+        return "댓글"
+      case "COMMENT_ACCEPTED":
+        return "채택"
+      case "STUDY_NOTICE_UPDATED":
+        return "공지"
+      default:
+        return "알림"
+    }
+  }
+
+export const getNotificationLabelStyle = (type: NotificationResponse["type"]) => {
+    switch (type) {
+      case "COMMENT_CREATED":
+        return {
+          background: "#eff6ff",
+          color: "#1d4ed8",
+        }
+      case "COMMENT_ACCEPTED":
+        return {
+          background: "#ecfdf5",
+          color: "#047857",
+        }
+      case "STUDY_NOTICE_UPDATED":
+        return {
+          background: "#fef3c7",
+          color: "#b45309",
+        }
+      default:
+        return {
+          background: "#f3f4f6",
+          color: "#374151",
+        }
+    }
+  }
+
 
 export type NotificationResponse = {
     id: number
