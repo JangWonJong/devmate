@@ -1,0 +1,13 @@
+# frontend 빌드 결과 제외
+frontend/dist/* linguist-vendored
+frontend/build/* linguist-vendored
+
+# 스타일 파일 제외 (비율 줄이기용)
+*.css linguist-vendored
+*.scss linguist-vendored
+
+# 이미지/정적 리소스 제외
+frontend/src/assets/* linguist-vendored
+
+# node_modules는 혹시라도 올라갔다면 제외
+frontend/node_modules/* linguist-vendored
