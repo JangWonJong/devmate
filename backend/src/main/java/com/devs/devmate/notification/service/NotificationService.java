@@ -20,7 +20,7 @@ public interface NotificationService {
 
     void createCommentAccepted(Member receiver, Member actor, Long postId);
 
-    void createStudyNoticeUpdated(Member receiver, Member actor, Long studyId, String studyTitle);
+    void createStudyNoticeUpdated(Member receiver, Member actor, Long postId, String studyTitle);
 
 }
 

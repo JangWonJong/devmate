@@ -96,7 +96,7 @@ public class StudyServiceImpl implements StudyService{
             notificationService.createStudyNoticeUpdated(
                     studyMember.getMember(),
                     actor,
-                    study.getId(),
+                    study.getPost().getId(),
                     study.getPost().getTitle()
             );
         }

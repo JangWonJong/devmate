@@ -8,6 +8,8 @@ import com.devs.devmate.notification.dto.NotificationUnreadCountResponse;
 import com.devs.devmate.notification.entity.Notification;
 import com.devs.devmate.notification.entity.NotificationType;
 import com.devs.devmate.notification.repository.NotificationRepository;
+import com.devs.devmate.post.entity.Post;
+import com.devs.devmate.post.repository.PostRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
@@ -22,6 +24,7 @@ import java.util.List;
 public class NotificationServiceImpl implements NotificationService{
 
     private final NotificationRepository notificationRepository;
+    private final PostRepository postRepository;
 
     @Override
     @Transactional(readOnly = true)
@@ -58,7 +61,9 @@ public class NotificationServiceImpl implements NotificationService{
 
     @Override
     public void createCommentCreated(Member receiver, Member actor, Long postId) {
-        if (receiver.getId().equals(actor.getId())) return;
+        if (receiver.getId().equals(actor.getId())) {
+            return;
+        }
 
         notificationRepository.save(Notification.builder()
                         .receiver(receiver)
@@ -71,7 +76,9 @@ public class NotificationServiceImpl implements NotificationService{
 
     @Override
     public void createCommentAccepted(Member receiver, Member actor, Long postId) {
-        if (receiver.getId().equals(actor.getId())) return;
+        if (receiver.getId().equals(actor.getId())) {
+            return;
+        }
 
         notificationRepository.save(Notification.builder()
                         .receiver(receiver)
@@ -85,15 +92,17 @@ public class NotificationServiceImpl implements NotificationService{
     }
 
     @Override
-    public void createStudyNoticeUpdated(Member receiver, Member actor, Long studyId, String studyTitle) {
-        if (receiver.getId().equals(actor.getId())) return;
+    public void createStudyNoticeUpdated(Member receiver, Member actor, Long postId, String studyTitle) {
+        if (receiver.getId().equals(actor.getId())) {
+            return;
+        }
 
         notificationRepository.save(Notification.builder()
                 .receiver(receiver)
                 .actor(actor)
-                .type(NotificationType.STUDY_NOTICE_UPDATE)
+                .type(NotificationType.STUDY_NOTICE_UPDATED)
                 .content( "[" + studyTitle + "] 스터디 공지가 수정되었어요")
-                .targetUrl("/studies/" + studyId)
+                .targetUrl("/posts/" + postId)
                 .build());
     }
 }
