@@ -10,6 +10,7 @@ import com.devs.devmate.global.exception.BusinessException;
 import com.devs.devmate.global.exception.ErrorCode;
 import com.devs.devmate.member.entity.Member;
 import com.devs.devmate.member.repository.MemberRepository;
+import com.devs.devmate.notification.service.NotificationService;
 import com.devs.devmate.post.entity.Post;
 import com.devs.devmate.post.repository.PostRepository;
 import lombok.RequiredArgsConstructor;
@@ -26,6 +27,7 @@ public class CommentServiceImpl implements CommentService{
     private final CommentRepository commentRepository;
     private final MemberRepository memberRepository;
     private final PostRepository postRepository;
+    private final NotificationService notificationService;
 
     @Override
     public Long create(Long memberId, Long postId, CommentCreateRequest request) {
@@ -41,7 +43,16 @@ public class CommentServiceImpl implements CommentService{
                 .content(request.getContent().trim())
                 .build();
 
-        return commentRepository.save(comment).getId();
+        Comment savedComment = commentRepository.save(comment);
+
+        notificationService.createCommentCreated(
+                // 알림 받는 사람/ 댓글 작성자/ 클릭 이동용 targetUrl 생성
+                post.getMember(),
+                member,
+                post.getId()
+        );
+
+        return savedComment.getId();
     }
 
     @Override
@@ -96,6 +107,12 @@ public class CommentServiceImpl implements CommentService{
 
         comment.adopt();
         post.markSolved();
+
+        notificationService.createCommentAccepted(
+                comment.getMember(),
+                post.getMember(),
+                post.getId()
+        );
     }
 
     @Override

@@ -4,6 +4,7 @@ import com.devs.devmate.global.exception.BusinessException;
 import com.devs.devmate.global.exception.ErrorCode;
 import com.devs.devmate.member.entity.Member;
 import com.devs.devmate.member.repository.MemberRepository;
+import com.devs.devmate.notification.service.NotificationService;
 import com.devs.devmate.post.entity.Post;
 import com.devs.devmate.post.repository.PostRepository;
 import com.devs.devmate.reservation.entity.Reservation;
@@ -33,7 +34,7 @@ public class StudyServiceImpl implements StudyService{
     private final PostRepository postRepository;
     private final MemberRepository memberRepository;
     private final ReservationRepository reservationRepository;
-
+    private final NotificationService notificationService;
 
     private String findLeaderNickname(Long studyId) {
         return studyMemberRepository.findByStudyIdAndStatus(studyId, StudyMember.Status.JOINED)
@@ -82,6 +83,22 @@ public class StudyServiceImpl implements StudyService{
         );
         if (study.isClosedByCapacity() && currentMembers < study.getMaxMembers()) {
             study.reopen();
+        }
+    }
+
+    // 공지 수정 알림용
+    private void notifyStudyNoticeUpdated(Study study, Member actor) {
+        List<StudyMember> studyMembers = studyMemberRepository.findByStudyIdAndStatus(
+                study.getId(), StudyMember.Status.JOINED
+        );
+
+        for (StudyMember studyMember : studyMembers) {
+            notificationService.createStudyNoticeUpdated(
+                    studyMember.getMember(),
+                    actor,
+                    study.getId(),
+                    study.getPost().getTitle()
+            );
         }
     }
 
@@ -375,6 +392,8 @@ public class StudyServiceImpl implements StudyService{
         }
 
         study.updateNotice(notice.trim());
+
+        notifyStudyNoticeUpdated(study, studyMember.getMember());
 
         return study.getId();
     }

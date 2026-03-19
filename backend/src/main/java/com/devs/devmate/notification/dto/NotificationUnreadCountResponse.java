@@ -1,4 +1,6 @@
 package com.devs.devmate.notification.dto;
 
-public class NotificationUnreadCountResponse {
+public record NotificationUnreadCountResponse(
+        long unreadCount
+) {
 }
