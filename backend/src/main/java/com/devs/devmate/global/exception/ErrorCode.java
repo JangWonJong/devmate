@@ -67,7 +67,11 @@ public enum ErrorCode {
     STUDY_JOIN_RESERVATION_CONFLICT(HttpStatus.CONFLICT, "STUDY_409_3", "기존 예약과 시간이 겹쳐 해당 스터디에 참가할 수 없습니다."),
     FORBIDDEN_STUDY_UPDATE(HttpStatus.FORBIDDEN, "STUDY_403_5", "스터디 리더만 수정할 수 있습니다."),
     INVALID_STUDY_CAPACITY(HttpStatus.BAD_REQUEST, "STUDY_400_9", "현재 참여 인원보다 적게 정원을 설정할 수 없습니다."),
-    FORBIDDEN_STUDY_NOTICE_UPDATE(HttpStatus.FORBIDDEN, "STUDY_403_6", "스터디 리더만 소개를 수정할 수 있습니다.");
+    FORBIDDEN_STUDY_NOTICE_UPDATE(HttpStatus.FORBIDDEN, "STUDY_403_6", "스터디 리더만 소개를 수정할 수 있습니다."),
+
+    // NOTIFICATION
+    NOTIFICATION_NOT_FOUND(HttpStatus.NOT_FOUND, "NOTIFICATION_404","알림을 찾을 수 없습니다.");
+
 
     private final HttpStatus status;
     private final String code;
