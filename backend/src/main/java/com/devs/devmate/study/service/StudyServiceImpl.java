@@ -102,6 +102,25 @@ public class StudyServiceImpl implements StudyService{
         }
     }
 
+    private Member findStudyLeader(Long studyId) {
+        return studyMemberRepository.findByStudyIdAndRoleAndStatus(
+                        studyId,
+                        StudyMember.Role.LEADER,
+                        StudyMember.Status.JOINED
+                )
+                .orElseThrow(() -> new BusinessException(ErrorCode.STUDY_LEADER_NOT_FOUND))
+                .getMember();
+    }
+
+    private void notifyStudyJoined(Study study, Member actor) {
+        notificationService.createStudyJoined(
+                findStudyLeader(study.getId()),
+                actor,
+                study.getPost().getId(),
+                study.getPost().getTitle()
+        );
+    }
+
     // 게시글 작성자만 해당 Study post로 study 생성 가능
     @Override
     public Long create(Long memberId, StudyCreateRequest request) {
@@ -191,7 +210,9 @@ public class StudyServiceImpl implements StudyService{
         if (existing.isPresent()) {
             StudyMember studyMember = existing.get();
             studyMember.reJoin();
+            notifyStudyJoined(study, member);
             closeStudyIfCapacityFull(study);
+
             return study.getId();
         }
 
@@ -202,6 +223,8 @@ public class StudyServiceImpl implements StudyService{
                 .build();
 
         studyMemberRepository.save(studyMember);
+
+        notifyStudyJoined(study, member);
 
         closeStudyIfCapacityFull(study);
 

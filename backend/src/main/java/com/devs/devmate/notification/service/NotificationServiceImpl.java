@@ -105,4 +105,34 @@ public class NotificationServiceImpl implements NotificationService{
                 .targetUrl("/posts/" + postId)
                 .build());
     }
+
+    @Override
+    public void createStudyJoined(Member receiver, Member actor, Long postId, String studyTitle) {
+        if (receiver.getId().equals(actor.getId())){
+            return;
+        }
+
+        notificationRepository.save(Notification.builder()
+                        .receiver(receiver)
+                        .actor(actor)
+                        .type(NotificationType.STUDY_JOINED)
+                        .content(actor.getNickname() + "님이 [" +studyTitle + "] 스터디에 참여했어요")
+                        .targetUrl("/posts/" + postId)
+                        .build());
+    }
+
+    @Override
+    public void createStudyReservationCreated(Member receiver, Member actor, Long postId, String studyTitle) {
+        if (receiver.getId().equals(actor.getId())) {
+            return;
+        }
+
+        notificationRepository.save(Notification.builder()
+                        .receiver(receiver)
+                        .actor(actor)
+                        .type(NotificationType.STUDY_RESERVATION_CREATED)
+                        .content(actor.getNickname() + "님이 [" + studyTitle + "] 스터디 예약을 했어요")
+                        .targetUrl("/posts/" + postId)
+                        .build());
+    }
 }

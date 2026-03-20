@@ -22,5 +22,9 @@ public interface NotificationService {
 
     void createStudyNoticeUpdated(Member receiver, Member actor, Long postId, String studyTitle);
 
+    void createStudyJoined(Member receiver, Member actor, Long postId, String studyTitle);
+
+    void createStudyReservationCreated(Member receiver, Member actor, Long postId, String studyTitle);
+
 }
 

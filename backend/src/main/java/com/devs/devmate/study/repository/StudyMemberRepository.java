@@ -25,4 +25,6 @@ public interface StudyMemberRepository extends JpaRepository<StudyMember, Long> 
     void deleteAllByStudyId(Long studyId);
 
     void deleteByStudyId(Long studyId);
+
+    Optional<StudyMember> findByStudyIdAndRoleAndStatus(Long studyId, StudyMember.Role role, StudyMember.Status status);
 }
