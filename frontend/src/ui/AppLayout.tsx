@@ -109,15 +109,17 @@ export function AppLayout(){
     try {
       if (!item.isRead) {
         await readNotification(item.id)
+
         setNotifications((prev) =>
           prev.map((n) =>
             n.id === item.id ? { ...n, isRead: true } : n
           )
         )
+
         setUnreadCount((prev) => Math.max(0, prev - 1))
       }
-    } catch {
-      // 읽음 실패해도 이동은 허용
+    } catch (e){
+      console.error(e)
     } finally {
       setNotificationOpen(false)
       nav(item.targetUrl)
@@ -196,12 +198,7 @@ export function AppLayout(){
         const m = await getMe()
         setMe(m)
       } catch (e: any) {
-        const status = e?.response?.status
-        if (status === 401 || status === 403) {
-          tokenStore.clear()
-          setMe(null)
-          return
-        }
+        tokenStore.clear()
         setMe(null)
       } finally {
         setMeLoading(false)
@@ -243,6 +240,8 @@ export function AppLayout(){
   document.addEventListener("mousedown", onClickOutside)
   return () => document.removeEventListener("mousedown", onClickOutside)
   }, [notificationOpen])
+
+  
 
     return (
      <div style={{ fontFamily: "system-ui, sans-serif" }}>

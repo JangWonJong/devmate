@@ -15,6 +15,7 @@ public enum ErrorCode {
     AUTH_FAILED(HttpStatus.UNAUTHORIZED, "AUTH_401_1", "이메일 또는 비밀번호가 올바르지 않습니다."),
     TOKEN_EXPIRED(HttpStatus.UNAUTHORIZED, "AUTH_401_2", "로그인이 만료되었습니다."),
     TOKEN_INVALID(HttpStatus.UNAUTHORIZED, "AUTH_401_3", "유효하지 않은 토큰입니다."),
+    DELETED_MEMBER(HttpStatus.UNAUTHORIZED, "AUTH_401_4", "탈퇴한 계정입니다."),
 
     // MEMBER
     PASSWORD_CONFIRM_MISMATCH(HttpStatus.BAD_REQUEST, "MEMBER_400", "비밀번호가 일치하지 않습니다."),

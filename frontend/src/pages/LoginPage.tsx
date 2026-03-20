@@ -19,23 +19,32 @@ export function LoginPage() {
   const [email, setEmail] = useState("")
   const [password, setPassword] = useState("")
   const [err, setErr] = useState<string | null>(null)
+  const [submitting, setSubmitting] = useState(false)
   
+  const signupSuccess = Boolean((loc.state as any)?.signupSuccess)
+  const withdrawSuccess = Boolean((loc.state as any)?.withdrawSuccess)
+
   const onSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault()
+
+    if (submitting) return
     setErr(null)
 
     const eValue = email.trim()
     const pValue = password.trim()
 
-    if (!eValue) return setErr("이메일 입력")
-    if (!pValue) return setErr("비밀번호 입력")
+    if (!eValue) return setErr("이메일을 입력해주세요")
+    if (!pValue) return setErr("비밀번호를 입력해주세요")
 
     try {
+      setSubmitting(true)
       const res = await login({ email: eValue, password: pValue })
       tokenStore.setTokens(res.accessToken, res.refreshToken)
       nav(from, { replace: true })
     } catch (e: any) {
       setErr(apiErrorMessage(e, "로그인 실패"))
+    } finally {
+      setSubmitting(false)
     }
   }
 
@@ -71,7 +80,34 @@ export function LoginPage() {
         >
           LOGIN
         </h1>
-
+        {signupSuccess && !err && (
+          <div
+            style={{
+              background: "#ecfdf5",
+              color: "#059669",
+              padding: "10px 12px",
+              borderRadius: 8,
+              fontSize: 14,
+              marginTop: -2,
+            }}
+          >
+            회원가입이 완료되었습니다. 로그인 해주세요.
+          </div>
+        )}
+        {withdrawSuccess && !err && (
+            <div
+              style={{
+                background: "#fef2f2",
+                color: "#dc2626",
+                padding: "10px 12px",
+                borderRadius: 8,
+                fontSize: 14,
+                marginTop: -2,
+              }}
+            >
+              회원 탈퇴가 완료되었습니다.
+            </div>
+          )}
         <input
           style={{
             width: "100%",
@@ -84,7 +120,10 @@ export function LoginPage() {
           }}
           placeholder="email"
           value={email}
-          onChange={(e) => setEmail(e.target.value)}
+          onChange={(e) => {
+            setEmail(e.target.value) 
+            if (err) setErr(null) 
+            }}
         />
 
         <input
@@ -100,13 +139,16 @@ export function LoginPage() {
           placeholder="password"
           type="password"
           value={password}
-          onChange={(e) => setPassword(e.target.value)}
+          onChange={(e) => {
+            setPassword(e.target.value)
+            if (err) setErr(null)
+          }}
         />
-
+        
         {err && (
           <div
             style={{
-              color: "crimson",
+              color: "#dc2626",
               fontSize: 14,
               marginTop: -2,
             }}
@@ -133,10 +175,11 @@ export function LoginPage() {
               color: "white",
               fontSize: 16,
               fontWeight: 700,
-              cursor: "pointer",
+              cursor: submitting ? "wait" : "pointer",
+              opacity: submitting ? 0.85 : 1,
             }}
           >
-            LOGIN
+          {submitting ? "로그인 중..." : "LOGIN"}
           </button>
 
           <button

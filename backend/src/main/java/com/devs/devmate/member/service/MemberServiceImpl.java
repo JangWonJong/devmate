@@ -1,6 +1,7 @@
 package com.devs.devmate.member.service;
 
 
+import com.devs.devmate.auth.repository.RefreshTokenRepository;
 import com.devs.devmate.global.exception.BusinessException;
 import com.devs.devmate.global.exception.ErrorCode;
 import com.devs.devmate.member.dto.*;
@@ -26,6 +27,7 @@ public class MemberServiceImpl implements MemberService{
     private final PasswordEncoder passwordEncoder;
     private final StudyMemberRepository studyMemberRepository;
     private final ReservationRepository reservationRepository;
+    private final RefreshTokenRepository refreshTokenRepository;
 
     private Member findActiveMember(Long memberId) {
         Member member = memberRepository.findById(memberId)
@@ -40,7 +42,7 @@ public class MemberServiceImpl implements MemberService{
 
     @Override
     public MemberSignupResponse signup(MemberSignUpRequest request){
-        String email = request.getEmail().trim();
+        String email = request.getEmail().trim().toLowerCase();
         String name = request.getName().trim();
         String nickname = request.getNickname().trim();
 
@@ -174,7 +176,7 @@ public class MemberServiceImpl implements MemberService{
         for (Reservation reservation : activeReservations) {
             reservation.cancel();
         }
-
+        refreshTokenRepository.deleteByMemberId(memberId);
         member.withdraw();
     }
 

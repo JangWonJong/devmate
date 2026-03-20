@@ -106,7 +106,7 @@ export function AccountSettingsPage() {
     setWithdrawErr(null)
 
     if (!withdrawPassword.trim()) {
-      return setWithdrawErr("탈퇴 확인용 비밀번호 입력")
+      return setWithdrawErr("탈퇴 확인용 비밀번호를 입력해주세요")
     }
 
     const ok = window.confirm("정말 탈퇴하시겠습니까?")
@@ -115,8 +115,11 @@ export function AccountSettingsPage() {
     try {
       await withdrawMember({ password: withdrawPassword.trim() })
       tokenStore.clear()
-      alert("회원탈퇴가 완료되었습니다.")
-      nav("/", { replace: true })
+      
+      nav("/login", { 
+        replace: true,
+        state: { withdrawSuccess: true}
+      })
     } catch (e) {
       setWithdrawErr(apiErrorMessage(e, "회원탈퇴 실패"))
     }
@@ -143,7 +146,7 @@ export function AccountSettingsPage() {
       {loadErr && (
         <div
           style={{
-            color: "crimson",
+            color: "#dc2626",
             marginBottom: 16,
             fontSize: 14,
           }}
@@ -186,12 +189,12 @@ export function AccountSettingsPage() {
         </h2>
 
         {profileErr && (
-          <div style={{ color: "crimson", marginBottom: 12, fontSize: 14 }}>
+          <div style={{ color: "#dc2626", marginBottom: 12, fontSize: 14 }}>
             {profileErr}
           </div>
         )}
         {profileSuccess && (
-          <div style={{ color: "green", marginBottom: 12, fontSize: 14 }}>
+          <div style={{ color: "#059669", marginBottom: 12, fontSize: 14 }}>
             {profileSuccess}
           </div>
         )}
@@ -208,7 +211,11 @@ export function AccountSettingsPage() {
           }}
           placeholder="이름"
           value={name}
-          onChange={(e) => setName(e.target.value)}
+          onChange={(e) => {
+            setName(e.target.value)
+            if (profileErr) setProfileErr(null)
+            if (profileSuccess) setProfileSuccess(null)
+          }}
         />
 
         <input
@@ -223,7 +230,11 @@ export function AccountSettingsPage() {
           }}
           placeholder="닉네임"
           value={nickname}
-          onChange={(e) => setNickname(e.target.value)}
+          onChange={(e) => {
+            setNickname(e.target.value)
+            if (profileErr) setProfileErr(null)
+            if (profileSuccess) setProfileSuccess(null)
+          }}
         />
 
         <input
@@ -238,7 +249,11 @@ export function AccountSettingsPage() {
           }}
           placeholder="전화번호"
           value={phone}
-          onChange={(e) => setPhone(e.target.value)}
+          onChange={(e) => {
+            setPhone(e.target.value)
+            if (profileErr) setProfileErr(null)
+            if (profileSuccess) setProfileSuccess(null)
+          }}
         />
 
         <textarea
@@ -255,7 +270,11 @@ export function AccountSettingsPage() {
           }}
           placeholder="한 줄 소개"
           value={bio}
-          onChange={(e) => setBio(e.target.value)}
+          onChange={(e) => {
+            setBio(e.target.value)
+            if (profileErr) setProfileErr(null)
+            if (profileSuccess) setProfileSuccess(null)
+            }}
         />
 
         <button
@@ -290,12 +309,12 @@ export function AccountSettingsPage() {
         </h2>
 
         {passwordErr && (
-          <div style={{ color: "crimson", marginBottom: 12, fontSize: 14 }}>
+          <div style={{ color: "#dc2626", marginBottom: 12, fontSize: 14 }}>
             {passwordErr}
           </div>
         )}
         {passwordSuccess && (
-          <div style={{ color: "green", marginBottom: 12, fontSize: 14 }}>
+          <div style={{ color: "#059669", marginBottom: 12, fontSize: 14 }}>
             {passwordSuccess}
           </div>
         )}
@@ -313,7 +332,11 @@ export function AccountSettingsPage() {
           }}
           placeholder="현재 비밀번호"
           value={currentPassword}
-          onChange={(e) => setCurrentPassword(e.target.value)}
+          onChange={(e) => {
+            setCurrentPassword(e.target.value)
+            if(passwordErr) setPasswordErr(null)
+            if(passwordSuccess) setPasswordSuccess(null)
+          }}
         />
 
         <input
@@ -329,7 +352,11 @@ export function AccountSettingsPage() {
           }}
           placeholder="새 비밀번호"
           value={newPassword}
-          onChange={(e) => setNewPassword(e.target.value)}
+          onChange={(e) => {
+            setNewPassword(e.target.value)
+            if (passwordErr) setPasswordErr(null)
+            if (passwordSuccess) setPasswordSuccess(null)
+          }}
         />
 
         <input
@@ -345,7 +372,11 @@ export function AccountSettingsPage() {
           }}
           placeholder="새 비밀번호 확인"
           value={confirmPassword}
-          onChange={(e) => setConfirmPassword(e.target.value)}
+          onChange={(e) => {
+            setConfirmPassword(e.target.value)
+            if (passwordErr) setPasswordErr(null)
+            if (passwordSuccess) setPasswordSuccess(null) 
+          }}
         />
 
         <button
@@ -374,12 +405,22 @@ export function AccountSettingsPage() {
           background: "#fffafa",
         }}
       >
-        <h2 style={{ marginTop: 0, marginBottom: 16, color: "crimson" }}>
+        <h2 style={{ marginTop: 0, marginBottom: 16, color: "#dc2626" }}>
           회원탈퇴
         </h2>
-
+        <div
+          style={{
+            marginBottom: 12,
+            fontSize: 14,
+            color: "#7f1d1d",
+            lineHeight: 1.5,
+          }}
+        >
+          탈퇴 시 계정은 비활성화되며,<br />
+          작성한 게시글과 댓글은 삭제되지 않고 작성자 정보만 변경됩니다.
+        </div>
         {withdrawErr && (
-          <div style={{ color: "crimson", marginBottom: 12, fontSize: 14 }}>
+          <div style={{ color: "#dc2626", marginBottom: 12, fontSize: 14 }}>
             {withdrawErr}
           </div>
         )}
@@ -397,14 +438,17 @@ export function AccountSettingsPage() {
           }}
           placeholder="비밀번호 확인"
           value={withdrawPassword}
-          onChange={(e) => setWithdrawPassword(e.target.value)}
+          onChange={(e) => {
+            setWithdrawPassword(e.target.value)
+            if (withdrawErr) setWithdrawErr(null)
+          }}
         />
 
         <button
           type="submit"
           style={{
             color: "white",
-            background: "crimson",
+            background: " #dc2626",
             border: "none",
             padding: "12px 18px",
             borderRadius: 10,
@@ -413,7 +457,7 @@ export function AccountSettingsPage() {
             cursor: "pointer",
           }}
         >
-          회원탈퇴
+          회원탈퇴 진행
         </button>
       </form>
     </div>

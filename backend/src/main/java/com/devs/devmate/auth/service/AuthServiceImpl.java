@@ -9,6 +9,7 @@ import com.devs.devmate.global.exception.BusinessException;
 import com.devs.devmate.global.exception.ErrorCode;
 import com.devs.devmate.member.entity.Member;
 import com.devs.devmate.auth.entity.RefreshToken;
+import com.devs.devmate.member.entity.MemberStatus;
 import com.devs.devmate.member.repository.MemberRepository;
 import com.devs.devmate.auth.repository.RefreshTokenRepository;
 import lombok.RequiredArgsConstructor;
@@ -43,9 +44,9 @@ public class AuthServiceImpl implements AuthService{
 
     @Override
     public LoginResponse login(LoginRequest request) {
-
-        Member member = memberRepository.findByEmail(request.getEmail())
-                .orElseThrow(() -> new BusinessException(ErrorCode.AUTH_FAILED));
+        String email = request.getEmail().trim().toLowerCase();
+        Member member = memberRepository.findByEmailAndStatus(email, MemberStatus.ACTIVE)
+                .orElseThrow(() -> new BusinessException(ErrorCode.DELETED_MEMBER));
         if (!passwordEncoder.matches(request.getPassword(), member.getPassword())){
             throw new BusinessException(ErrorCode.AUTH_FAILED);
         }

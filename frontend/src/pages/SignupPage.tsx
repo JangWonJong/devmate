@@ -14,21 +14,30 @@ export function SignupPage() {
   const [name, setName] = useState("")
   const [nickname, setNickname] = useState("")
   const [err, setErr] = useState<string | null>(null)
-  
+  const [submitting, setSubmitting] = useState(false)
+
+  const emailTrim = email.trim()
+  const passwordTrim = password.trim()
+  const confirmTrim = confirmPassword.trim()
+  const nameTrim = name.trim()
+  const nicknameTrim = nickname.trim()
+
   const handleSignup = async (e: React.FormEvent) => {
-    
     e.preventDefault()
     setErr(null)
 
-    const emailTrim = email.trim()
-    const passwordTrim = password.trim()
-    const confirmTrim = confirmPassword.trim()
-    const nameTrim = name.trim()
-    const nicknameTrim = nickname.trim()
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/
 
     if (!emailTrim) return setErr("이메일을 입력해주세요")
+    if (!emailRegex.test(emailTrim)) {
+      return setErr("올바른 이메일 형식을 입력해주세요")
+    }
     if (!passwordTrim) return setErr("비밀번호을 입력해주세요")
-    if (!confirmTrim) return setErr("비밀번호 확인 입력해주세요")
+    if (passwordTrim.length < 8) {
+      return setErr("비밀번호는 8자 이상이어야 합니다")
+    }
+
+    if (!confirmTrim) return setErr("비밀번호 확인을 입력해주세요")
     if (!nameTrim) return setErr("이름을 입력해주세요")
     if (!nicknameTrim) return setErr("닉네임을 입력해주세요")
     
@@ -37,6 +46,8 @@ export function SignupPage() {
     }  
 
     try{
+      setSubmitting(true)
+
       await signup({
         email: emailTrim,
         password: passwordTrim,
@@ -48,10 +59,18 @@ export function SignupPage() {
       nav("/login", { state: { signupSuccess: true}})
 
     } catch (e: any) {
-      setErr(apiErrorMessage(e, "회원가입실패"))
+      setErr(apiErrorMessage(e, "회원가입에 실패했습니다"))
+    } finally {
+      setSubmitting(false)
     }
 
   }
+
+  const clearError = () => {
+    if (err) setErr(null)
+  }
+
+  
   return (
     <div
       style={{
@@ -97,7 +116,10 @@ export function SignupPage() {
           }}
           placeholder="email"
           value={email}
-          onChange={(e) => setEmail(e.target.value)}
+          onChange={(e) => {
+            setEmail(e.target.value)
+            clearError()
+          }}
         />
 
         <input
@@ -113,7 +135,10 @@ export function SignupPage() {
           placeholder="password"
           type="password"
           value={password}
-          onChange={(e) => setPassword(e.target.value)}
+          onChange={(e) => {
+            setPassword(e.target.value)
+            clearError()
+          }}
         />
 
         <input
@@ -129,8 +154,12 @@ export function SignupPage() {
           placeholder="confirm password"
           type="password"
           value={confirmPassword}
-          onChange={(e) => setConfirmPassword(e.target.value)}
+          onChange={(e) => {
+            setConfirmPassword(e.target.value)
+            clearError()
+          }}
         />
+
         <input
           style={{
             width: "100%",
@@ -143,7 +172,10 @@ export function SignupPage() {
           }}
           placeholder="name"
           value={name}
-          onChange={(e) => setName(e.target.value)}
+          onChange={(e) => {
+            setName(e.target.value)
+            clearError()
+          }}
         />
 
         <input
@@ -158,7 +190,10 @@ export function SignupPage() {
           }}
           placeholder="nickname"
           value={nickname}
-          onChange={(e) => setNickname(e.target.value)}
+          onChange={(e) => {
+            setNickname(e.target.value)
+            clearError()
+          }}
         />
 
         {err && (
@@ -191,10 +226,11 @@ export function SignupPage() {
               color: "white",
               fontSize: 16,
               fontWeight: 700,
-              cursor: "pointer",
+              cursor: submitting ? "wait" : "pointer",
+              opacity: submitting ? 0.85 : 1
             }}
           >
-            SIGN UP
+            {submitting ? "가입 중..." : "SIGN UP"}
           </button>
 
           <button
