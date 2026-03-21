@@ -36,6 +36,19 @@ export type StudyReservationCreateResponse = {
     endTime: string
 }
 
+export type AvailabilitySlot = {
+    startTime: string
+    endTime: string
+    available: boolean
+    reason: string | null
+}
+
+export type AvailabilityResponse = {
+  roomId: number
+  date: string
+  slots: AvailabilitySlot[]
+}
+
 
 export async function listReservations(params: {
     date: string
@@ -134,6 +147,19 @@ export async function listStudyReservations(params:{
 
     if (!data.success || !data.data) {
         throw new Error(data?.error?.message ?? "Study reservations list failed")
+    }
+    
+    return data.data
+    
+}
+
+export async function getRoomAvailability(roomId: number, date: string) {
+
+    const {data} = await http.get<ApiResponse<AvailabilityResponse>>(
+        `/api/rooms/${roomId}/availability`, { params: { date } }
+    )
+    if (!data.success || !data.data) {
+        throw new Error(data?.error?.message ?? "Availability list failed")
     }
     
     return data.data

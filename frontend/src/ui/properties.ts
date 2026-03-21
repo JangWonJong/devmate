@@ -169,6 +169,19 @@ export const buttonStyle: React.CSSProperties = {
   cursor: "pointer",
 }
 
+export const slotTimeTextStyle: React.CSSProperties = {
+  fontWeight: 700,
+  fontSize: 16,
+}
+
+export const slotDescriptionStyle: React.CSSProperties = {
+  marginTop: 6,
+  fontSize: 11,
+  fontWeight: 500,
+  minHeight: 16,
+}
+
+
 export function getSlotButtonStyle(unavailable: boolean, selected: boolean): React.CSSProperties {
   return {
     ...slotButtonBaseStyle,
@@ -207,3 +220,45 @@ export function getReservationStatusStyle(status: string) {
   }
 }
 
+export function getSlotButtonStyleV2(
+  unavailable: boolean,
+  selected: boolean
+): React.CSSProperties {
+  return {
+    borderRadius: 14,
+
+    border: selected
+      ? "2px solid #2563eb"
+      : unavailable
+      ? "1px solid #e5e7eb"
+      : "1px solid #d1d5db",
+
+    background: selected
+      ? "#2563eb"
+      : unavailable
+      ? "#f8fafc"
+      : "#ffffff",
+
+    color: selected
+      ? "#ffffff"
+      : unavailable
+      ? "#9ca3af"
+      : "#111827",
+
+    minHeight: 88,
+    padding: "12px 10px",
+
+    display: "flex",
+    flexDirection: "column",
+    justifyContent: "center",
+    alignItems: "center",
+
+    cursor: unavailable ? "not-allowed" : "pointer",
+
+    transition: "all 0.15s ease",
+
+    boxShadow: selected
+      ? "0 4px 12px rgba(37, 99, 235, 0.25)"
+      : "0 1px 2px rgba(0,0,0,0.04)",
+  }
+}

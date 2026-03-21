@@ -7,20 +7,21 @@ import {
   listMyReservations,
   listReservations,
   type ReservationResponse,
+  type AvailabilityResponse,
+  type AvailabilitySlot,
+  getRoomAvailability
 } from "../api/reservations"
 import { tokenStore } from "../auth/token"
 import { getMeId } from "../api/members"
 import { apiErrorMessage } from "../utils/error"
 import {
-  addHours,
-  makeTimeSlots,
-  canReserveStartTime,
-  today,
+  addHours, today,
 } from "../utils/reservationTime"
 
 import { ReservationTimeline } from "./RservationTimeline"
 import { pageStyle, cardStyle, inputStyle, primaryButtonStyle, secondaryButtonStyle, 
-  mutedBoxStyle, listItemCardStyle, errorBoxStyle, getSlotButtonStyle, getReservationStatusStyle } from "../ui/properties"
+  mutedBoxStyle, listItemCardStyle, errorBoxStyle, getSlotButtonStyleV2,
+   getReservationStatusStyle, slotTimeTextStyle, slotDescriptionStyle } from "../ui/properties"
 
 type Scope = "all" | "mine"
 
@@ -45,7 +46,52 @@ function getReservationStatus(date: string, endTime: string) {
   return "예정 예약"
 }
 
+function getAvailabilityReasonText(reason: string | null) {
+  switch (reason) {
+    case "PAST_TIME":
+      return "지난 시간"
+    case "ALREADY_RESERVED":
+      return "이미 예약됨"
+    case "MY_CONFLICT":
+      return "내 예약과 겹침"
+    case "DAILY_COUNT_LIMIT":
+      return "하루 예약 횟수 초과"
+    default:
+      return ""
+  }
+}
 
+function getSlotDescription(
+  slot: AvailabilitySlot,
+  slots: AvailabilitySlot[],
+  durationHours: number
+) {
+  if (slot.reason) {
+    return getAvailabilityReasonText(slot.reason)
+  }
+
+  if (!canSelectDuration(slots, slot.startTime, durationHours)) {
+    return `${durationHours}시간 연속 선택 불가`
+  }
+
+  return ""
+}
+
+function canSelectDuration(
+  slots: AvailabilitySlot[],
+  startTime: string,
+  durationHours: number
+) {
+  const startIndex = slots.findIndex((slot) => slot.startTime === startTime)
+  if (startIndex === -1) return false
+
+  for (let i = 0; i < durationHours; i += 1) {
+    const slot = slots[startIndex + i]
+    if (!slot || !slot.available) return false
+  }
+
+  return true
+}
 
 function toScope(v: string | null): Scope {
   return v === "mine" ? "mine" : "all"
@@ -101,6 +147,9 @@ export function ReservationsPage() {
   const [err, setErr] = useState<string | null>(null)
   const [busy, setBusy] = useState(false)
 
+  const [availability, setAvailability] = useState<AvailabilityResponse | null>(null)
+  const [availabilityLoading, setAvailabilityLoading] = useState(false)
+
   useEffect(() => {
     const sync = () => setLoggedIn(tokenStore.isLoggedIn())
     sync()
@@ -136,6 +185,37 @@ export function ReservationsPage() {
       }
     })()
   }, [])
+
+  useEffect(() => {
+    ;(async () => {
+      if (scope !== "all" || !roomId || !date) {
+        setAvailability(null)
+        setSelectedTime(null)
+        return
+      }
+
+      try {
+        setAvailabilityLoading(true)
+        const res = await getRoomAvailability(roomId, date)
+        setAvailability(res)
+        
+        if (
+          selectedTime &&
+          !res.slots.some(
+            (slot) => slot.startTime === selectedTime && slot.available
+          )
+        ) {
+          setSelectedTime(null)
+          }
+      } catch (e: any) {
+        setAvailability(null)
+        setSelectedTime(null)
+        setErr(apiErrorMessage(e, "예약 가능 시간 조회 실패"))
+      }finally {
+        setAvailabilityLoading(false)
+      }
+    }) ()
+  }, [scope, roomId, date, selectedTime])
 
   const loadAll = async () => {
     const page = await listReservations({
@@ -189,16 +269,7 @@ export function ReservationsPage() {
     }
     return "해당 날짜 예약이 없어요"
   }, [scope, loggedIn])
-
-  const timeSlots = useMemo(() => makeTimeSlots(), [])
-
-  const canReserveFromTime = useCallback(
-    (time: string) => {
-      return canReserveStartTime(items, roomId, time, durationHours)
-    },
-    [items, roomId, durationHours]
-  )
-
+  
   const onCreate = async () => {
     if (!loggedIn) {
       setErr("로그인 후 예약할 수 있어요")
@@ -474,26 +545,94 @@ export function ReservationsPage() {
             style={{
               display: "grid",
               gridTemplateColumns: "repeat(auto-fit, minmax(96px, 1fr))",
-              gap: 10,
+              gap: 12,
               marginBottom: 16,
             }}
           >
-            {timeSlots.map((time) => {
-              const unavailable = !canReserveFromTime(time)
-              const selected = selectedTime === time
+            {availabilityLoading ? (
+              <div
+                style={{
+                  gridColumn: "1 / -1",
+                  padding: "16px 14px",
+                  borderRadius: 16,
+                  border: "1px solid #e5e7eb",
+                  background: "#f8fafc",
+                  color: "#64748b",
+                  fontSize: 14,
+                }}
+              >
+                예약 가능 시간을 불러오는 중이에요.
+              </div>
+            ) : !availability ? (
+              <div
+                style={{
+                  gridColumn: "1 / -1",
+                  padding: "16px 14px",
+                  borderRadius: 16,
+                  border: "1px solid #e5e7eb",
+                  background: "#f8fafc",
+                  color: "#64748b",
+                  fontSize: 14,
+                }}
+              >
+                방과 날짜를 선택하면 예약 가능 시간을 확인할 수 있어요.
+              </div>
+            ) : (
+              availability.slots.map((slot) => {
+                const unavailable = !canSelectDuration(
+                  availability.slots,
+                  slot.startTime,
+                  durationHours
+                )
+                const isServerUnavailable = !slot.available
+                const selected = selectedTime === slot.startTime
+                const description = isServerUnavailable
+                  ? getAvailabilityReasonText(slot.reason)
+                  : unavailable
+                  ? `${durationHours}시간 연속 선택 불가`
+                  : ""
+                return (
+                  <button
+                    key={`${slot.startTime}-${slot.endTime}`}
+                    type="button"
+                    disabled={unavailable || isServerUnavailable || busy}
+                    onClick={() => {
+                      if (unavailable) return
+                      setSelectedTime(slot.startTime)
+                    }}
+                    style={ getSlotButtonStyleV2(unavailable, selected)}
+                    onMouseEnter={(e) => {
+                        if (!unavailable && !selected) {
+                          e.currentTarget.style.border = "1px solid #2563eb"
+                          e.currentTarget.style.background = "#eff6ff"
+                        }
+                      }}
+                      onMouseLeave={(e) => {
+                        if (!unavailable && !selected) {
+                          e.currentTarget.style.border = "1px solid #d1d5db"
+                          e.currentTarget.style.background = "#ffffff"
+                        }
+                      }}
+                    title={description}
+                  >
+                    <div
+                      style={slotTimeTextStyle}
+                    >
+                      {hhmm(slot.startTime)}
+                    </div>
 
-              return (
-                <button
-                  key={time}
-                  type="button"
-                  disabled={unavailable || busy}
-                  onClick={() => setSelectedTime(time)}
-                  style={getSlotButtonStyle(unavailable, selected)}
-                >
-                  {time}
-                </button>
-              )
-            })}
+                    <div
+                      style={{
+                        ...slotDescriptionStyle,
+                        color: unavailable ? "#ef4444" : "#f59e0b",
+                      }}
+                    >
+                      {description || " "}
+                    </div>
+                  </button>
+                )
+              })
+            )}
           </div>
 
           <div
@@ -505,7 +644,17 @@ export function ReservationsPage() {
               flexWrap: "wrap",
             }}
           >
-            <div style={mutedBoxStyle}>
+           <div
+              style={{
+                marginTop: 8,
+                padding: "14px 16px",
+                borderRadius: 14,
+                border: "1px solid #e5e7eb",
+                background: "#fff",
+                color: "#475569",
+                fontSize: 14,
+              }}
+            >
               {selectedTime
                 ? `선택한 시간: ${selectedTime} ~ ${addHours(selectedTime, durationHours)} (${durationHours}시간)`
                 : "시간을 선택하세요"}
