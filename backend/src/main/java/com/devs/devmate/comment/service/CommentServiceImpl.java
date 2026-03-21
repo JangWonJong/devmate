@@ -86,7 +86,7 @@ public class CommentServiceImpl implements CommentService{
         if (!comment.getMember().getId().equals(memberId)) {
             throw new BusinessException(ErrorCode.FORBIDDEN_COMMENT);
         }
-
+        System.out.println(request.getContent().trim());
         comment.updateContent(request.getContent().trim());
     }
 

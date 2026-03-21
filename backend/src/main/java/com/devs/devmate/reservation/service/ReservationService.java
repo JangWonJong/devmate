@@ -1,9 +1,6 @@
 package com.devs.devmate.reservation.service;
 
-import com.devs.devmate.reservation.dto.ReservationCreateRequest;
-import com.devs.devmate.reservation.dto.ReservationCreateResponse;
-import com.devs.devmate.reservation.dto.ReservationResponse;
-import com.devs.devmate.reservation.dto.StudyReservationCreateRequest;
+import com.devs.devmate.reservation.dto.*;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 
@@ -26,5 +23,7 @@ public interface ReservationService {
     Page<ReservationResponse> listStudyReservations(Long studyId, Pageable pageable);
 
     void cancel(Long memberId, Long reservationId);
+
+    AvailabilityResponse getAvailability(Long roomId, Long memberId, LocalDate date);
 
 }

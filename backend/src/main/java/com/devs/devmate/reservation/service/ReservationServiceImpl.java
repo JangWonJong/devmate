@@ -3,12 +3,10 @@ package com.devs.devmate.reservation.service;
 import com.devs.devmate.global.exception.BusinessException;
 import com.devs.devmate.global.exception.ErrorCode;
 import com.devs.devmate.member.entity.Member;
+import com.devs.devmate.member.entity.MemberStatus;
 import com.devs.devmate.member.repository.MemberRepository;
 import com.devs.devmate.notification.service.NotificationService;
-import com.devs.devmate.reservation.dto.ReservationCreateRequest;
-import com.devs.devmate.reservation.dto.ReservationCreateResponse;
-import com.devs.devmate.reservation.dto.ReservationResponse;
-import com.devs.devmate.reservation.dto.StudyReservationCreateRequest;
+import com.devs.devmate.reservation.dto.*;
 import com.devs.devmate.reservation.entity.Reservation;
 import com.devs.devmate.reservation.entity.Room;
 import com.devs.devmate.reservation.repository.ReservationRepository;
@@ -27,6 +25,7 @@ import java.time.Duration;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.time.LocalTime;
+import java.util.ArrayList;
 import java.util.List;
 
 
@@ -41,6 +40,7 @@ public class ReservationServiceImpl implements ReservationService{
     private final StudyRepository studyRepository;
     private final StudyMemberRepository studyMemberRepository;
     private final NotificationService notificationService;
+    private final ReservationAvailabilityEvaluator reservationAvailabilityEvaluator;
 
     private Room findRoom(Long roomId) {
         return roomRepository.findById(roomId)
@@ -156,6 +156,23 @@ public class ReservationServiceImpl implements ReservationService{
         }
     }
 
+    private record TimeSlot(LocalTime startTime, LocalTime endTime){}
+
+    private List<TimeSlot> createBaseSlots() {
+        List<TimeSlot> slots = new ArrayList<>();
+
+        LocalTime start = LocalTime.of(9, 0);
+        LocalTime end = LocalTime.of(22, 0);
+
+        while (start.isBefore(end)) {
+            LocalTime next = start.plusHours(1);
+            slots.add(new TimeSlot(start, next));
+            start = next;
+        }
+
+        return slots;
+    }
+
     @Override
     public ReservationCreateResponse create(Long memberId, ReservationCreateRequest req) {
 
@@ -167,7 +184,9 @@ public class ReservationServiceImpl implements ReservationService{
 
         Member member = memberRepository.findById(memberId)
                 .orElseThrow(() -> new BusinessException(ErrorCode.MEMBER_NOT_FOUND));
-
+        if (member.getStatus() == MemberStatus.DELETED) {
+            throw new BusinessException(ErrorCode.DELETED_MEMBER);
+        }
         validateReservationOverlap(
                 room.getId(), req.date(), req.startTime(), req.endTime());
 
@@ -294,6 +313,45 @@ public class ReservationServiceImpl implements ReservationService{
         validateCancelable(reservation);
 
         reservation.cancel();
+    }
+
+    @Override
+    public AvailabilityResponse getAvailability(Long roomId, Long memberId, LocalDate date) {
+        Room room = roomRepository.findById(roomId)
+                .orElseThrow(() -> new BusinessException(ErrorCode.ROOM_NOT_FOUND));
+
+        List<Reservation> roomReservations = reservationRepository.findByRoomIdAndDateAndStatus(
+                room.getId(),
+                date,
+                Reservation.Status.ACTIVE
+        );
+
+        List<Reservation> myReservations = reservationRepository.findByMemberIdAndDateAndStatus(
+                memberId,
+                date,
+                Reservation.Status.ACTIVE
+        );
+
+        List<AvailabilitySlotResponse> slots = createBaseSlots().stream()
+                .map(slot -> {
+                    AvailabilityEvaluationResult result = reservationAvailabilityEvaluator.evaluate(
+                            date,
+                            slot.startTime(),
+                            slot.endTime(),
+                            roomReservations,
+                            myReservations
+                    );
+
+                    return new AvailabilitySlotResponse(
+                            slot.startTime(),
+                            slot.endTime(),
+                            result.available(),
+                            result.reason()
+                    );
+                })
+                .toList();
+
+        return new AvailabilityResponse(room.getId(), date, slots);
     }
 
     @Override

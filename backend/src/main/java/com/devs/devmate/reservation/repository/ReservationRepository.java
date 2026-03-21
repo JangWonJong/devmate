@@ -116,14 +116,14 @@ public interface ReservationRepository extends JpaRepository<Reservation, Long> 
     Page<Reservation> findVisibleReservationByMemberIdAndDateAndStatus(
             @Param("memberId") Long memberId,
             @Param("date") LocalDate date,
-            @Param("status") Reservation.Status status,
+            @Param("status") Status status,
             Pageable pageable
     );
     // 개인예약만
     List<Reservation> findByMemberIdAndDateAndStatus(
             Long memberId,
             LocalDate date,
-            Reservation.Status status
+            Status status
     );
 
     @EntityGraph(attributePaths = {"room", "member"})
@@ -135,9 +135,11 @@ public interface ReservationRepository extends JpaRepository<Reservation, Long> 
     @EntityGraph(attributePaths = {"room", "member", "study"})
     Page<Reservation> findPageByStudyIdAndStatus(Long studyId, Status status, Pageable pageable);
 
-    List<Reservation> findAllByStudyIdAndStatus(Long studyId, Reservation.Status status);
+    List<Reservation> findAllByStudyIdAndStatus(Long studyId, Status status);
 
-    List<Reservation> findByMemberIdAndStatus(Long memberId, Reservation.Status status);
+    List<Reservation> findByRoomIdAndDateAndStatus(Long roomId, LocalDate date, Status status);
+
+    List<Reservation> findByMemberIdAndStatus(Long memberId, Status status);
 
     long countByMemberIdAndDateAndStatus(Long memberId, LocalDate date, Status status);
 
@@ -150,10 +152,11 @@ public interface ReservationRepository extends JpaRepository<Reservation, Long> 
                         and r.date < :cutoffDate
         """)
     int deleteByStatusAndDateBefore(
-            @Param("status") Reservation.Status status,
+            @Param("status") Status status,
             @Param("cutoffDate") LocalDate cutoffDate
         );
 
-    void deleteByStatusAndUpdatedAtBefore(Reservation.Status status, LocalDateTime cutoff);
+    void deleteByStatusAndUpdatedAtBefore(Status status, LocalDateTime cutoff);
+
 
 }

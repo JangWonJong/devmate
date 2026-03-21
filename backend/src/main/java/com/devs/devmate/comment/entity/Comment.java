@@ -47,7 +47,7 @@ public class Comment extends BaseEntity {
         this.adopted = false;
     }
 
-    public void updateContent(String string) {
+    public void updateContent(String content) {
         this.content = content;
     }
 }
