@@ -30,8 +30,6 @@ export type StudyLeaderDelegateRequest = {
     targetMemberId: number
 }
 
-
-
 export async function createStudy(req: StudyCreateRequest) {
     
     const {data} = await http.post<ApiResponse<number>>("/api/studies", req)

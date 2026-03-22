@@ -15,8 +15,8 @@ import { tokenStore } from "../auth/token"
 import { getMeId } from "../api/members"
 import { apiErrorMessage } from "../utils/error"
 import {
-  addHours, today,
-} from "../utils/reservationTime"
+  addHours, today, hhmm, canSelectDuration, getAvailabilityReasonText, getSlotDescription
+} from "../utils/reservationUtils"
 
 import { ReservationTimeline } from "./RservationTimeline"
 import { pageStyle, cardStyle, inputStyle, primaryButtonStyle, secondaryButtonStyle, 
@@ -28,10 +28,6 @@ type Scope = "all" | "mine"
 type Query = {
   scope?: Scope
   date?: string
-}
-
-function hhmm(t: string) {
-  return t?.length >= 5 ? t.slice(0, 5) : t
 }
 
 function getReservationStatus(date: string, endTime: string) {
@@ -46,52 +42,6 @@ function getReservationStatus(date: string, endTime: string) {
   return "예정 예약"
 }
 
-function getAvailabilityReasonText(reason: string | null) {
-  switch (reason) {
-    case "PAST_TIME":
-      return "지난 시간"
-    case "ALREADY_RESERVED":
-      return "이미 예약됨"
-    case "MY_CONFLICT":
-      return "내 예약과 겹침"
-    case "DAILY_COUNT_LIMIT":
-      return "하루 예약 횟수 초과"
-    default:
-      return ""
-  }
-}
-
-function getSlotDescription(
-  slot: AvailabilitySlot,
-  slots: AvailabilitySlot[],
-  durationHours: number
-) {
-  if (slot.reason) {
-    return getAvailabilityReasonText(slot.reason)
-  }
-
-  if (!canSelectDuration(slots, slot.startTime, durationHours)) {
-    return `${durationHours}시간 연속 선택 불가`
-  }
-
-  return ""
-}
-
-function canSelectDuration(
-  slots: AvailabilitySlot[],
-  startTime: string,
-  durationHours: number
-) {
-  const startIndex = slots.findIndex((slot) => slot.startTime === startTime)
-  if (startIndex === -1) return false
-
-  for (let i = 0; i < durationHours; i += 1) {
-    const slot = slots[startIndex + i]
-    if (!slot || !slot.available) return false
-  }
-
-  return true
-}
 
 function toScope(v: string | null): Scope {
   return v === "mine" ? "mine" : "all"
@@ -149,6 +99,27 @@ export function ReservationsPage() {
 
   const [availability, setAvailability] = useState<AvailabilityResponse | null>(null)
   const [availabilityLoading, setAvailabilityLoading] = useState(false)
+  const [successMessage, setSuccessMessage] = useState<string | null>(null)
+
+
+  const refreshAvailability = useCallback(async () => {
+  if (scope !== "all" || !roomId || !date) {
+    setAvailability(null)
+    return
+  }
+
+  try {
+    setAvailabilityLoading(true)
+    const res = await getRoomAvailability(roomId, date)
+    setAvailability(res)
+  } catch (e: any) {
+    setAvailability(null)
+    setErr(apiErrorMessage(e, "예약 가능 시간 조회 실패"))
+  } finally {
+    setAvailabilityLoading(false)
+  }
+}, [scope, roomId, date])
+
 
   useEffect(() => {
     const sync = () => setLoggedIn(tokenStore.isLoggedIn())
@@ -186,36 +157,20 @@ export function ReservationsPage() {
     })()
   }, [])
 
-  useEffect(() => {
-    ;(async () => {
-      if (scope !== "all" || !roomId || !date) {
-        setAvailability(null)
-        setSelectedTime(null)
-        return
-      }
 
-      try {
-        setAvailabilityLoading(true)
-        const res = await getRoomAvailability(roomId, date)
-        setAvailability(res)
-        
-        if (
-          selectedTime &&
-          !res.slots.some(
-            (slot) => slot.startTime === selectedTime && slot.available
-          )
-        ) {
-          setSelectedTime(null)
-          }
-      } catch (e: any) {
-        setAvailability(null)
-        setSelectedTime(null)
-        setErr(apiErrorMessage(e, "예약 가능 시간 조회 실패"))
-      }finally {
-        setAvailabilityLoading(false)
-      }
-    }) ()
-  }, [scope, roomId, date, selectedTime])
+  useEffect(() => {
+  void refreshAvailability()
+  }, [refreshAvailability])
+  
+  useEffect(() => {
+  if (!successMessage) return
+
+  const timer = window.setTimeout(() => {
+    setSuccessMessage(null)
+  }, 2500)
+
+  return () => window.clearTimeout(timer)
+  }, [successMessage])
 
   const loadAll = async () => {
     const page = await listReservations({
@@ -284,7 +239,8 @@ export function ReservationsPage() {
     const t = title.trim()
     if (!t) return setErr("예약 제목을 입력하세요")
     if (!selectedTime) return setErr("예약 시간을 선택하세요")
-
+    
+    setSuccessMessage(null)
     try {
       setBusy(true)
       setErr(null)
@@ -297,12 +253,17 @@ export function ReservationsPage() {
         title: t,
       })
 
+      setSuccessMessage("예약이 완료되었어요")
       setTitle("")
       setSelectedTime(null)
       setDurationHours(1)
-
-      if (scope === "mine") await loadMine()
-      else await loadAll()
+      
+      if (scope === "mine") {
+        await loadMine()
+      } else {
+        await loadAll()
+        await refreshAvailability()
+      }
     } catch (e: any) {
       const status = e?.response?.status
       if (status === 409) setErr("이미 예약된 시간대입니다.")
@@ -317,13 +278,19 @@ export function ReservationsPage() {
     const ok = confirm("예약을 취소할까요?")
     if (!ok) return
 
+    setSuccessMessage(null)
     try {
       setBusy(true)
       setErr(null)
       await cancelReservation(id)
+      setSuccessMessage("예약이 취소되었어요")
 
-      if (scope === "mine") await loadMine()
-      else await loadAll()
+      if (scope === "mine") {
+        await loadMine()
+      } else {
+        await loadAll()
+        await refreshAvailability()
+      }
     } catch (e: any) {
       setErr(apiErrorMessage(e, "예약 취소 실패"))
     } finally {
@@ -412,6 +379,22 @@ export function ReservationsPage() {
     </div>
 
     {err && <div style={errorBoxStyle}>{err}</div>}
+    {successMessage && (
+      <div
+        style={{
+          marginBottom: 16,
+          padding: "14px 16px",
+          borderRadius: 14,
+          border: "1px solid #bbf7d0",
+          background: "#f0fdf4",
+          color: "#166534",
+          fontSize: 14,
+          fontWeight: 600,
+        }}
+      >
+        {successMessage}
+      </div>
+    )}
     {scope === "mine" && (
         <div
           style={{
@@ -597,18 +580,18 @@ export function ReservationsPage() {
                     type="button"
                     disabled={unavailable || isServerUnavailable || busy}
                     onClick={() => {
-                      if (unavailable) return
+                      if (unavailable || isServerUnavailable || busy) return
                       setSelectedTime(slot.startTime)
                     }}
-                    style={ getSlotButtonStyleV2(unavailable, selected)}
+                    style={ getSlotButtonStyleV2(unavailable || isServerUnavailable, selected)}
                     onMouseEnter={(e) => {
-                        if (!unavailable && !selected) {
+                        if (!(unavailable || isServerUnavailable) && !selected) {
                           e.currentTarget.style.border = "1px solid #2563eb"
                           e.currentTarget.style.background = "#eff6ff"
                         }
                       }}
                       onMouseLeave={(e) => {
-                        if (!unavailable && !selected) {
+                        if (!(unavailable || isServerUnavailable) && !selected) {
                           e.currentTarget.style.border = "1px solid #d1d5db"
                           e.currentTarget.style.background = "#ffffff"
                         }
@@ -624,7 +607,7 @@ export function ReservationsPage() {
                     <div
                       style={{
                         ...slotDescriptionStyle,
-                        color: unavailable ? "#ef4444" : "#f59e0b",
+                        color: isServerUnavailable ? "#ef4444" : unavailable ? "#f59e0b" : "transparent",
                       }}
                     >
                       {description || " "}

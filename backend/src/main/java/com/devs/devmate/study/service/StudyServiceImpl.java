@@ -51,6 +51,10 @@ public class StudyServiceImpl implements StudyService{
         );
 
         for (Reservation studyReservation : studyReservations) {
+            if (studyReservation.getMember().getId().equals(memberId)) {
+                continue;
+            }
+
             boolean overlap = reservationRepository.existsMemberOverlap(
                     memberId,
                     studyReservation.getDate(),
@@ -247,6 +251,15 @@ public class StudyServiceImpl implements StudyService{
         }
 
         studyMember.cancel();
+
+        List<Reservation> myStudyReservations =
+                reservationRepository.findByStudyIdAndMemberIdAndStatus(
+                        studyId, memberId, Reservation.Status.ACTIVE
+                );
+        for (Reservation reservation : myStudyReservations) {
+            reservation.cancel();
+        }
+
         reopenStudyIfNeeded(study);
 
         return study.getId();
