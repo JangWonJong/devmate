@@ -8,19 +8,14 @@ import {
   listReservations,
   type ReservationResponse,
   type AvailabilityResponse,
-  getRoomAvailability
+  getRoomAvailability,
 } from "../../api/reservations"
 import { tokenStore } from "../../auth/token"
 import { getMeId } from "../../api/members"
 import { apiErrorMessage } from "../../utils/error"
-import {
-  addHours, today, hhmm, canSelectDuration, getAvailabilityReasonText
-} from "../../utils/reservationUtils"
-
-import { ReservationTimeline } from "./ReservationTimeline"
-import { pageStyle, cardStyle, inputStyle, primaryButtonStyle, secondaryButtonStyle, 
-  mutedBoxStyle, listItemCardStyle, errorBoxStyle, getSlotButtonStyleV2,
-   getReservationStatusStyle, slotTimeTextStyle, slotDescriptionStyle } from "../../styles/commonStyles"
+import { addHours, today } from "../../utils/reservationUtils"
+import ReservationCreateSection from "../../components/reservation/ReservationCreateSection"
+import ReservationListSection from "../../components/reservation/ReservationListSection"
 
 type Scope = "all" | "mine"
 
@@ -41,7 +36,6 @@ function getReservationStatus(date: string, endTime: string) {
   return "예정 예약"
 }
 
-
 function toScope(v: string | null): Scope {
   return v === "mine" ? "mine" : "all"
 }
@@ -51,6 +45,51 @@ function isCancelable(date: string, startTime: string) {
   const start = new Date(`${date}T${startTime}`)
   const diff = (start.getTime() - now.getTime()) / (1000 * 60)
   return diff >= 60
+}
+
+function ScopeTab({
+  active,
+  onClick,
+  children,
+}: {
+  active: boolean
+  onClick: () => void
+  children: React.ReactNode
+}) {
+  return (
+    <button
+      type="button"
+      onClick={onClick}
+      className={`rounded-full px-4 py-2 text-sm font-semibold transition ${
+        active
+          ? "bg-slate-900 text-white"
+          : "border border-slate-300 bg-white text-slate-700 hover:bg-slate-50"
+      }`}
+    >
+      {children}
+    </button>
+  )
+}
+
+function StatusPill({
+  label,
+  tone,
+}: {
+  label: string
+  tone: "upcoming" | "today" | "past"
+}) {
+  const className =
+    tone === "upcoming"
+      ? "bg-emerald-50 text-emerald-700 border border-emerald-200"
+      : tone === "today"
+      ? "bg-blue-50 text-blue-700 border border-blue-200"
+      : "bg-slate-100 text-slate-500 border border-slate-200"
+
+  return (
+    <span className={`inline-flex rounded-full px-2.5 py-1 text-xs font-semibold ${className}`}>
+      {label}
+    </span>
+  )
 }
 
 export function ReservationsPage() {
@@ -69,14 +108,10 @@ export function ReservationsPage() {
       const nextDate = next.date ?? curDate
 
       const params: Record<string, string> = {}
-      
-      if (nextScope !== "all") {
-        params.scope = nextScope
-      }
 
-      if (nextScope === "all" && nextDate !== today()) {
-        params.date = nextDate
-}
+      if (nextScope !== "all") params.scope = nextScope
+      if (nextScope === "all" && nextDate !== today()) params.date = nextDate
+
       setSp(params, { replace: options?.replace ?? false })
     },
     [sp, setSp]
@@ -100,25 +135,23 @@ export function ReservationsPage() {
   const [availabilityLoading, setAvailabilityLoading] = useState(false)
   const [successMessage, setSuccessMessage] = useState<string | null>(null)
 
-
   const refreshAvailability = useCallback(async () => {
-  if (scope !== "all" || !roomId || !date) {
-    setAvailability(null)
-    return
-  }
+    if (scope !== "all" || !roomId || !date) {
+      setAvailability(null)
+      return
+    }
 
-  try {
-    setAvailabilityLoading(true)
-    const res = await getRoomAvailability(roomId, date)
-    setAvailability(res)
-  } catch (e: any) {
-    setAvailability(null)
-    setErr(apiErrorMessage(e, "예약 가능 시간 조회 실패"))
-  } finally {
-    setAvailabilityLoading(false)
-  }
-}, [scope, roomId, date])
-
+    try {
+      setAvailabilityLoading(true)
+      const res = await getRoomAvailability(roomId, date)
+      setAvailability(res)
+    } catch (e: any) {
+      setAvailability(null)
+      setErr(apiErrorMessage(e, "예약 가능 시간 조회 실패"))
+    } finally {
+      setAvailabilityLoading(false)
+    }
+  }, [scope, roomId, date])
 
   useEffect(() => {
     const sync = () => setLoggedIn(tokenStore.isLoggedIn())
@@ -156,19 +189,16 @@ export function ReservationsPage() {
     })()
   }, [])
 
-
   useEffect(() => {
-  void refreshAvailability()
+    void refreshAvailability()
   }, [refreshAvailability])
-  
+
   useEffect(() => {
-  if (!successMessage) return
-
-  const timer = window.setTimeout(() => {
-    setSuccessMessage(null)
-  }, 2500)
-
-  return () => window.clearTimeout(timer)
+    if (!successMessage) return
+    const timer = window.setTimeout(() => {
+      setSuccessMessage(null)
+    }, 2500)
+    return () => window.clearTimeout(timer)
   }, [successMessage])
 
   const loadAll = async () => {
@@ -223,7 +253,7 @@ export function ReservationsPage() {
     }
     return "해당 날짜 예약이 없어요"
   }, [scope, loggedIn])
-  
+
   const onCreate = async () => {
     if (!loggedIn) {
       setErr("로그인 후 예약할 수 있어요")
@@ -238,7 +268,7 @@ export function ReservationsPage() {
     const t = title.trim()
     if (!t) return setErr("예약 제목을 입력하세요")
     if (!selectedTime) return setErr("예약 시간을 선택하세요")
-    
+
     setSuccessMessage(null)
     try {
       setBusy(true)
@@ -256,7 +286,7 @@ export function ReservationsPage() {
       setTitle("")
       setSelectedTime(null)
       setDurationHours(1)
-      
+
       if (scope === "mine") {
         await loadMine()
       } else {
@@ -266,7 +296,6 @@ export function ReservationsPage() {
     } catch (e: any) {
       const status = e?.response?.status
       if (status === 409) setErr("이미 예약된 시간대입니다.")
-      //else if (status === 400) setErr(apiErrorMessage(e, "예약 시간을 확인해주세요."))
       else setErr(apiErrorMessage(e, "예약 생성 실패"))
     } finally {
       setBusy(false)
@@ -298,11 +327,11 @@ export function ReservationsPage() {
   }
 
   const groupedItems = useMemo(() => {
-  return items.reduce<Record<string, ReservationResponse[]>>((acc, item) => {
-    if (!acc[item.date]) acc[item.date] = []
-    acc[item.date].push(item)
-    return acc
-  }, {})
+    return items.reduce<Record<string, ReservationResponse[]>>((acc, item) => {
+      if (!acc[item.date]) acc[item.date] = []
+      acc[item.date].push(item)
+      return acc
+    }, {})
   }, [items])
 
   const reservationSummary = useMemo(() => {
@@ -318,11 +347,7 @@ export function ReservationsPage() {
       else past += 1
     }
 
-    return {
-      upcoming,
-      todayCount,
-      past,
-    }
+    return { upcoming, todayCount, past }
   }, [items])
 
   const onMoveToStudyPost = (postId: number | null) => {
@@ -331,547 +356,132 @@ export function ReservationsPage() {
   }
 
   return (
-  <div style={pageStyle}>
-    <div
-      style={{
-        display: "flex",
-        justifyContent: "space-between",
-        alignItems: "flex-end",
-        gap: 16,
-        flexWrap: "wrap",
-        marginBottom: 20,
-      }}
-    >
-      <div>
-        <h1 style={{ fontSize: 32, fontWeight: 800, margin: 0 }}>예약</h1>
-        <div style={{ marginTop: 8, color: "#666", fontSize: 14 }}>
-          스터디룸 예약 현황을 확인하고 원하는 시간대를 선택해보세요.
+    <div className="space-y-6">
+      <section className="flex flex-col gap-4 lg:flex-row lg:items-end lg:justify-between">
+        <div>
+          <h1 className="text-4xl font-bold tracking-tight text-slate-900">예약</h1>
+          <p className="mt-2 text-lg leading-8 text-slate-600">
+            스터디룸 예약 현황을 확인하고 원하는 시간대를 선택해보세요.
+          </p>
         </div>
-      </div>
 
-      <div style={{ display: "flex", gap: 8 }}>
-        <button
-          onClick={() => setQuery({ scope: "all" })}
-          style={scope === "all" ? primaryButtonStyle : secondaryButtonStyle}
-        >
-          전체 예약
-        </button>
+        <div className="flex flex-wrap gap-2">
+          <ScopeTab active={scope === "all"} onClick={() => setQuery({ scope: "all" })}>
+            전체 예약
+          </ScopeTab>
 
-        <button
-          onClick={() => {
-            if (!loggedIn) {
-              setErr("로그인 후 내 예약을 확인할 수 있어요")
-              nav("/login", {
-                state: {
-                  from: { pathname: "/reservations", search: `?${sp.toString()}` },
-                },
-              })
-              return
-            }
-            setQuery({ scope: "mine" })
-          }}
-          style={scope === "mine" ? primaryButtonStyle : secondaryButtonStyle}
-        >
-          내 예약
-        </button>
-      </div>
-    </div>
+          <ScopeTab
+            active={scope === "mine"}
+            onClick={() => {
+              if (!loggedIn) {
+                setErr("로그인 후 내 예약을 확인할 수 있어요")
+                nav("/login", {
+                  state: {
+                    from: { pathname: "/reservations", search: `?${sp.toString()}` },
+                  },
+                })
+                return
+              }
+              setQuery({ scope: "mine" })
+            }}
+          >
+            내 예약
+          </ScopeTab>
+        </div>
+      </section>
 
-    {err && <div style={errorBoxStyle}>{err}</div>}
-    {successMessage && (
-      <div
-        style={{
-          marginBottom: 16,
-          padding: "14px 16px",
-          borderRadius: 14,
-          border: "1px solid #bbf7d0",
-          background: "#f0fdf4",
-          color: "#166534",
-          fontSize: 14,
-          fontWeight: 600,
-        }}
-      >
-        {successMessage}
-      </div>
-    )}
-    {scope === "mine" && (
-        <div
-          style={{
-            display: "flex",
-            justifyContent: "space-between",
-            alignItems: "center",
-            gap: 12,
-            flexWrap: "wrap",
-            marginBottom: 16,
-          }}
-        >
-          <div style={{ display: "flex", gap: 8, alignItems: "center", flexWrap: "wrap" }}>
-            <span style={{ fontSize: 14, color: "#666" }}>날짜 필터</span>
-            <input
-              type="date"
-              value={mineDate}
-              onChange={(e) => setMineDate(e.target.value)}
-              style={{ ...inputStyle, width: 180 }}
-            />
-            <button
-              type="button"
-              onClick={() => setMineDate("")}
-              style={secondaryButtonStyle}
-            >
-              전체 보기
-            </button>
-          </div>
+      {err && (
+        <div className="rounded-2xl border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-700">
+          {err}
         </div>
       )}
-    {scope === "all" && (
-      <>
-        <div
-          style={{
-            display: "flex",
-            justifyContent: "space-between",
-            alignItems: "center",
-            gap: 12,
-            flexWrap: "wrap",
-            marginBottom: 16,
-          }}
-        >
-          <div style={{ display: "flex", gap: 8, alignItems: "center" }}>
-            <span style={{ fontSize: 14, color: "#666" }}>날짜</span>
-            <input
-              type="date"
-              value={date}
-              onChange={(e) => setQuery({ date: e.target.value })}
-              style={{ ...inputStyle, width: 180 }}
-            />
-          </div>
+
+      {successMessage && (
+        <div className="rounded-2xl border border-emerald-200 bg-emerald-50 px-4 py-3 text-sm font-semibold text-emerald-700">
+          {successMessage}
         </div>
-
-        <div style={{ marginBottom: 16 }}>
-          <ReservationTimeline items={items} roomId={roomId}
-           previewStartTime={selectedTime}
-           previewEndTime={selectedTime ? addHours(selectedTime, durationHours) : null} />
-        </div>
-
-        <div style={{ ...cardStyle, marginBottom: 20 }}>
-          <div style={{ fontSize: 22, fontWeight: 800, marginBottom: 16 }}>
-            예약 만들기
-          </div>
-
-          {!loggedIn && (
-            <div style={{ fontSize: 13, color: "#666", marginBottom: 12 }}>
-              로그인 후 예약할 수 있어요
-            </div>
-          )}
-
-          <div
-            style={{
-              display: "grid",
-              gridTemplateColumns: "180px 140px minmax(220px, 1fr)",
-              gap: 12,
-              marginBottom: 16,
-            }}
-          >
-            <div>
-              <div style={{ marginBottom: 6, fontSize: 13, color: "#666" }}>
-                스터디룸
-              </div>
-              <select
-                value={roomId?.toString() ?? ""}
-                onChange={(e) => setRoomId(e.target.value ? Number(e.target.value) : null)}
-                style={inputStyle}
-              >
-                <option value="" disabled>
-                  방 선택
-                </option>
-                {rooms.map((r) => (
-                  <option key={r.id} value={r.id}>
-                    {r.name}
-                  </option>
-                ))}
-              </select>
-            </div>
-
-            <div>
-              <div style={{ marginBottom: 6, fontSize: 13, color: "#666" }}>
-                예약 시간
-              </div>
-              <select
-                value={durationHours}
-                onChange={(e) => setDurationHours(Number(e.target.value))}
-                style={inputStyle}
-              >
-                <option value={1}>1시간</option>
-                <option value={2}>2시간</option>
-                <option value={3}>3시간</option>
-              </select>
-            </div>
-
-            <div>
-              <div style={{ marginBottom: 6, fontSize: 13, color: "#666" }}>
-                예약 제목
-              </div>
-              <input
-                value={title}
-                onChange={(e) => setTitle(e.target.value)}
-                placeholder="예: 알고리즘 공부"
-                style={inputStyle}
-              />
-            </div>
-          </div>
-
-          <div style={{ marginBottom: 10, fontSize: 13, color: "#666" }}>
-            시간 선택 (1시간 단위)
-          </div>
-
-          <div
-            style={{
-              display: "grid",
-              gridTemplateColumns: "repeat(auto-fit, minmax(96px, 1fr))",
-              gap: 12,
-              marginBottom: 16,
-            }}
-          >
-            {availabilityLoading ? (
-              <div
-                style={{
-                  gridColumn: "1 / -1",
-                  padding: "16px 14px",
-                  borderRadius: 16,
-                  border: "1px solid #e5e7eb",
-                  background: "#f8fafc",
-                  color: "#64748b",
-                  fontSize: 14,
-                }}
-              >
-                예약 가능 시간을 불러오는 중이에요.
-              </div>
-            ) : !availability ? (
-              <div
-                style={{
-                  gridColumn: "1 / -1",
-                  padding: "16px 14px",
-                  borderRadius: 16,
-                  border: "1px solid #e5e7eb",
-                  background: "#f8fafc",
-                  color: "#64748b",
-                  fontSize: 14,
-                }}
-              >
-                방과 날짜를 선택하면 예약 가능 시간을 확인할 수 있어요.
-              </div>
-            ) : (
-              availability.slots.map((slot) => {
-                const unavailable = !canSelectDuration(
-                  availability.slots,
-                  slot.startTime,
-                  durationHours
-                )
-                const isServerUnavailable = !slot.available
-                const selected = selectedTime === slot.startTime
-                const description = isServerUnavailable
-                  ? getAvailabilityReasonText(slot.reason)
-                  : unavailable
-                  ? `${durationHours}시간 연속 선택 불가`
-                  : ""
-                return (
-                  <button
-                    key={`${slot.startTime}-${slot.endTime}`}
-                    type="button"
-                    disabled={unavailable || isServerUnavailable || busy}
-                    onClick={() => {
-                      if (unavailable || isServerUnavailable || busy) return
-                      setSelectedTime(slot.startTime)
-                    }}
-                    style={ getSlotButtonStyleV2(unavailable || isServerUnavailable, selected)}
-                    onMouseEnter={(e) => {
-                        if (!(unavailable || isServerUnavailable) && !selected) {
-                          e.currentTarget.style.border = "1px solid #2563eb"
-                          e.currentTarget.style.background = "#eff6ff"
-                        }
-                      }}
-                      onMouseLeave={(e) => {
-                        if (!(unavailable || isServerUnavailable) && !selected) {
-                          e.currentTarget.style.border = "1px solid #d1d5db"
-                          e.currentTarget.style.background = "#ffffff"
-                        }
-                      }}
-                    title={description}
-                  >
-                    <div
-                      style={slotTimeTextStyle}
-                    >
-                      {hhmm(slot.startTime)}
-                    </div>
-
-                    <div
-                      style={{
-                        ...slotDescriptionStyle,
-                        color: isServerUnavailable ? "#ef4444" : unavailable ? "#f59e0b" : "transparent",
-                      }}
-                    >
-                      {description || " "}
-                    </div>
-                  </button>
-                )
-              })
-            )}
-          </div>
-
-          <div
-            style={{
-              display: "flex",
-              justifyContent: "space-between",
-              alignItems: "center",
-              gap: 12,
-              flexWrap: "wrap",
-            }}
-          >
-           <div
-              style={{
-                marginTop: 8,
-                padding: "14px 16px",
-                borderRadius: 14,
-                border: "1px solid #e5e7eb",
-                background: "#fff",
-                color: "#475569",
-                fontSize: 14,
-              }}
-            >
-              {selectedTime
-                ? `선택한 시간: ${selectedTime} ~ ${addHours(selectedTime, durationHours)} (${durationHours}시간)`
-                : "시간을 선택하세요"}
-            </div>
-
-            <button
-              disabled={busy}
-              onClick={onCreate}
-              style={{
-                ...primaryButtonStyle,
-                opacity: busy ? 0.6 : 1,
-              }}
-            >
-              예약하기
-            </button>
-          </div>
-        </div>
-      </>
-    )}
-
-    <div style={{ ...cardStyle, display: "grid", gap: 10 }}>
-    <div
-      style={{
-        display: "flex",
-        justifyContent: "space-between",
-        alignItems: "center",
-        gap: 12,
-        flexWrap: "wrap",
-      }}
-    >
-  <div style={{ fontSize: 20, fontWeight: 800 }}>
-    {scope === "mine" ? "내 예약 목록" : "예약 목록"}
-  </div>
-
-  {scope === "mine" && (
-    <div
-      style={{
-        display: "flex",
-        gap: 8,
-        flexWrap: "wrap",
-      }}
-    >
-      <span
-        style={{
-          borderRadius: 999,
-          padding: "6px 10px",
-          fontSize: 12,
-          fontWeight: 700,
-          background: "#f0fdf4",
-          color: "#15803d",
-          border: "1px solid #bbf7d0",
-        }}
-      >
-        예정 {reservationSummary.upcoming}건
-      </span>
-
-      <span
-        style={{
-          borderRadius: 999,
-          padding: "6px 10px",
-          fontSize: 12,
-          fontWeight: 700,
-          background: "#eef6ff",
-          color: "#1d4ed8",
-          border: "1px solid #bfdbfe",
-        }}
-      >
-        오늘 {reservationSummary.todayCount}건
-      </span>
-
-      <span
-        style={{
-          borderRadius: 999,
-          padding: "6px 10px",
-          fontSize: 12,
-          fontWeight: 700,
-          background: "#f5f5f5",
-          color: "#777",
-          border: "1px solid #e5e5e5",
-        }}
-      >
-        지난 {reservationSummary.past}건
-      </span>
-    </div>
       )}
-    </div>
 
-    {items.length === 0 ? (
-      <div style={mutedBoxStyle}>{emptyText}</div>
-    ) : (
-      Object.entries(groupedItems).map(([groupDate, reservations]) => (
-        <div key={groupDate} style={{ display: "grid", gap: 8 }}>
-          <div
-            style={{
-              fontSize: 14,
-              fontWeight: 700,
-              color: "#555",
-              marginTop: 4,
-              paddingLeft: 2,
-            }}
-          >
-            {groupDate}
-          </div>
-
-          {reservations.map((r) => {
-            const isMine = meId != null && r.memberId === meId
-            const statusLabel = getReservationStatus(r.date, r.endTime)
-            const statusStyle = getReservationStatusStyle(statusLabel)
-            const cancelable = isCancelable(r.date, r.startTime)
-
-            return (
-              <div
-                key={r.id}
-                style={{
-                  ...listItemCardStyle,
-                  opacity: statusLabel === "지난 예약" ? 0.72 : 1,
-                }}
-              >
-                <div
-                  style={{
-                    display: "flex",
-                    justifyContent: "space-between",
-                    gap: 8,
-                    alignItems: "center",
-                    flexWrap: "wrap",
-                  }}
+      {scope === "mine" ? (
+        <>
+          <section className="rounded-[28px] border border-slate-200 bg-white p-6 shadow-sm">
+            <div className="flex flex-col gap-4 lg:flex-row lg:items-center lg:justify-between">
+              <div className="flex flex-wrap items-center gap-3">
+                <span className="text-sm font-medium text-slate-500">날짜 필터</span>
+                <input
+                  type="date"
+                  value={mineDate}
+                  onChange={(e) => setMineDate(e.target.value)}
+                  className="h-11 rounded-2xl border border-slate-300 bg-white px-4 text-sm text-slate-700 outline-none transition focus:border-slate-400"
+                />
+                <button
+                  type="button"
+                  onClick={() => setMineDate("")}
+                  className="rounded-2xl border border-slate-300 px-4 py-2 text-sm font-semibold text-slate-700 transition hover:bg-slate-50"
                 >
-                  <div>
-                    <div
-                      style={{
-                        display: "flex",
-                        alignItems: "center",
-                        gap: 8,
-                        flexWrap: "wrap",
-                      }}
-                    >
-                      <div style={{ fontWeight: 800, fontSize: 16 }}>
-                        {hhmm(r.startTime)} ~ {hhmm(r.endTime)}
-                      </div>
-
-                      <span
-                        style={{
-                          ...statusStyle,
-                          borderRadius: 999,
-                          padding: "4px 10px",
-                          fontSize: 12,
-                          fontWeight: 700,
-                        }}
-                      >
-                        {statusLabel}
-                      </span>
-                    </div>
-                  <div style={{ marginTop: 10, fontSize: 15, fontWeight: 600 }}>{r.title}</div>
-                  <div style={{ marginTop: 4, fontSize: 13, color: "#777", display: "flex", gap: 6, alignItems: "center", flexWrap: "wrap" }}>
-                      <span>{r.roomName}</span>
-                      {scope === "all" && <span>· {r.memberNickname}</span>}
-                      {r.studyId ? (
-                        <button type="button" onClick={() => onMoveToStudyPost(r.postId)}
-                          style={{
-                            fontSize: 11,
-                            padding: "2px 6px",
-                            borderRadius: 6,
-                            background: "#eef4ff",
-                            border: "1px solid #d0dcff",
-                            color: "#1d4ed8",
-                            fontWeight: 600,
-                          }}
-                        >
-                          스터디
-                        </button>
-                      ) : (
-                        <span
-                          style={{
-                            fontSize: 11,
-                            padding: "2px 6px",
-                            borderRadius: 6,
-                            background: "#f5f5f5",
-                            border: "1px solid #ddd",
-                            color: "#555",
-                            fontWeight: 600,
-                          }}
-                        >
-                          개인
-                        </span>
-                      )}
-                    </div>
-                  </div>
-                  {isMine && cancelable && (
-                    <button
-                      disabled={busy}
-                      onClick={() => onCancel(r.id)}
-                      style={secondaryButtonStyle}
-                    >
-                      취소
-                    </button>
-                  )}
-                </div>
-
-                <div style={{ marginTop: 6, fontSize: 12 }}>
-                {cancelable ? (
-                  <span style={{ color: "#15803d", fontWeight: 600 }}>
-                    취소 가능
-                  </span>
-                ) : (
-                  <span style={{ color: "#999" }}>
-                    취소 불가
-                  </span>
-                )}
-                {r.studyId && r.postId && (
-                <div style={{ marginTop: 6 }}>
-                  <button
-                    type="button"
-                    onClick={() => onMoveToStudyPost(r.postId)}
-                    style={{
-                      background: "none",
-                      border: "none",
-                      padding: 0,
-                      color: "#1d4ed8",
-                      cursor: "pointer",
-                      fontSize: 12,
-                      textDecoration: "underline",
-                    }}
-                  >
-                    스터디 글 보기
-                  </button>
-                </div>
-              )}
+                  전체 보기
+                </button>
               </div>
+
+              <div className="flex flex-wrap gap-2">
+                <StatusPill label={`예정 ${reservationSummary.upcoming}건`} tone="upcoming" />
+                <StatusPill label={`오늘 ${reservationSummary.todayCount}건`} tone="today" />
+                <StatusPill label={`지난 ${reservationSummary.past}건`} tone="past" />
               </div>
-            )
-          })}
+            </div>
+          </section>
+
+          <ReservationListSection
+            title="내 예약 목록"
+            items={items}
+            groupedItems={groupedItems}
+            emptyText={emptyText}
+            scope={scope}
+            meId={meId}
+            busy={busy}
+            getReservationStatus={getReservationStatus}
+            isCancelable={isCancelable}
+            onCancel={onCancel}
+            onMoveToStudyPost={onMoveToStudyPost}
+          />
+        </>
+      ) : (
+        <div className="grid gap-6 xl:grid-cols-[1.45fr_0.95fr]">
+          <ReservationCreateSection
+            date={date}
+            roomId={roomId}
+            rooms={rooms}
+            durationHours={durationHours}
+            title={title}
+            selectedTime={selectedTime}
+            loggedIn={loggedIn}
+            busy={busy}
+            items={items}
+            availability={availability}
+            availabilityLoading={availabilityLoading}
+            onChangeDate={(value) => setQuery({ date: value })}
+            onChangeRoomId={setRoomId}
+            onChangeDurationHours={setDurationHours}
+            onChangeTitle={setTitle}
+            onChangeSelectedTime={setSelectedTime}
+            onCreate={onCreate}
+          />
+
+          <ReservationListSection
+            title="예약 목록"
+            items={items}
+            groupedItems={groupedItems}
+            emptyText={emptyText}
+            scope={scope}
+            meId={meId}
+            busy={busy}
+            getReservationStatus={getReservationStatus}
+            isCancelable={isCancelable}
+            onCancel={onCancel}
+            onMoveToStudyPost={onMoveToStudyPost}
+          />
         </div>
-      ))
-    )}
-  </div>
-  </div>
-)
+      )}
+    </div>
+  )
 }

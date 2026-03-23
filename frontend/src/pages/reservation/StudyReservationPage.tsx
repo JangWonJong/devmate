@@ -1,5 +1,6 @@
 import { useCallback, useEffect, useState } from "react"
 import { useNavigate, useParams } from "react-router-dom"
+import { ChevronLeft } from "lucide-react"
 import { listRooms, type RoomResponse } from "../../api/rooms"
 import {
   createStudyReservation,
@@ -12,24 +13,10 @@ import { getStudy, type StudyResponse } from "../../api/study"
 import { apiErrorMessage } from "../../utils/error"
 import {
   addHours,
-  canSelectDuration,
-  getSlotDescription,
-  hhmm,
   today,
-  getStudyStatusText
 } from "../../utils/reservationUtils"
-import { ReservationTimeline } from "./ReservationTimeline"
-import {
-  cardStyle,
-  errorBoxStyle,
-  getSlotButtonStyleV2,
-  inputStyle,
-  pageStyle,
-  primaryButtonStyle,
-  secondaryButtonStyle,
-  slotDescriptionStyle,
-  slotTimeTextStyle,
-} from "../../styles/commonStyles"
+import StudyInfoCard from "../../components/study/reservation/StudyInfoCard"
+import StudyReservationCreateSection from "../../components/study/reservation/StudyReservationCreateSection"
 
 export function StudyReservationPage() {
   const nav = useNavigate()
@@ -88,11 +75,9 @@ export function StudyReservationPage() {
 
   useEffect(() => {
     if (!successMessage) return
-
     const timer = window.setTimeout(() => {
       setSuccessMessage(null)
     }, 2500)
-
     return () => window.clearTimeout(timer)
   }, [successMessage])
 
@@ -190,303 +175,72 @@ export function StudyReservationPage() {
 
   if (loading) {
     return (
-      <div style={pageStyle}>
-        <div style={cardStyle}>불러오는 중...</div>
+      <div className="rounded-2xl border border-slate-200 bg-white px-4 py-3 text-sm text-slate-500 shadow-sm">
+        불러오는 중...
       </div>
     )
   }
 
   if (!study) {
     return (
-      <div style={pageStyle}>
-        <div style={errorBoxStyle}>스터디 정보를 찾을 수 없어요.</div>
+      <div className="rounded-2xl border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-700">
+        스터디 정보를 찾을 수 없어요.
       </div>
     )
   }
 
   return (
-    <div style={pageStyle}>
-      <div
-        style={{
-          display: "flex",
-          justifyContent: "space-between",
-          alignItems: "flex-end",
-          gap: 16,
-          flexWrap: "wrap",
-          marginBottom: 20,
-        }}
-      >
+    <div className="space-y-6">
+      <section className="flex flex-col gap-4 lg:flex-row lg:items-end lg:justify-between">
         <div>
-          <h1 style={{ fontSize: 32, fontWeight: 800, margin: 0 }}>
+          <h1 className="text-4xl font-bold tracking-tight text-slate-900">
             스터디 예약
           </h1>
-          <div style={{ marginTop: 8, color: "#666", fontSize: 14 }}>
+          <p className="mt-2 text-lg leading-8 text-slate-600">
             가능한 시간대를 확인하고 스터디 예약을 진행해보세요.
-          </div>
+          </p>
         </div>
 
-        <button type="button" onClick={() => nav(-1)} style={secondaryButtonStyle}>
+        <button
+          type="button"
+          onClick={() => nav(-1)}
+          className="inline-flex items-center gap-2 rounded-2xl border border-slate-300 px-4 py-2.5 text-sm font-semibold text-slate-700 transition hover:bg-slate-50"
+        >
+          <ChevronLeft className="h-4 w-4" />
           뒤로가기
         </button>
-      </div>
+      </section>
 
-      {err && <div style={errorBoxStyle}>{err}</div>}
+      {err && (
+        <div className="rounded-2xl border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-700">
+          {err}
+        </div>
+      )}
 
       {successMessage && (
-        <div
-          style={{
-            marginBottom: 16,
-            padding: "14px 16px",
-            borderRadius: 14,
-            border: "1px solid #bbf7d0",
-            background: "#f0fdf4",
-            color: "#166534",
-            fontSize: 14,
-            fontWeight: 600,
-          }}
-        >
+        <div className="rounded-2xl border border-emerald-200 bg-emerald-50 px-4 py-3 text-sm font-semibold text-emerald-700">
           {successMessage}
         </div>
       )}
 
-      <div style={{ ...cardStyle, marginBottom: 20 }}>
-        <div style={{ fontSize: 20, fontWeight: 800, marginBottom: 12 }}>
-          스터디 정보
-        </div>
+      <StudyInfoCard study={study} />
 
-        <div style={{ display: "grid", gap: 8 }}>
-          <div>
-            <strong>제목</strong> · {study.postTitle}
-          </div>
-          <div>
-            <strong>리더</strong> · {study.leaderNickname}
-          </div>
-          <div>
-            <strong>상태</strong> · {getStudyStatusText(study.status)}
-          </div>
-          <div>
-            <strong>인원</strong> · {study.currentMembers} / {study.maxMembers}
-          </div>
-          <div
-            style={{
-              color: study.notice?.trim() ? "#111827" : "#9ca3af",
-              lineHeight: 1.5,
-            }}>
-            <strong>공지</strong> ·{" "}
-            {study.notice?.trim() ? study.notice : "등록된 공지가 없어요."}
-          </div>
-        </div>
-      </div>
-
-      <div style={{ marginBottom: 16 }}>
-        <ReservationTimeline
-          items={items}
-          roomId={roomId}
-          previewStartTime={selectedTime}
-          previewEndTime={selectedTime ? addHours(selectedTime, durationHours) : null}
-        />
-      </div>
-
-      <div style={cardStyle}>
-        <div style={{ fontSize: 22, fontWeight: 800, marginBottom: 16 }}>
-          스터디 예약 만들기
-        </div>
-
-        <div
-          style={{
-            display: "grid",
-            gridTemplateColumns: "180px 180px 140px",
-            gap: 12,
-            marginBottom: 16,
-          }}
-        >
-          <div>
-            <div style={{ marginBottom: 6, fontSize: 13, color: "#666" }}>
-              날짜
-            </div>
-            <input
-              type="date"
-              value={date}
-              onChange={(e) => setDate(e.target.value)}
-              style={inputStyle}
-            />
-          </div>
-
-          <div>
-            <div style={{ marginBottom: 6, fontSize: 13, color: "#666" }}>
-              스터디룸
-            </div>
-            <select
-              value={roomId?.toString() ?? ""}
-              onChange={(e) => setRoomId(e.target.value ? Number(e.target.value) : null)}
-              style={inputStyle}
-            >
-              <option value="" disabled>
-                방 선택
-              </option>
-              {rooms.map((room) => (
-                <option key={room.id} value={room.id}>
-                  {room.name}
-                </option>
-              ))}
-            </select>
-          </div>
-
-          <div>
-            <div style={{ marginBottom: 6, fontSize: 13, color: "#666" }}>
-              예약 시간
-            </div>
-            <select
-              value={durationHours}
-              onChange={(e) => setDurationHours(Number(e.target.value))}
-              style={inputStyle}
-            >
-              <option value={1}>1시간</option>
-              <option value={2}>2시간</option>
-              <option value={3}>3시간</option>
-            </select>
-          </div>
-        </div>
-
-        <div style={{ marginBottom: 10, fontSize: 13, color: "#666" }}>
-          시간 선택 (1시간 단위)
-        </div>
-
-        <div
-          style={{
-            display: "grid",
-            gridTemplateColumns: "repeat(auto-fit, minmax(96px, 1fr))",
-            gap: 12,
-            marginBottom: 16,
-          }}
-        >
-          {availabilityLoading ? (
-            <div
-              style={{
-                gridColumn: "1 / -1",
-                padding: "16px 14px",
-                borderRadius: 16,
-                border: "1px solid #e5e7eb",
-                background: "#f8fafc",
-                color: "#64748b",
-                fontSize: 14,
-              }}
-            >
-              예약 가능 시간을 불러오는 중이에요.
-            </div>
-          ) : !availability ? (
-            <div
-              style={{
-                gridColumn: "1 / -1",
-                padding: "16px 14px",
-                borderRadius: 16,
-                border: "1px solid #e5e7eb",
-                background: "#f8fafc",
-                color: "#64748b",
-                fontSize: 14,
-              }}
-            >
-              방과 날짜를 선택하면 예약 가능 시간을 확인할 수 있어요.
-            </div>
-          ) : (
-            availability.slots.map((slot) => {
-              const unavailable = !canSelectDuration(
-                availability.slots,
-                slot.startTime,
-                durationHours
-              )
-              const isServerUnavailable = !slot.available
-              const selected = selectedTime === slot.startTime
-              const description = getSlotDescription(
-                slot,
-                availability.slots,
-                durationHours
-              )
-
-              return (
-                <button
-                  key={`${slot.startTime}-${slot.endTime}`}
-                  type="button"
-                  disabled={unavailable || isServerUnavailable || saving}
-                  onClick={() => {
-                    if (unavailable || isServerUnavailable || saving) return
-                    setSelectedTime(slot.startTime)
-                  }}
-                  style={getSlotButtonStyleV2(
-                    unavailable || isServerUnavailable,
-                    selected
-                  )}
-                  onMouseEnter={(e) => {
-                    if (!(unavailable || isServerUnavailable) && !selected) {
-                      e.currentTarget.style.border = "1px solid #2563eb"
-                      e.currentTarget.style.background = "#eff6ff"
-                    }
-                  }}
-                  onMouseLeave={(e) => {
-                    if (!(unavailable || isServerUnavailable) && !selected) {
-                      e.currentTarget.style.border = "1px solid #d1d5db"
-                      e.currentTarget.style.background = "#ffffff"
-                    }
-                  }}
-                  title={description}
-                >
-                  <div style={slotTimeTextStyle}>{hhmm(slot.startTime)}</div>
-
-                  <div
-                    style={{
-                      ...slotDescriptionStyle,
-                      color: isServerUnavailable
-                        ? "#ef4444"
-                        : unavailable
-                        ? "#f59e0b"
-                        : "transparent",
-                    }}
-                  >
-                    {description || " "}
-                  </div>
-                </button>
-              )
-            })
-          )}
-        </div>
-
-        <div
-          style={{
-            display: "flex",
-            justifyContent: "space-between",
-            alignItems: "center",
-            gap: 12,
-            flexWrap: "wrap",
-          }}
-        >
-          <div
-            style={{
-              marginTop: 8,
-              padding: "14px 16px",
-              borderRadius: 14,
-              border: "1px solid #e5e7eb",
-              background: "#fff",
-              color: "#475569",
-              fontSize: 14,
-            }}
-          >
-            {selectedTime
-              ? `선택한 시간: ${selectedTime} ~ ${addHours(selectedTime, durationHours)} (${durationHours}시간)`
-              : "시간을 선택하세요"}
-          </div>
-
-          <button
-            disabled={saving}
-            onClick={onCreate}
-            style={{
-              ...primaryButtonStyle,
-              opacity: saving ? 0.6 : 1,
-            }}
-          >
-            스터디 예약하기
-          </button>
-        </div>
-      </div>
+      <StudyReservationCreateSection
+        date={date}
+        roomId={roomId}
+        rooms={rooms}
+        durationHours={durationHours}
+        selectedTime={selectedTime}
+        saving={saving}
+        items={items}
+        availability={availability}
+        availabilityLoading={availabilityLoading}
+        onChangeDate={setDate}
+        onChangeRoomId={setRoomId}
+        onChangeDurationHours={setDurationHours}
+        onChangeSelectedTime={setSelectedTime}
+        onCreate={onCreate}
+      />
     </div>
   )
 }

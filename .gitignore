@@ -50,3 +50,10 @@ frontend/dist/
 frontend/.vite/
 frontend/.env
 frontend/.env.*
+frontend/eslint.config.js
+frontend/package-lock.json
+frontend/package.json
+frontend/README.md
+frontend/tsconfig.app.json
+frontend/tsconfig.json
+frontend/vite.config.ts
