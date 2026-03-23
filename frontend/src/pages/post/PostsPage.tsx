@@ -1,8 +1,8 @@
 import { useCallback, useEffect, useState } from "react";
-import { listPosts, type PostResponse } from "../api/posts";
+import { listPosts, type PostResponse } from "../../api/posts";
 import { Link, useSearchParams } from "react-router-dom";
-import { tokenStore } from "../auth/token";
-import { getMeId } from "../api/members";
+import { tokenStore } from "../../auth/token";
+import { getMeId } from "../../api/members";
 
 type PageInfo = {
   totalPages: number

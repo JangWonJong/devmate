@@ -1,8 +1,8 @@
 import { useState } from "react";
 import { useLocation, useNavigate } from "react-router-dom";
-import { login } from "../api/auth";
-import { tokenStore } from "../auth/token";
-import { apiErrorMessage } from "../utils/error";
+import { login } from "../../api/auth";
+import { tokenStore } from "../../auth/token";
+import { apiErrorMessage } from "../../utils/error";
 
 
 export function LoginPage() {

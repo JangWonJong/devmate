@@ -1,25 +1,33 @@
 import React from "react";
 import { createBrowserRouter } from "react-router-dom"
-import {AppLayout} from "./ui/AppLayout"
-import { PostsPage } from "./pages/PostsPage"
-import { NewPostPage } from "./pages/NewPostPage"
-import { LoginPage } from "./pages/LoginPage"
-import { SignupPage } from "./pages/SignupPage"
-import { PostDetailPage } from "./pages/PostDetailPage"
-import { EditPostPage } from "./pages/EditPostPage"
-import { RequireAuth } from "./auth/RequireAuth"
-import { ReservationsPage } from "./pages/ReservationsPage"
-import { PublicOnlyRoute } from "./auth/PublicOnlyRoute"
-import { MyStudiesPage } from "./pages/MyStudiesPage"
-import { StudyReservationPage } from "./pages/StudyReservationPage"
-import { MyPage } from "./pages/MyPage"
-import { AccountSettingsPage } from "./pages/AccountSettingsPage"
+import LandingPage from "./pages/landing/LandingPage";
+import {AppLayout} from "./laytouts/AppLayout"
+import { PostsPage } from "./pages/post/PostsPage"
+import { NewPostPage } from "./pages/post/NewPostPage"
+import { LoginPage } from "./pages/auth/LoginPage"
+import { SignupPage } from "./pages/auth/SignupPage"
+import { PostDetailPage } from "./pages/post/PostDetailPage"
+import { EditPostPage } from "./pages/post/EditPostPage"
+import { RequireAuth } from "./routes/RequireAuth"
+import { ReservationsPage } from "./pages/reservation/ReservationsPage"
+import { PublicOnlyRoute } from "./routes/PublicOnlyRoute"
+import { MyStudiesPage } from "./pages/study/MyStudiesPage"
+import { StudyReservationPage } from "./pages/reservation/StudyReservationPage"
+import { MyPage } from "./pages/member/MyPage"
+import { AccountSettingsPage } from "./pages/member/AccountSettingsPage"
+
 
 export const router = createBrowserRouter([
-    {
+    {   
+         path: "/", element: <LandingPage /> 
+    },
+
+        {
         element: <AppLayout />,
         children: [
-            { path: "/", element: <PostsPage /> },
+            
+            { path: "/posts", element: <PostsPage /> },
+
             { path: "/posts/:id", element: <PostDetailPage /> },
 
             { path: "/posts/new", element: <RequireAuth><NewPostPage /></RequireAuth> },

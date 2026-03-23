@@ -1,11 +1,11 @@
-import type { ReservationResponse } from "../api/reservations"
+import type { ReservationResponse } from "../../api/reservations"
 import {
   formatTimeRange,
   getRoomReservations,
   getTimelineLabels,
   hhmmToMinutes,
   timeToPercent,
-} from "../utils/reservationUtils"
+} from "../../utils/reservationUtils"
 
 type Props = {
   items: ReservationResponse[]

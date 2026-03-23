@@ -1,6 +1,6 @@
 import { useCallback, useEffect, useMemo, useState } from "react"
 import { useNavigate, useSearchParams } from "react-router-dom"
-import { listRooms, type RoomResponse } from "../api/rooms"
+import { listRooms, type RoomResponse } from "../../api/rooms"
 import {
   cancelReservation,
   createReservation,
@@ -9,18 +9,18 @@ import {
   type ReservationResponse,
   type AvailabilityResponse,
   getRoomAvailability
-} from "../api/reservations"
-import { tokenStore } from "../auth/token"
-import { getMeId } from "../api/members"
-import { apiErrorMessage } from "../utils/error"
+} from "../../api/reservations"
+import { tokenStore } from "../../auth/token"
+import { getMeId } from "../../api/members"
+import { apiErrorMessage } from "../../utils/error"
 import {
   addHours, today, hhmm, canSelectDuration, getAvailabilityReasonText
-} from "../utils/reservationUtils"
+} from "../../utils/reservationUtils"
 
-import { ReservationTimeline } from "./RservationTimeline"
+import { ReservationTimeline } from "./ReservationTimeline"
 import { pageStyle, cardStyle, inputStyle, primaryButtonStyle, secondaryButtonStyle, 
   mutedBoxStyle, listItemCardStyle, errorBoxStyle, getSlotButtonStyleV2,
-   getReservationStatusStyle, slotTimeTextStyle, slotDescriptionStyle } from "../ui/properties"
+   getReservationStatusStyle, slotTimeTextStyle, slotDescriptionStyle } from "../../styles/commonStyles"
 
 type Scope = "all" | "mine"
 

@@ -3,7 +3,7 @@ import { Link, Outlet, useLocation, useNavigate } from "react-router-dom"
 import { tokenStore } from "../auth/token"
 import { getMe, type MeResponse } from "../api/members"
 import { logout, reissue } from "../api/auth"
-import { headerStyle, headerInnerStyle, logoStyle, navStyle, navItemStyle, mainLayoutStyle, secondaryButtonStyle } from "./properties"
+import { headerStyle, headerInnerStyle, logoStyle, navStyle, navItemStyle, mainLayoutStyle, secondaryButtonStyle } from "../styles/commonStyles"
 import { getUnreadNotificationCount, listNotifications, readAllNotifications, readNotification, getNotificationLabel, getNotificationLabelStyle,
    type NotificationResponse} from "../api/notifications"
 
@@ -250,7 +250,9 @@ export function AppLayout(){
           <Link to="/" style={logoStyle}>
             DevMate
           </Link>
-
+          <Link to="/posts" style={navItemStyle}>
+              커뮤니티
+            </Link>
           <nav style={navStyle}>
             {isAuthenticated ? (
               <Link to="/posts/new" style={navItemStyle}>

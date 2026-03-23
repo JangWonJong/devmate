@@ -1,6 +1,6 @@
 import { useEffect, useState } from "react";
 import { useNavigate, useParams } from "react-router-dom";
-import { getPost, updatePost } from "../api/posts";
+import { getPost, updatePost } from "../../api/posts";
 
 export function EditPostPage() {
   const nav = useNavigate()

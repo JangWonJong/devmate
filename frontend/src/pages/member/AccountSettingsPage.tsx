@@ -1,14 +1,14 @@
 import { useEffect, useState } from "react"
 import { useNavigate } from "react-router-dom"
-import { apiErrorMessage } from "../utils/error"
+import { apiErrorMessage } from "../../utils/error"
 import {
   changePassword,
   getMe,
   updateProfile,
   withdrawMember,
   type MeResponse,
-} from "../api/members"
-import { tokenStore } from "../auth/token"
+} from "../../api/members"
+import { tokenStore } from "../../auth/token"
 
 export function AccountSettingsPage() {
   const nav = useNavigate()

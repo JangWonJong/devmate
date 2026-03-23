@@ -1,8 +1,8 @@
 import { useEffect, useRef ,useState } from "react" 
 import { useNavigate, useParams } from "react-router-dom"
-import { deletePost, getPost, solvePost, type PostResponse } from "../api/posts"
-import { tokenStore } from "../auth/token"
-import { getMeId } from "../api/members"
+import { deletePost, getPost, solvePost, type PostResponse } from "../../api/posts"
+import { tokenStore } from "../../auth/token"
+import { getMeId } from "../../api/members"
 import {
   listComments,
   createComment,
@@ -10,13 +10,13 @@ import {
   updateComment,
   type CommentResponse,
   adoptComment,
-} from "../api/comments"
+} from "../../api/comments"
 import { getStudyByPostId, getStudyMembers, createStudy, getStudy, joinStudy,
          leaveStudy, closeStudy, delegateStudyLeader, updateStudyCapacity,
    type StudyMemberResponse, type StudyResponse, 
-   updateStudyNotice} from "../api/study"
-import { listStudyReservations, type ReservationResponse } from "../api/reservations"
-import { apiErrorMessage } from "../utils/error"
+   updateStudyNotice} from "../../api/study"
+import { listStudyReservations, type ReservationResponse } from "../../api/reservations"
+import { apiErrorMessage } from "../../utils/error"
 
 
 function StatusBadge({ solved }: { solved: boolean }) {
@@ -548,198 +548,278 @@ export function PostDetailPage() {
         {post.content}
       </div>
       {isStudyPost && (
-        <section
+  <section
+    style={{
+      marginTop: 24,
+      padding: 20,
+      border: "1px solid #eee",
+      borderRadius: 16,
+      background: "#fafafa",
+    }}
+  >
+    <h3 style={{ marginTop: 0, marginBottom: 16, fontSize: 22, fontWeight: 800 }}>
+      스터디 정보
+    </h3>
+
+    {studyLoading ? (
+      <div style={{ color: "#666" }}>스터디 정보를 불러오는 중...</div>
+    ) : studyError ? (
+      <div style={{ color: "crimson" }}>{studyError}</div>
+    ) : study ? (
+      <>
+        <div style={{ display: "grid", gap: 10 }}>
+          <div>
+            <strong>상태</strong> · {studyStatusLabel(study.status)}
+          </div>
+
+          {isClosedByCapacity && (
+            <div style={{ color: "#666", fontSize: 14 }}>
+              현재 정원이 가득 차 있어 참가할 수 없습니다.
+            </div>
+          )}
+
+          {isClosedByLeader && (
+            <div style={{ color: "#666", fontSize: 14 }}>
+              리더가 모집을 마감한 상태입니다.
+            </div>
+          )}
+
+          <div>
+            <strong>현재 인원</strong> · {study.currentMembers} / {study.maxMembers}
+          </div>
+        </div>
+
+        <div
           style={{
-            marginTop: 24,
-            padding: 16,
-            border: "1px solid #eee",
+            marginTop: 16,
+            padding: 14,
             borderRadius: 12,
-            background: "#fafafa",
+            border: "1px solid #e5e7eb",
+            background: "#fff",
           }}
         >
-          <h3 style={{ marginTop: 0, marginBottom: 12 }}>스터디 정보</h3>           
-          {studyLoading ? (
-            <div style={{ color: "#666" }}>스터디 정보를 불러오는 중...</div>
-          ) : studyError ? (
-            <div style={{ color: "crimson" }}>{studyError}</div>
-          ) : study ? (
-            <>            
-              <div style={{ display: "grid", gap: 8 }}>
-                <div>
-                  <strong>상태:</strong> {studyStatusLabel(study.status)}
-                </div>
-                {isClosedByCapacity && (
-                    <div style={{ color: "#666", fontSize: 14, marginTop: 4 }}>
-                      현재 정원이 가득 차 있어 참가할 수 없습니다.
-                    </div>
-                  )}
+          <div style={{ fontWeight: 700, marginBottom: 8 }}>스터디 공지</div>
+          <div style={{ whiteSpace: "pre-wrap", color: "#374151", lineHeight: 1.6 }}>
+            {study.notice?.trim() ? study.notice : "등록된 공지가 없어요."}
+          </div>
+        </div>
 
-                  {isClosedByLeader && (
-                    <div style={{ color: "#666", fontSize: 14, marginTop: 4 }}>
-                      리더가 모집을 마감한 상태입니다.
-                    </div>
-                  )}
-                <div>
-                  <strong>현재 인원:</strong> {study.currentMembers} / {study.maxMembers}
-                </div>
-                {study.notice && (
-                    <div style={{ marginTop: 12 }}>
-                      <strong>스터디 공지</strong>
-                      <div style={{ marginTop: 4, color: "#404040", whiteSpace: "pre-wrap" }}>
-                        {study.notice}
-                      </div>
-                    </div>
-                  )}  
-              </div>
+        <div style={{ marginTop: 20 }}>
+          <h4 style={{ marginBottom: 10, fontSize: 18 }}>참여 멤버</h4>
 
-              <div style={{ marginTop: 16 }}>
-                <h4 style={{ marginBottom: 8 }}>참여 멤버</h4>
-                {studyMembers.length === 0 ? (
-                  <div style={{ color: "#666" }}>참여 중인 멤버가 없습니다.</div>
-                ) : (
-                  <ul style={{ margin: 0, paddingLeft: 18 }}>
-                    {studyMembers.map((member) => (
-                  <li
-                    key={member.memberId}
-                    style={{
-                      marginBottom: 8,
-                      display: "flex",
-                      alignItems: "center",
-                      justifyContent: "space-between",
-                      gap: 8,
-                    }}
-                  >
-                    <div>
-                      {member.nickname}{" "}
-                      {member.role === "LEADER" && (
-                        <span style={{ color: "#666", fontSize: 13 }}>(리더)</span>
-                      )}
-                    </div>
-
-                    {isStudyLeader &&
-                      member.role !== "LEADER" &&
-                      member.memberId !== meId && (
-                        <button
-                          style={{ padding: "4px 8px", fontSize: 12 }}
-                          onClick={() => onDelegateLeader(member.memberId)}
-                        >
-                          리더 위임
-                        </button>
-                      )}
-                  </li>
-                    ))}
-                  </ul>
-                )}
-                <div style={{ marginTop: 20 }}>
-                  <h4 style={{ marginBottom: 8 }}>스터디 예약 현황</h4>
-
-                  {reservationsLoading ? (
-                    <div style={{ color: "#666" }}>예약 현황을 불러오는 중...</div>
-                  ) : studyReservations.length === 0 ? (
-                    <div style={{ color: "#666" }}>등록된 스터디 예약이 없습니다.</div>
-                  ) : (
-                    <div style={{ display: "grid", gap: 8 }}>
-                      {studyReservations.map((reservation) => (
-                        <div
-                          key={reservation.id}
-                          style={{
-                            border: "1px solid #eee",
-                            borderRadius: 10,
-                            padding: 12,
-                            background: "#fff",
-                          }}
-                        >
-                          <div style={{ fontWeight: 600 }}>
-                            {reservation.date} · {reservation.roomName}
-                          </div>
-                          <div style={{ marginTop: 4, color: "#333" }}>
-                            {reservation.startTime.slice(0, 5)} ~ {reservation.endTime.slice(0, 5)}
-                          </div>
-                          <div style={{ marginTop: 4, color: "#666", fontSize: 14 }}>
-                            예약자: {reservation.memberNickname}
-                          </div>
-                        </div>
-                      ))}
-                    </div>
-                  )}
-                </div>
-              </div>
-            {loggedIn ? (
-            <div style={{ display: "flex", gap: 8, marginTop: 16, flexWrap: "wrap" }}>
-              {isStudyJoined && study && (
-                <button
-                  style={{ padding: "8px 12px" }}
-                  onClick={() => nav(`/studies/${study.id}/reservation`)}
-                >
-                  스터디 예약
-                </button>
-              )}
-
-              {canJoin && (
-                <button
-                  style={{ padding: "8px 12px" }}
-                  onClick={onJoinStudy}
-                >
-                  참가하기
-                </button>
-              )}
-
-              {canLeave && (
-                <button
-                  style={{ padding: "8px 12px" }}
-                  onClick={onLeaveStudy}
-                >
-                  탈퇴하기
-                </button>
-              )}
-
-              {canClose && (
-                <button
-                  style={{ padding: "8px 12px" }}
-                  onClick={onCloseStudy}
-                >
-                  모집 마감
-                </button>
-              )}
-              {canUpdateNotice && (
-                              <button
-                                style={{ padding: "8px 12px" }}
-                                onClick={onUpdateNotice}
-                              >
-                                공지 수정
-                              </button>
-                            )}
-              {canUpdateCapacity && (
-                <button
-                  style={{ padding: "8px 12px" }}
-                  onClick={onUpdateStudyCapacity}
-                >
-                  정원 수정
-                </button>
-              )}
-            </div>
-          ): (
-            <div style={{ color: "#666", marginTop: 16 }}>
-              로그인 후 스터디 참가 및 예약이 가능합니다.
-            </div>
-          )}
-          </>
+          {studyMembers.length === 0 ? (
+            <div style={{ color: "#666" }}>참여 중인 멤버가 없습니다.</div>
           ) : (
-            <div>
-              <div style={{ color: "#666", marginBottom: 12 }}>
-                아직 스터디가 생성되지 않았습니다.
-              </div>
+            <ul style={{ margin: 0, paddingLeft: 18, display: "grid", gap: 8 }}>
+              {studyMembers.map((member) => (
+                <li
+                  key={member.memberId}
+                  style={{
+                    display: "flex",
+                    alignItems: "center",
+                    justifyContent: "space-between",
+                    gap: 8,
+                  }}
+                >
+                  <div>
+                    {member.nickname}{" "}
+                    {member.role === "LEADER" && (
+                      <span style={{ color: "#666", fontSize: 13 }}>(리더)</span>
+                    )}
+                  </div>
 
-              {isAuthor && (
-                <button style={{ padding: "8px 12px" }}  onClick={onCreateStudy}>
-                  스터디 생성
-                </button>
-              )}
-            </div>
-            
+                  {isStudyLeader &&
+                    member.role !== "LEADER" &&
+                    member.memberId !== meId && (
+                      <button
+                        style={{
+                          padding: "4px 8px",
+                          fontSize: 12,
+                          borderRadius: 8,
+                          border: "1px solid #ddd",
+                          background: "#fff",
+                          cursor: "pointer",
+                        }}
+                        onClick={() => onDelegateLeader(member.memberId)}
+                      >
+                        리더 위임
+                      </button>
+                    )}
+                </li>
+              ))}
+            </ul>
           )}
-        </section>
-      )}
+        </div>
+
+        <div style={{ marginTop: 20 }}>
+          <h4 style={{ marginBottom: 10, fontSize: 18 }}>스터디 예약 현황</h4>
+
+          {reservationsLoading ? (
+            <div style={{ color: "#666" }}>예약 현황을 불러오는 중...</div>
+          ) : studyReservations.length === 0 ? (
+            <div style={{ color: "#666" }}>등록된 스터디 예약이 없습니다.</div>
+          ) : (
+            <div style={{ display: "grid", gap: 10 }}>
+              {studyReservations.map((reservation) => (
+                <div
+                  key={reservation.id}
+                  style={{
+                    border: "1px solid #eee",
+                    borderRadius: 12,
+                    padding: 14,
+                    background: "#fff",
+                  }}
+                >
+                  <div style={{ fontWeight: 700 }}>
+                    {reservation.date} · {reservation.roomName}
+                  </div>
+                  <div style={{ marginTop: 4, color: "#333" }}>
+                    {reservation.startTime.slice(0, 5)} ~ {reservation.endTime.slice(0, 5)}
+                  </div>
+                  <div style={{ marginTop: 4, color: "#666", fontSize: 14 }}>
+                    예약자: {reservation.memberNickname}
+                  </div>
+                </div>
+              ))}
+            </div>
+          )}
+        </div>
+
+        {loggedIn ? (
+          <div
+            style={{
+              display: "flex",
+              gap: 10,
+              marginTop: 20,
+              flexWrap: "wrap",
+            }}
+          >
+            {isStudyJoined && study && (
+              <button
+                style={{
+                  padding: "10px 14px",
+                  borderRadius: 10,
+                  border: "none",
+                  background: "#2563eb",
+                  color: "#fff",
+                  fontWeight: 700,
+                  cursor: "pointer",
+                }}
+                onClick={() => nav(`/studies/${study.id}/reservation`)}
+              >
+                스터디 예약
+              </button>
+            )}
+
+            {canJoin && (
+              <button
+                style={{
+                  padding: "10px 14px",
+                  borderRadius: 10,
+                  border: "none",
+                  background: "#10b981",
+                  color: "#fff",
+                  fontWeight: 700,
+                  cursor: "pointer",
+                }}
+                onClick={onJoinStudy}
+              >
+                참가하기
+              </button>
+            )}
+
+            {canLeave && (
+              <button
+                style={{
+                  padding: "8px 12px",
+                  borderRadius: 10,
+                  border: "1px solid #ddd",
+                  background: "#fff",
+                  cursor: "pointer",
+                }}
+                onClick={onLeaveStudy}
+              >
+                탈퇴하기
+              </button>
+            )}
+
+            {canClose && (
+              <button
+                style={{
+                  padding: "8px 12px",
+                  borderRadius: 10,
+                  border: "1px solid #ddd",
+                  background: "#fff",
+                  cursor: "pointer",
+                }}
+                onClick={onCloseStudy}
+              >
+                모집 마감
+              </button>
+            )}
+
+            {canUpdateNotice && (
+              <button
+                style={{
+                  padding: "8px 12px",
+                  borderRadius: 10,
+                  border: "1px solid #ddd",
+                  background: "#fff",
+                  cursor: "pointer",
+                }}
+                onClick={onUpdateNotice}
+              >
+                공지 수정
+              </button>
+            )}
+
+            {canUpdateCapacity && (
+              <button
+                style={{
+                  padding: "8px 12px",
+                  borderRadius: 10,
+                  border: "1px solid #ddd",
+                  background: "#fff",
+                  cursor: "pointer",
+                }}
+                onClick={onUpdateStudyCapacity}
+              >
+                정원 수정
+              </button>
+            )}
+          </div>
+        ) : (
+          <div style={{ color: "#666", marginTop: 16 }}>
+            로그인 후 스터디 참가 및 예약이 가능합니다.
+          </div>
+        )}
+      </>
+    ) : (
+      <div>
+        <div style={{ color: "#666", marginBottom: 12 }}>
+          아직 스터디가 생성되지 않았습니다.
+        </div>
+
+        {isAuthor && (
+          <button
+            style={{
+              padding: "10px 14px",
+              borderRadius: 10,
+              border: "none",
+              background: "#111",
+              color: "#fff",
+              fontWeight: 700,
+              cursor: "pointer",
+            }}
+            onClick={onCreateStudy}
+          >
+            스터디 생성
+          </button>
+        )}
+      </div>
+    )}
+  </section>
+)}
       
       {actionErr && (
         <div style={{ color: "crimson", marginTop: 12 }}>{actionErr}</div>

@@ -1,15 +1,15 @@
 import { useCallback, useEffect, useState } from "react"
 import { useNavigate, useParams } from "react-router-dom"
-import { listRooms, type RoomResponse } from "../api/rooms"
+import { listRooms, type RoomResponse } from "../../api/rooms"
 import {
   createStudyReservation,
   getRoomAvailability,
   listReservations,
   type AvailabilityResponse,
   type ReservationResponse,
-} from "../api/reservations"
-import { getStudy, type StudyResponse } from "../api/study"
-import { apiErrorMessage } from "../utils/error"
+} from "../../api/reservations"
+import { getStudy, type StudyResponse } from "../../api/study"
+import { apiErrorMessage } from "../../utils/error"
 import {
   addHours,
   canSelectDuration,
@@ -17,8 +17,8 @@ import {
   hhmm,
   today,
   getStudyStatusText
-} from "../utils/reservationUtils"
-import { ReservationTimeline } from "./RservationTimeline"
+} from "../../utils/reservationUtils"
+import { ReservationTimeline } from "./ReservationTimeline"
 import {
   cardStyle,
   errorBoxStyle,
@@ -29,7 +29,7 @@ import {
   secondaryButtonStyle,
   slotDescriptionStyle,
   slotTimeTextStyle,
-} from "../ui/properties"
+} from "../../styles/commonStyles"
 
 export function StudyReservationPage() {
   const nav = useNavigate()

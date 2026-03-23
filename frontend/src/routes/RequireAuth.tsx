@@ -1,6 +1,6 @@
 import type { JSX } from "react";
 import { Navigate, useLocation } from "react-router-dom";
-import { tokenStore } from "./token";
+import { tokenStore } from "../auth/token";
 
 export function RequireAuth({ children }: {children: JSX.Element}){
     const loc = useLocation()

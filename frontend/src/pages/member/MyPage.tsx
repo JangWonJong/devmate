@@ -1,11 +1,11 @@
 import { useEffect, useState } from "react"
 import { useNavigate } from "react-router-dom"
-import { getMe, type MeResponse } from "../api/members"
-import { getMyStudies } from "../api/study"
-import { listMyReservations } from "../api/reservations"
-import { listPosts, type PostResponse } from "../api/posts"
-import { listMyComments, type MyCommentResponse } from "../api/comments"
-import { apiErrorMessage } from "../utils/error"
+import { getMe, type MeResponse } from "../../api/members"
+import { getMyStudies } from "../../api/study"
+import { listMyReservations } from "../../api/reservations"
+import { listPosts, type PostResponse } from "../../api/posts"
+import { listMyComments, type MyCommentResponse } from "../../api/comments"
+import { apiErrorMessage } from "../../utils/error"
 import {
   pageStyle,
   cardStyle,
@@ -15,7 +15,7 @@ import {
   mutedBoxStyle,
   listItemCardStyle,
   titleHeroStyle,
-} from "../ui/properties"
+} from "../../styles/commonStyles"
 
 function isUpcomingReservation(date: string, endTime: string) {
   const now = new Date()
