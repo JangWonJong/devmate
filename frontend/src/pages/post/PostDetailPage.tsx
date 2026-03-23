@@ -1,4 +1,4 @@
-import { useEffect, useRef ,useState } from "react" 
+import { useEffect, useRef, useState } from "react"
 import { useNavigate, useParams } from "react-router-dom"
 import { deletePost, getPost, solvePost, type PostResponse } from "../../api/posts"
 import { tokenStore } from "../../auth/token"
@@ -11,43 +11,28 @@ import {
   type CommentResponse,
   adoptComment,
 } from "../../api/comments"
-import { getStudyByPostId, getStudyMembers, createStudy, getStudy, joinStudy,
-         leaveStudy, closeStudy, delegateStudyLeader, updateStudyCapacity,
-   type StudyMemberResponse, type StudyResponse, 
-   updateStudyNotice} from "../../api/study"
-import { listStudyReservations, type ReservationResponse } from "../../api/reservations"
+import {
+  getStudyByPostId,
+  getStudyMembers,
+  createStudy,
+  getStudy,
+  joinStudy,
+  leaveStudy,
+  closeStudy,
+  delegateStudyLeader,
+  updateStudyCapacity,
+  type StudyMemberResponse,
+  type StudyResponse,
+  updateStudyNotice,
+} from "../../api/study"
+import {
+  listStudyReservations,
+  type ReservationResponse,
+} from "../../api/reservations"
 import { apiErrorMessage } from "../../utils/error"
-
-
-function StatusBadge({ solved }: { solved: boolean }) {
-  return (
-    <span
-      style={{
-        fontSize: 12,
-        padding: "2px 8px",
-        border: "1px solid #ddd",
-        borderRadius: 999,
-        background: solved ? "#f3fff6" : "#fafafa",
-        color: "#111",
-      }}
-    >
-      {solved ? "고민 해결됨" : "고민 해결 전"}
-    </span>
-  )
-}
-
-function studyStatusLabel(status: string) {
-  switch (status) {
-    case "RECRUITING":
-      return "모집중"
-    case "CLOSED_BY_CAPACITY":
-      return "정원 마감"
-    case "CLOSED_BY_LEADER":
-      return "모집 마감"
-    default:
-      return status
-  }
-}
+import PostDetailHeader from "../../components/post/detail/PostDetailHeader"
+import StudyInfoSection from "../../components/study/detail/StudyInfoSection"
+import CommentSection from "../../components/post/detail/CommentSection"
 
 export function PostDetailPage() {
   const nav = useNavigate()
@@ -56,7 +41,7 @@ export function PostDetailPage() {
   const [loadErr, setLoadErr] = useState<string | null>(null)
   const [commentErr, setCommentErr] = useState<string | null>(null)
   const [actionErr, setActionErr] = useState<string | null>(null)
-  const [studyError, setStudyError] =useState<string | null>(null)
+  const [studyError, setStudyError] = useState<string | null>(null)
 
   const [loggedIn, setLoggedIn] = useState(tokenStore.isLoggedIn())
   const [post, setPost] = useState<PostResponse | null>(null)
@@ -90,7 +75,7 @@ export function PostDetailPage() {
   }, [id])
 
   useEffect(() => {
-    (async () => {
+    ;(async () => {
       if (!loggedIn) {
         setMeId(null)
         return
@@ -105,7 +90,7 @@ export function PostDetailPage() {
   }, [loggedIn])
 
   useEffect(() => {
-    (async () => {
+    ;(async () => {
       try {
         setLoadErr(null)
         setLoading(true)
@@ -118,10 +103,10 @@ export function PostDetailPage() {
         if (status === 404) {
           if (handledNotFoundRef.current) return
           handledNotFoundRef.current = true
-          if(!deletingPost){
+          if (!deletingPost) {
             alert("삭제되었거나 존재하지 않는 게시글입니다.")
           }
-          nav("/", {replace: true})
+          nav("/", { replace: true })
           return
         }
         setLoadErr(apiErrorMessage(e, "상세 조회 실패"))
@@ -132,7 +117,7 @@ export function PostDetailPage() {
   }, [id, nav, deletingPost])
 
   useEffect(() => {
-    (async () => {
+    ;(async () => {
       if (!id) return
       try {
         setCommentErr(null)
@@ -140,9 +125,7 @@ export function PostDetailPage() {
         setComments(res)
       } catch (e: any) {
         const status = e?.response?.status
-        if (status === 404) {
-          return
-        }
+        if (status === 404) return
         setCommentErr(apiErrorMessage(e, "댓글 조회 실패"))
       }
     })()
@@ -172,10 +155,10 @@ export function PostDetailPage() {
           studyId: s.id,
           page: 0,
           size: 20,
-          sort: "date,asc"
+          sort: "date,asc",
         })
 
-        if(cancelled) return
+        if (cancelled) return
         setStudyReservations(reservationPage.content)
       } catch (e: any) {
         const status = e?.response?.status
@@ -189,7 +172,7 @@ export function PostDetailPage() {
         }
 
         if (cancelled) return
-        setStudyError(apiErrorMessage(e,"스터디 정보를 불러오지 못했습니다."))
+        setStudyError(apiErrorMessage(e, "스터디 정보를 불러오지 못했습니다."))
       } finally {
         if (!cancelled) {
           setStudyLoading(false)
@@ -203,14 +186,6 @@ export function PostDetailPage() {
     }
   }, [post])
 
-
-  if (loading) return <div style={{ color: "#666" }}>게시글 불러오는 중...</div>
-  if (loadErr) return <div style={{ color: "crimson" }}>{loadErr}</div>
-  if (!post) return <div style={{ color: "#666" }}>게시글이 없어요.</div>
-  
-  const isMine = meId != null && post.authorId === meId
-  const canSolve = isMine && !post.solved
-
   const refreshStudySection = async (postId: number) => {
     const s = await getStudyByPostId(postId)
     setStudy(s)
@@ -222,7 +197,7 @@ export function PostDetailPage() {
       studyId: s.id,
       page: 0,
       size: 20,
-      sort: "date,asc"
+      sort: "date,asc",
     })
     setStudyReservations(reservationPage.content)
   }
@@ -269,7 +244,7 @@ export function PostDetailPage() {
 
     const maxMembers = Number(input)
 
-    if (!Number.isInteger(maxMembers) || maxMembers <2) {
+    if (!Number.isInteger(maxMembers) || maxMembers < 2) {
       setStudyError("최대 인원은 2명 이상이어야 합니다.")
       return
     }
@@ -292,11 +267,10 @@ export function PostDetailPage() {
     try {
       setStudyError(null)
       setStudyLoading(true)
-
       await joinStudy(study.id)
       await refreshStudySection(post.id)
     } catch (e: any) {
-      setStudyError(apiErrorMessage(e, "스터디 참가 실패") )
+      setStudyError(apiErrorMessage(e, "스터디 참가 실패"))
     } finally {
       setStudyLoading(false)
     }
@@ -311,7 +285,6 @@ export function PostDetailPage() {
     try {
       setStudyError(null)
       setStudyLoading(true)
-
       await leaveStudy(study.id)
       await refreshStudySection(post.id)
     } catch (e: any) {
@@ -319,7 +292,7 @@ export function PostDetailPage() {
     } finally {
       setStudyLoading(false)
     }
-  } 
+  }
 
   const onCloseStudy = async () => {
     if (!study || !post) return
@@ -330,7 +303,6 @@ export function PostDetailPage() {
     try {
       setStudyError(null)
       setStudyLoading(true)
-
       await closeStudy(study.id)
       await refreshStudySection(post.id)
     } catch (e: any) {
@@ -349,16 +321,13 @@ export function PostDetailPage() {
     try {
       setStudyError(null)
       setStudyLoading(true)
-
-      await delegateStudyLeader(study.id, {targetMemberId})
+      await delegateStudyLeader(study.id, { targetMemberId })
       await refreshStudySection(post.id)
-
     } catch (e: any) {
       setStudyError(apiErrorMessage(e, "리더 위임 실패"))
     } finally {
       setStudyLoading(false)
     }
-
   }
 
   const onCreateComment = async () => {
@@ -453,19 +422,19 @@ export function PostDetailPage() {
   }
 
   const onAdoptComment = async (commentId: number) => {
-  try {
-    setCommentErr(null)
-    await adoptComment(commentId)
+    try {
+      setCommentErr(null)
+      await adoptComment(commentId)
 
-    const res = await listComments(id!)
-    setComments(res)
+      const res = await listComments(id!)
+      setComments(res)
 
-    const updatedPost = await getPost(id!)
-    setPost(updatedPost)
-  } catch (e: any) {
-    setCommentErr(apiErrorMessage(e, "댓글 채택 실패"))
+      const updatedPost = await getPost(id!)
+      setPost(updatedPost)
+    } catch (e: any) {
+      setCommentErr(apiErrorMessage(e, "댓글 채택 실패"))
+    }
   }
-}
 
   const onUpdateNotice = async () => {
     if (!study || !post) return
@@ -486,532 +455,84 @@ export function PostDetailPage() {
     }
   }
 
-  const sortedComments = [...comments].sort((a,b) => {
-    if (a.adopted === b.adopted) return 0
-    return a.adopted ? -1 :1
-  })
+  if (loading) {
+    return (
+      <div className="rounded-2xl border border-slate-200 bg-white px-4 py-3 text-sm text-slate-500 shadow-sm">
+        게시글 불러오는 중...
+      </div>
+    )
+  }
 
-  const isRecruiting = study?.status === "RECRUITING"
-  const isClosedByCapacity = study?.status === "CLOSED_BY_CAPACITY"
-  const isClosedByLeader = study?.status === "CLOSED_BY_LEADER"
-  
-  const isAuthor = meId != null && post.authorId === meId
+  if (loadErr) {
+    return (
+      <div className="rounded-2xl border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-700">
+        {loadErr}
+      </div>
+    )
+  }
+
+  if (!post) {
+    return (
+      <div className="rounded-2xl border border-slate-200 bg-white px-4 py-3 text-sm text-slate-500 shadow-sm">
+        게시글이 없어요.
+      </div>
+    )
+  }
+
+  const isMine = meId != null && post.authorId === meId
+  const canSolve = isMine && !post.solved
   const isStudyPost = post.type === "STUDY"
-  const isStudyLeader = studyMembers.some(
-    (member) => member.memberId === meId && member.role === "LEADER"
-  )
-  const isStudyJoined = studyMembers.some(
-    (member) => member.memberId === meId
-  )
 
-  const canJoin = !!study && !isStudyJoined && isRecruiting
-  const canLeave = !!study && isStudyJoined && !isStudyLeader
-  const canClose = !!study && isStudyJoined && isStudyLeader && isRecruiting
-  const canUpdateCapacity = !!study && isStudyJoined && isStudyLeader
-  const canUpdateNotice = !!study && isStudyJoined && isStudyLeader
   return (
-    <div style={{ maxWidth: 720 }}>
-      <h1 style={{ fontSize: 24, fontWeight: 800, marginBottom: 8 }}>
-        {post.title}
-      </h1>
+    <div className="mx-auto max-w-4xl space-y-8">
+      <PostDetailHeader
+        post={post}
+        isMine={isMine}
+        canSolve={canSolve}
+        busy={busy}
+        actionErr={actionErr}
+        onSolve={onSolve}
+        onDeletePost={onDeletePost}
+      />
 
-      <div
-        style={{
-          color: "#666",
-          marginBottom: 16,
-          display: "flex",
-          gap: 8,
-          alignItems: "center",
-          flexWrap: "wrap",
-        }}
-      >
-        <span>작성자: {post.authorNickname}</span>
-        <StatusBadge solved={post.solved} />
-
-        {isMine && (
-          <span
-            style={{
-              fontSize: 12,
-              padding: "2px 8px",
-              border: "1px solid #ddd",
-              borderRadius: 999,
-              color: "#111",
-              background: "#fafafa",
-            }}
-          >
-            내 글
-          </span>
-        )}
-      </div>
-
-      <div style={{ whiteSpace: "pre-wrap", lineHeight: 1.6 }}>
-        {post.content}
-      </div>
       {isStudyPost && (
-  <section
-    style={{
-      marginTop: 24,
-      padding: 20,
-      border: "1px solid #eee",
-      borderRadius: 16,
-      background: "#fafafa",
-    }}
-  >
-    <h3 style={{ marginTop: 0, marginBottom: 16, fontSize: 22, fontWeight: 800 }}>
-      스터디 정보
-    </h3>
-
-    {studyLoading ? (
-      <div style={{ color: "#666" }}>스터디 정보를 불러오는 중...</div>
-    ) : studyError ? (
-      <div style={{ color: "crimson" }}>{studyError}</div>
-    ) : study ? (
-      <>
-        <div style={{ display: "grid", gap: 10 }}>
-          <div>
-            <strong>상태</strong> · {studyStatusLabel(study.status)}
-          </div>
-
-          {isClosedByCapacity && (
-            <div style={{ color: "#666", fontSize: 14 }}>
-              현재 정원이 가득 차 있어 참가할 수 없습니다.
-            </div>
-          )}
-
-          {isClosedByLeader && (
-            <div style={{ color: "#666", fontSize: 14 }}>
-              리더가 모집을 마감한 상태입니다.
-            </div>
-          )}
-
-          <div>
-            <strong>현재 인원</strong> · {study.currentMembers} / {study.maxMembers}
-          </div>
-        </div>
-
-        <div
-          style={{
-            marginTop: 16,
-            padding: 14,
-            borderRadius: 12,
-            border: "1px solid #e5e7eb",
-            background: "#fff",
-          }}
-        >
-          <div style={{ fontWeight: 700, marginBottom: 8 }}>스터디 공지</div>
-          <div style={{ whiteSpace: "pre-wrap", color: "#374151", lineHeight: 1.6 }}>
-            {study.notice?.trim() ? study.notice : "등록된 공지가 없어요."}
-          </div>
-        </div>
-
-        <div style={{ marginTop: 20 }}>
-          <h4 style={{ marginBottom: 10, fontSize: 18 }}>참여 멤버</h4>
-
-          {studyMembers.length === 0 ? (
-            <div style={{ color: "#666" }}>참여 중인 멤버가 없습니다.</div>
-          ) : (
-            <ul style={{ margin: 0, paddingLeft: 18, display: "grid", gap: 8 }}>
-              {studyMembers.map((member) => (
-                <li
-                  key={member.memberId}
-                  style={{
-                    display: "flex",
-                    alignItems: "center",
-                    justifyContent: "space-between",
-                    gap: 8,
-                  }}
-                >
-                  <div>
-                    {member.nickname}{" "}
-                    {member.role === "LEADER" && (
-                      <span style={{ color: "#666", fontSize: 13 }}>(리더)</span>
-                    )}
-                  </div>
-
-                  {isStudyLeader &&
-                    member.role !== "LEADER" &&
-                    member.memberId !== meId && (
-                      <button
-                        style={{
-                          padding: "4px 8px",
-                          fontSize: 12,
-                          borderRadius: 8,
-                          border: "1px solid #ddd",
-                          background: "#fff",
-                          cursor: "pointer",
-                        }}
-                        onClick={() => onDelegateLeader(member.memberId)}
-                      >
-                        리더 위임
-                      </button>
-                    )}
-                </li>
-              ))}
-            </ul>
-          )}
-        </div>
-
-        <div style={{ marginTop: 20 }}>
-          <h4 style={{ marginBottom: 10, fontSize: 18 }}>스터디 예약 현황</h4>
-
-          {reservationsLoading ? (
-            <div style={{ color: "#666" }}>예약 현황을 불러오는 중...</div>
-          ) : studyReservations.length === 0 ? (
-            <div style={{ color: "#666" }}>등록된 스터디 예약이 없습니다.</div>
-          ) : (
-            <div style={{ display: "grid", gap: 10 }}>
-              {studyReservations.map((reservation) => (
-                <div
-                  key={reservation.id}
-                  style={{
-                    border: "1px solid #eee",
-                    borderRadius: 12,
-                    padding: 14,
-                    background: "#fff",
-                  }}
-                >
-                  <div style={{ fontWeight: 700 }}>
-                    {reservation.date} · {reservation.roomName}
-                  </div>
-                  <div style={{ marginTop: 4, color: "#333" }}>
-                    {reservation.startTime.slice(0, 5)} ~ {reservation.endTime.slice(0, 5)}
-                  </div>
-                  <div style={{ marginTop: 4, color: "#666", fontSize: 14 }}>
-                    예약자: {reservation.memberNickname}
-                  </div>
-                </div>
-              ))}
-            </div>
-          )}
-        </div>
-
-        {loggedIn ? (
-          <div
-            style={{
-              display: "flex",
-              gap: 10,
-              marginTop: 20,
-              flexWrap: "wrap",
-            }}
-          >
-            {isStudyJoined && study && (
-              <button
-                style={{
-                  padding: "10px 14px",
-                  borderRadius: 10,
-                  border: "none",
-                  background: "#2563eb",
-                  color: "#fff",
-                  fontWeight: 700,
-                  cursor: "pointer",
-                }}
-                onClick={() => nav(`/studies/${study.id}/reservation`)}
-              >
-                스터디 예약
-              </button>
-            )}
-
-            {canJoin && (
-              <button
-                style={{
-                  padding: "10px 14px",
-                  borderRadius: 10,
-                  border: "none",
-                  background: "#10b981",
-                  color: "#fff",
-                  fontWeight: 700,
-                  cursor: "pointer",
-                }}
-                onClick={onJoinStudy}
-              >
-                참가하기
-              </button>
-            )}
-
-            {canLeave && (
-              <button
-                style={{
-                  padding: "8px 12px",
-                  borderRadius: 10,
-                  border: "1px solid #ddd",
-                  background: "#fff",
-                  cursor: "pointer",
-                }}
-                onClick={onLeaveStudy}
-              >
-                탈퇴하기
-              </button>
-            )}
-
-            {canClose && (
-              <button
-                style={{
-                  padding: "8px 12px",
-                  borderRadius: 10,
-                  border: "1px solid #ddd",
-                  background: "#fff",
-                  cursor: "pointer",
-                }}
-                onClick={onCloseStudy}
-              >
-                모집 마감
-              </button>
-            )}
-
-            {canUpdateNotice && (
-              <button
-                style={{
-                  padding: "8px 12px",
-                  borderRadius: 10,
-                  border: "1px solid #ddd",
-                  background: "#fff",
-                  cursor: "pointer",
-                }}
-                onClick={onUpdateNotice}
-              >
-                공지 수정
-              </button>
-            )}
-
-            {canUpdateCapacity && (
-              <button
-                style={{
-                  padding: "8px 12px",
-                  borderRadius: 10,
-                  border: "1px solid #ddd",
-                  background: "#fff",
-                  cursor: "pointer",
-                }}
-                onClick={onUpdateStudyCapacity}
-              >
-                정원 수정
-              </button>
-            )}
-          </div>
-        ) : (
-          <div style={{ color: "#666", marginTop: 16 }}>
-            로그인 후 스터디 참가 및 예약이 가능합니다.
-          </div>
-        )}
-      </>
-    ) : (
-      <div>
-        <div style={{ color: "#666", marginBottom: 12 }}>
-          아직 스터디가 생성되지 않았습니다.
-        </div>
-
-        {isAuthor && (
-          <button
-            style={{
-              padding: "10px 14px",
-              borderRadius: 10,
-              border: "none",
-              background: "#111",
-              color: "#fff",
-              fontWeight: 700,
-              cursor: "pointer",
-            }}
-            onClick={onCreateStudy}
-          >
-            스터디 생성
-          </button>
-        )}
-      </div>
-    )}
-  </section>
-)}
-      
-      {actionErr && (
-        <div style={{ color: "crimson", marginTop: 12 }}>{actionErr}</div>
+        <StudyInfoSection
+          study={study}
+          studyLoading={studyLoading}
+          studyError={studyError}
+          studyMembers={studyMembers}
+          studyReservations={studyReservations}
+          reservationsLoading={reservationsLoading}
+          loggedIn={loggedIn}
+          meId={meId}
+          isAuthor={isMine}
+          onCreateStudy={onCreateStudy}
+          onJoinStudy={onJoinStudy}
+          onLeaveStudy={onLeaveStudy}
+          onCloseStudy={onCloseStudy}
+          onUpdateCapacity={onUpdateStudyCapacity}
+          onUpdateNotice={onUpdateNotice}
+          onDelegateLeader={onDelegateLeader}
+        />
       )}
 
-      <div style={{ display: "flex", gap: 8, marginTop: 20 }}>
-        <button
-          disabled={busy}
-          style={{ padding: "10px 14px" }}
-          onClick={() => nav("/")}
-        >
-          목록
-        </button>
-        {isMine && (
-          <>
-            {canSolve && (
-              <button
-                disabled={busy}
-                style={{ padding: "10px 14px" }}
-                onClick={onSolve}
-              >
-                고민 해결
-              </button>
-            )}
-
-            <button
-              disabled={busy}
-              style={{ padding: "10px 14px" }}
-              onClick={onDeletePost}
-            >
-              삭제
-            </button>
-
-            <button
-              disabled={busy}
-              style={{ padding: "10px 14px" }}
-              onClick={() => nav(`/posts/${post.id}/edit`)}
-            >
-              수정
-            </button>
-          </>
-        )}
-      </div>
-
-      <div style={{ marginTop: 40 }}>
-        <h3 style={{ marginBottom: 10 }}>댓글</h3>
-
-        {commentErr && (
-          <div style={{ color: "crimson", marginBottom: 12 }}>{commentErr}</div>
-        )}
-
-        {loggedIn ? (
-          <form
-            onSubmit={(e) => {
-              e.preventDefault()
-              onCreateComment()
-            }}
-            style={{ display: "flex", gap: 8, marginBottom: 16 }}
-          >
-            <input
-              value={commentInput}
-              onChange={(e) => setCommentInput(e.target.value)}
-              placeholder="댓글을 입력하세요"
-              style={{ flex: 1, padding: 8, border: "1px solid #ddd" }}
-            />
-
-            <button type="submit" style={{ padding: "8px 12px" }}>
-              작성
-            </button>
-          </form>
-        ) : (
-          <div style={{ color: "#666", marginBottom: 12 }}>
-            로그인 후 댓글을 작성할 수 있어요
-          </div>
-        )}
-
-        <div style={{ display: "grid", gap: 8 }}>
-          {comments.length === 0 ? (
-            <div style={{ color: "#666" }}>댓글이 아직 없어요</div>
-          ) : (
-            sortedComments.map((c) => {
-              const isMyComment = meId != null && c.memberId === meId
-              const isEditing = editingCommentId === c.id
-              return (
-                <div
-                  key={c.id}
-                  style={{ border: "1px solid #eee", padding: 10 }}
-                >
-                  <div
-                      style={{
-                        display: "flex",
-                        justifyContent: "space-between",
-                        alignItems: "center",
-                        fontSize: 13,
-                        color: "#666",
-                        gap: 8,
-                      }}
-                    >
-                      <div style={{ display: "flex", alignItems: "center", gap: 8, flexWrap: "wrap" }}>
-                        <span>{c.authorNickname}</span>
-
-                          {c.adopted && (
-                            <span
-                              style={{
-                                fontSize: 12,
-                                padding: "2px 8px",
-                                border: "1px solid #ddd",
-                                borderRadius: 999,
-                                background: "#f3fff6",
-                                color: "#111",
-                              }}
-                            >
-                              채택됨
-                            </span>
-                          )}
-                        </div>
-
-                        <div style={{ display: "flex", gap: 8 }}>
-                          {isMine && !c.adopted && (
-                            <button
-                              onClick={() => onAdoptComment(c.id)}
-                              style={{ fontSize: 12 }}
-                            >
-                              채택
-                            </button>
-                          )}
-
-                          {isMyComment && (
-                            <>
-                              <button
-                                onClick={() => {
-                                  setCommentErr(null)
-                                  setEditingCommentId(c.id)
-                                  setEditingContent(c.content)
-                                }}
-                                style={{ fontSize: 12 }}
-                              >
-                                수정
-                              </button>
-
-                              <button
-                                onClick={() => onDeleteComment(c.id)}
-                                style={{ fontSize: 12 }}
-                              >
-                                삭제
-                              </button>
-                            </>
-                          )}
-                        </div>
-                      </div>
-
-                  {isEditing ? (
-                    <div style={{ marginTop: 6 }}>
-                      <input
-                        value={editingContent}
-                        onChange={(e) => setEditingContent(e.target.value)}
-                        style={{
-                          width: "100%",
-                          padding: 8,
-                          border: "1px solid #ddd",
-                          boxSizing: "border-box",
-                        }}
-                      />
-
-                      <div style={{ display: "flex", gap: 8, marginTop: 8 }}>
-                        <button
-                          onClick={() => onUpdateComment(c.id)}
-                          style={{ fontSize: 12 }}
-                        >
-                          저장
-                        </button>
-
-                        <button
-                          onClick={() => {
-                            setEditingCommentId(null)
-                            setEditingContent("")
-                          }}
-                          style={{ fontSize: 12 }}
-                        >
-                          취소
-                        </button>
-                      </div>
-                    </div>
-                  ) : (
-                    <div style={{ marginTop: 6 }}>{c.content}</div>
-                  )}
-                </div>
-              )
-            })
-          )}
-        </div>
-      </div>
+      <CommentSection
+        loggedIn={loggedIn}
+        meId={meId}
+        isMine={isMine}
+        commentErr={commentErr}
+        comments={comments}
+        commentInput={commentInput}
+        setCommentInput={setCommentInput}
+        editingCommentId={editingCommentId}
+        editingContent={editingContent}
+        setEditingCommentId={setEditingCommentId}
+        setEditingContent={setEditingContent}
+        onCreateComment={onCreateComment}
+        onDeleteComment={onDeleteComment}
+        onUpdateComment={onUpdateComment}
+        onAdoptComment={onAdoptComment}
+      />
     </div>
   )
 }
