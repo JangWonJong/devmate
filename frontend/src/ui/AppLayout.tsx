@@ -399,7 +399,7 @@ export function AppLayout(){
                               textAlign: "left",
                               border: "none",
                               borderBottom: "1px solid #f8fafc",
-                              background: item.isRead ? "#fff" : "#f8fafc",
+                              background: item.isRead ? "#fff" : "#f1f5f9",
                               padding: "14px 16px",
                               cursor: "pointer",
                               transition: "background 0.15s ease",
@@ -408,7 +408,7 @@ export function AppLayout(){
                               e.currentTarget.style.background = item.isRead ? "#f9fafb" : "#f1f5f9"
                             }}
                             onMouseLeave={(e) => {
-                              e.currentTarget.style.background = item.isRead ? "#fff" : "#f8fafc"
+                              e.currentTarget.style.background = item.isRead ? "#fff" : "#f1f5f9"
                             }}
                           >
                             <div

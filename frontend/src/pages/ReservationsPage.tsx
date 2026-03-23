@@ -8,14 +8,13 @@ import {
   listReservations,
   type ReservationResponse,
   type AvailabilityResponse,
-  type AvailabilitySlot,
   getRoomAvailability
 } from "../api/reservations"
 import { tokenStore } from "../auth/token"
 import { getMeId } from "../api/members"
 import { apiErrorMessage } from "../utils/error"
 import {
-  addHours, today, hhmm, canSelectDuration, getAvailabilityReasonText, getSlotDescription
+  addHours, today, hhmm, canSelectDuration, getAvailabilityReasonText
 } from "../utils/reservationUtils"
 
 import { ReservationTimeline } from "./RservationTimeline"

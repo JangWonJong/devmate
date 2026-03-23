@@ -8,6 +8,7 @@ export type NotificationType =
     | "STUDY_NOTICE_UPDATED"
     | "STUDY_JOINED"
     | "STUDY_RESERVATION_CREATED"
+    | "STUDY_LEAVE"
 
 
 export const getNotificationLabel = (type: NotificationResponse["type"]) => {
@@ -22,6 +23,8 @@ export const getNotificationLabel = (type: NotificationResponse["type"]) => {
         return "참가"
       case "STUDY_RESERVATION_CREATED":
         return "예약"
+      case "STUDY_LEAVE":
+        return "탈퇴"
       default:
         return "알림"
     }
@@ -53,6 +56,11 @@ export const getNotificationLabelStyle = (type: NotificationResponse["type"]) =>
         return {
            background: "#e0f2fe",
            color: "#0284c7",
+        }
+      case "STUDY_LEAVE":
+        return {
+           background: "#f5f3ff",
+           color: "#7c3aed",
         }
       default:
         return {

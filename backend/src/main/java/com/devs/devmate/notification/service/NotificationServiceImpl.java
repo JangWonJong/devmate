@@ -135,4 +135,19 @@ public class NotificationServiceImpl implements NotificationService{
                         .targetUrl("/posts/" + postId)
                         .build());
     }
+
+    @Override
+    public void createStudyLeave(Member receiver, Member actor, Long postId, String postTitle) {
+        if (receiver.getId().equals(actor.getId())) {
+            return;
+        }
+
+        notificationRepository.save(Notification.builder()
+                        .receiver(receiver)
+                        .actor(actor)
+                        .type(NotificationType.STUDY_LEAVE)
+                        .content(actor.getNickname() + "님이 [" + postTitle + "] 스터디에서 탈퇴했어요.")
+                        .targetUrl("/posts/" + postId)
+                        .build());
+    }
 }

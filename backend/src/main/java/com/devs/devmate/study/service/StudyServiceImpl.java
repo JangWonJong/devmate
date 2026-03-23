@@ -249,7 +249,8 @@ public class StudyServiceImpl implements StudyService{
         if (studyMember.getRole() == StudyMember.Role.LEADER) {
             throw new BusinessException(ErrorCode.LEADER_CANNOT_LEAVE);
         }
-
+        Member actor = studyMember.getMember();
+        Member leader = findStudyLeader(studyId);
         studyMember.cancel();
 
         List<Reservation> myStudyReservations =
@@ -261,6 +262,10 @@ public class StudyServiceImpl implements StudyService{
         }
 
         reopenStudyIfNeeded(study);
+
+        notificationService.createStudyLeave(
+                leader, actor, study.getPost().getId(), study.getPost().getTitle()
+        );
 
         return study.getId();
     }
