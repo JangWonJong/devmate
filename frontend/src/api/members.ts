@@ -4,6 +4,16 @@ import { http } from "./http";
 type ApiError = { code: string; message: string}
 type ApiResponse<T> = { success: boolean; data?: T; error?: ApiError}
 
+export type ProfileLinkType = "GITHUB" | "BLOG" | "PORTFOLIO" | "ETC"
+
+export type ProfileLinkResponse = {
+  id?: number
+  type: ProfileLinkType
+  label: string
+  url: string
+  displayOrder: number
+}
+
 export type MeResponse = {
     id: number
     email: string
@@ -12,6 +22,21 @@ export type MeResponse = {
     phone: string | null
     bio: string | null
     status: "ACTIVE" | "DELETED"
+    links: ProfileLinkResponse[]
+}
+
+export type ProfileLinkRequest = {
+  type: ProfileLinkType
+  label: string
+  url: string
+  displayOrder: number
+}
+
+export type ProfileLinkForm = {
+  type: ProfileLinkType
+  label: string
+  url: string
+  displayOrder: number
 }
 
 export type UpdateProfileRequest = {
@@ -19,6 +44,7 @@ export type UpdateProfileRequest = {
   nickname: string
   phone?: string
   bio?: string
+  links: ProfileLinkRequest[]
 }
 
 export type ChangePasswordRequest = {

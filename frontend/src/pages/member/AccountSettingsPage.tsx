@@ -6,7 +6,9 @@ import {
   getMe,
   updateProfile,
   withdrawMember,
+  type ProfileLinkForm,
   type MeResponse,
+  type ProfileLinkType,
 } from "../../api/members"
 import { tokenStore } from "../../auth/token"
 
@@ -30,7 +32,7 @@ export function AccountSettingsPage() {
   const [nickname, setNickname] = useState("")
   const [phone, setPhone] = useState("")
   const [bio, setBio] = useState("")
-
+  const [links, setLinks] = useState<ProfileLinkForm[]>([])
   const [currentPassword, setCurrentPassword] = useState("")
   const [newPassword, setNewPassword] = useState("")
   const [confirmPassword, setConfirmPassword] = useState("")
@@ -46,6 +48,13 @@ export function AccountSettingsPage() {
         setNickname(data.nickname ?? "")
         setPhone(data.phone ?? "")
         setBio(data.bio ?? "")
+        setLinks((data.links ?? []).map((link, index) => ({
+                  type: link.type,
+                  label: link.label,
+                  url: link.url,
+                  displayOrder: link.displayOrder ?? index,
+                }))
+              )
       } catch (e) {
         setLoadErr(apiErrorMessage(e, "내 정보 조회 실패"))
       } finally {
@@ -66,11 +75,31 @@ export function AccountSettingsPage() {
       const updated = await updateProfile({
         name: name.trim(),
         nickname: nickname.trim(),
-        phone: phone.trim(),
-        bio: bio.trim(),
+        phone: phone.trim() || undefined,
+        bio: bio.trim() || undefined,
+        links: links
+          .map((link, index) => ({
+            type: link.type,
+            label: link.label.trim(),
+            url: link.url.trim(),
+            displayOrder: index,
+          }))
+          .filter((link) => link.label && link.url),
       })
 
       setMe(updated)
+      setName(updated.name ?? "")
+      setNickname(updated.nickname ?? "")
+      setPhone(updated.phone ?? "")
+      setBio(updated.bio ?? "")
+      setLinks(
+        (updated.links ?? []).map((link, index) => ({
+          type: link.type,
+          label: link.label,
+          url: link.url,
+          displayOrder: link.displayOrder ?? index,
+        }))
+      )
       setProfileSuccess("회원정보가 수정되었습니다.")
     } catch (e) {
       setProfileErr(apiErrorMessage(e, "회원정보 수정 실패"))
@@ -117,6 +146,41 @@ export function AccountSettingsPage() {
     } catch (e) {
       setPasswordErr(apiErrorMessage(e, "비밀번호 변경 실패"))
     }
+  }
+
+  const addLink = () => {
+  setLinks((prev) => [
+    ...prev,
+    {
+      type: "ETC",
+      label: "",
+      url: "",
+      displayOrder: prev.length,
+    },
+  ])
+  }
+
+  const removeLink = (index: number) => {
+    setLinks((prev) =>
+      prev
+        .filter((_, i) => i !== index)
+        .map((link, i) => ({
+          ...link,
+          displayOrder: i,
+        }))
+    )
+  }
+
+  const updateLink = <K extends keyof ProfileLinkForm>(
+    index: number,
+    key: K,
+    value: ProfileLinkForm[K]
+  ) => {
+    setLinks((prev) =>
+      prev.map((link, i) =>
+        i === index ? { ...link, [key]: value } : link
+      )
+    )
   }
 
   const onWithdraw = async (e: React.FormEvent<HTMLFormElement>) => {
@@ -225,7 +289,7 @@ export function AccountSettingsPage() {
         />
 
         <textarea
-          className={`${inputClassName} min-h-[110px] resize-y`}
+          className={`${inputClassName} min-h-[110px] resize-y placeholder:text-slate-400`}
           placeholder="한 줄 소개"
           value={bio}
           onChange={(e) => {
@@ -234,7 +298,72 @@ export function AccountSettingsPage() {
             if (profileSuccess) setProfileSuccess(null)
           }}
         />
+        <div className="space-y-3">
+        <div className="flex items-center justify-between">
+          <h3 className="text-sm font-semibold text-slate-900">프로필 링크</h3>
+          <button
+            type="button"
+            onClick={addLink}
+            className="rounded-lg border border-slate-300 bg-white px-3 py-2 text-xs font-medium text-slate-700 transition hover:bg-slate-50"
+          >
+            링크 추가
+          </button>
+        </div>
 
+        {links.length === 0 ? (
+          <div className="rounded-xl border border-slate-200 bg-slate-50 px-4 py-3 text-sm text-slate-500">
+            등록된 프로필 링크가 없어요.
+          </div>
+        ) : (
+          <div className="space-y-3">
+            {links.map((link, index) => (
+              <div
+                key={index}
+                className="rounded-xl border border-slate-200 bg-slate-50 p-4"
+              >
+                <div className="grid gap-3 md:grid-cols-[140px_1fr]">
+                  <select
+                    className="rounded-xl border border-slate-300 bg-white px-4 py-3 text-sm outline-none focus:border-indigo-500 focus:ring-2 focus:ring-indigo-100"
+                    value={link.type}
+                    onChange={(e) =>
+                      updateLink(index, "type", e.target.value as ProfileLinkType)
+                    }
+                  >
+                    <option value="GITHUB">GitHub</option>
+                    <option value="BLOG">Blog</option>
+                    <option value="PORTFOLIO">Portfolio</option>
+                    <option value="ETC">기타</option>
+                  </select>
+
+                  <input
+                    className="rounded-xl border border-slate-300 bg-white px-4 py-3 text-sm outline-none focus:border-indigo-500 focus:ring-2 focus:ring-indigo-100"
+                    placeholder="링크 이름"
+                    value={link.label}
+                    onChange={(e) => updateLink(index, "label", e.target.value)}
+                  />
+                </div>
+
+                <div className="mt-3 flex gap-3">
+                  <input
+                    className="flex-1 rounded-xl border border-slate-300 bg-white px-4 py-3 text-sm outline-none placeholder:text-slate-400 focus:border-indigo-500 focus:ring-2 focus:ring-indigo-100"
+                    placeholder="https://..."
+                    value={link.url}
+                    onChange={(e) => updateLink(index, "url", e.target.value)}
+                  />
+
+                  <button
+                    type="button"
+                    onClick={() => removeLink(index)}
+                    className="rounded-xl border border-red-200 bg-red-50 px-4 py-3 text-sm font-medium text-red-600 transition hover:bg-red-100"
+                  >
+                    삭제
+                  </button>
+                </div>
+              </div>
+            ))}
+          </div>
+        )}
+      </div>
         <button
           type="submit"
           className="w-full rounded-xl bg-gradient-to-r from-indigo-600 to-indigo-500 px-4 py-3 text-sm font-semibold text-white transition hover:opacity-90"

@@ -312,7 +312,39 @@ export function MyPage() {
           )}
         </div>
       )}
+      {(me?.links ?? []).length > 0 && (
+        <section className="mb-6 rounded-2xl border border-slate-200 bg-white p-6 shadow-sm">
+          <h2 className="text-lg font-bold text-slate-900">프로필 링크</h2>
 
+          <div className="mt-4 grid gap-3">
+            {(me?.links ?? [])
+              .slice()
+              .sort((a, b) => (a.displayOrder ?? 0) - (b.displayOrder ?? 0))
+              .map((link, index) => (
+                <div
+                  key={`${link.type}-${link.label}-${index}`}
+                  className="flex items-center justify-between rounded-xl border border-slate-200 bg-slate-50 px-4 py-3"
+                >
+                  <div className="min-w-0">
+                    <div className="text-xs text-slate-500">{link.label}</div>
+                    <div className="truncate text-sm font-medium text-slate-900">
+                      {link.url}
+                    </div>
+                  </div>
+
+                  <a
+                    href={link.url}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="ml-4 rounded-lg bg-indigo-600 px-3 py-1.5 text-xs font-medium text-white transition hover:opacity-90"
+                  >
+                    이동
+                  </a>
+                </div>
+              ))}
+          </div>
+        </section>
+      )}
       <div
         style={{
           display: "grid",

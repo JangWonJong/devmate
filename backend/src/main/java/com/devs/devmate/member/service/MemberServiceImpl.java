@@ -47,7 +47,9 @@ public class MemberServiceImpl implements MemberService{
     }
 
     private List<ProfileLinkResponse> toProfileLinkResponses(Member member) {
-        return member.getProfileLinks().stream()
+        return  member.getProfileLinks() == null
+                ? List.of()
+                : member.getProfileLinks().stream()
                 .sorted(Comparator.comparing(ProfileLink::getDisplayOrder))
                 .map(link -> new ProfileLinkResponse(
                         link.getId(),
@@ -159,7 +161,6 @@ public class MemberServiceImpl implements MemberService{
                 toProfileLinkResponses(member)
         );
     }
-
 
     private List<ProfileLink> toProfileLinks(Member member, List<ProfileLinkRequest> links) {
         if (links == null || links.isEmpty()) {
