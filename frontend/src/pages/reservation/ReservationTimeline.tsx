@@ -28,169 +28,86 @@ export function ReservationTimeline({
     !!previewEndTime &&
     hhmmToMinutes(previewEndTime) > hhmmToMinutes(previewStartTime)
 
-  return (
-    <div
-      style={{
-        border: "1px solid #eee",
-        borderRadius: 16,
-        padding: 16,
-        background: "#fff",
-      }}
-    >
-      <div style={{ fontWeight: 800, marginBottom: 12 }}>예약 현황</div>
+  const getBarStyle = (startTime: string, endTime: string) => {
+  const left = timeToPercent(startTime)
+  const right = timeToPercent(endTime)
+  const width = right - left
 
-      <div
-        style={{
-          position: "relative",
-          height: 20,
-          marginBottom: 8,
-          fontSize: 12,
-          color: "#666",
-        }}
-      >
+  return {
+    left: `calc(${left}% + 2px)`,
+    width: `calc(${width}% - 4px)`,
+  }
+}
+
+  return (
+    <div className="rounded-2xl border border-slate-200 bg-slate-50 p-4">
+      <div className="mb-3 text-sm font-semibold text-slate-900">예약 현황</div>
+
+      <div className="relative mb-3 h-5 text-xs text-slate-500">
         {timelineLabels.map((label) => (
           <span
             key={label}
-            style={{
-              position: "absolute",
-              left: `${timeToPercent(label)}%`,
-              transform: "translateX(-50%)",
-              whiteSpace: "nowrap",
-            }}
+            className="absolute -translate-x-1/2 whitespace-nowrap"
+            style={{ left: `${timeToPercent(label)}%` }}
           >
             {label}
           </span>
         ))}
       </div>
 
-      <div
-        style={{
-          position: "relative",
-          height: 56,
-          borderRadius: 12,
-          background: "#f5f5f5",
-          overflow: "hidden",
-          padding: "0 4px",
-        }}
-      >
+      <div className="relative h-16 overflow-hidden rounded-2xl bg-white">
         {timelineLabels.map((label) => (
           <div
             key={`line-${label}`}
-            style={{
-              position: "absolute",
-              left: `${timeToPercent(label)}%`,
-              top: 0,
-              bottom: 0,
-              width: 1,
-              background: "#e6e6e6",
-            }}
+            className="absolute bottom-0 top-0 w-px bg-slate-200"
+            style={{ left: `${timeToPercent(label)}%` }}
           />
         ))}
 
         {roomReservations.length === 0 && !hasPreview ? (
-          <div
-            style={{
-              position: "absolute",
-              inset: 0,
-              display: "flex",
-              alignItems: "center",
-              justifyContent: "center",
-              fontSize: 13,
-              color: "#888",
-            }}
-          >
+          <div className="absolute inset-0 flex items-center justify-center text-sm text-slate-400">
             예약된 일정이 없습니다
           </div>
         ) : null}
 
-        {roomReservations.map((r) => {
-          const left = timeToPercent(r.startTime)
-          const right = timeToPercent(r.endTime)
-          const width = right - left
-
-          return (
-            <div
-              key={r.id}
-              title={`${formatTimeRange(r.startTime, r.endTime)} · ${r.title}`}
-              style={{
-                position: "absolute",
-                left: `${left}%`,
-                width: `${width}%`,
-                top: 12,
-                height: 32,
-                borderRadius: 999,
-                background: "#111",
-                color: "#fff",
-                fontSize: 12,
-                fontWeight: 700,
-                display: "flex",
-                alignItems: "center",
-                justifyContent: "center",
-                padding: "0 8px",
-                whiteSpace: "nowrap",
-                overflow: "hidden",
-                textOverflow: "ellipsis",
-              }}
-            >
-              {formatTimeRange(r.startTime, r.endTime)}
-            </div>
-          )
-        })}
+        {roomReservations.map((reservation) => (
+          <div
+            key={reservation.id}
+            title={`${formatTimeRange(reservation.startTime, reservation.endTime)} · ${reservation.title}`}
+            className="absolute top-3.5 h-9 rounded-xl border border-indigo-600 bg-indigo-500 shadow-sm hover:bg-indigo-500 transition"
+            style={{
+              ...getBarStyle(reservation.startTime, reservation.endTime),
+              minWidth: "52px",
+            }}
+          />
+        ))}
 
         {hasPreview && (
-          <div
-            title={`선택 예정: ${formatTimeRange(
-              previewStartTime!,
-              previewEndTime!
-            )}`}
-            style={{
-              position: "absolute",
-              left: `${timeToPercent(previewStartTime!)}%`,
-              width: `${
-                timeToPercent(previewEndTime!) - timeToPercent(previewStartTime!)
-              }%`,
-              top: 12,
-              height: 32,
-              borderRadius: 999,
-              background: "rgba(17, 17, 17, 0.12)",
-              border: "1px dashed #111",
-              color: "#111",
-              fontSize: 12,
-              fontWeight: 700,
-              display: "flex",
-              alignItems: "center",
-              justifyContent: "center",
-              padding: "0 8px",
-              whiteSpace: "nowrap",
-              overflow: "hidden",
-              textOverflow: "ellipsis",
-            }}
-          >
-            선택 예정
-          </div>
-        )}
+        <div
+          title={`선택 예정: ${formatTimeRange(previewStartTime!, previewEndTime!)}`}
+          className="absolute top-3.5 h-9 rounded-xl border border-dashed border-indigo-500 bg-indigo-100 shadow-sm"
+          style={{
+            ...getBarStyle(previewStartTime!, previewEndTime!),
+            minWidth: "52px",
+          }}
+        />
+      )}
       </div>
 
       {roomReservations.length > 0 && (
-        <div style={{ marginTop: 12, display: "grid", gap: 8 }}>
-          {roomReservations.map((r) => (
+        <div className="mt-4 grid gap-2">
+          {roomReservations.map((reservation) => (
             <div
-              key={`list-${r.id}`}
-              style={{
-                display: "flex",
-                justifyContent: "space-between",
-                gap: 8,
-                fontSize: 14,
-                border: "1px solid #f0f0f0",
-                borderRadius: 10,
-                padding: "8px 10px",
-              }}
+              key={`list-${reservation.id}`}
+              className="flex items-center justify-between gap-3 rounded-xl border border-slate-200 bg-white px-3 py-2 text-sm"
             >
-              <div>
-                <strong>{formatTimeRange(r.startTime, r.endTime)}</strong>
-                <span style={{ color: "#666" }}> · {r.title}</span>
+              <div className="min-w-0">
+                <span className="font-semibold text-slate-900">
+                  {formatTimeRange(reservation.startTime, reservation.endTime)}
+                </span>
+                <span className="text-slate-500"> · {reservation.title}</span>
               </div>
-              <div style={{ color: "#888" }}>{r.memberNickname}</div>
+              <div className="shrink-0 text-slate-500">{reservation.memberNickname}</div>
             </div>
           ))}
         </div>

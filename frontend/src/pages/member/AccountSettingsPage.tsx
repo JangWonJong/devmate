@@ -10,6 +10,9 @@ import {
 } from "../../api/members"
 import { tokenStore } from "../../auth/token"
 
+const inputClassName =
+  "w-full rounded-xl border border-slate-300 px-4 py-3 text-sm outline-none focus:border-indigo-500 focus:ring-2 focus:ring-indigo-100"
+
 export function AccountSettingsPage() {
   const nav = useNavigate()
 
@@ -31,7 +34,6 @@ export function AccountSettingsPage() {
   const [currentPassword, setCurrentPassword] = useState("")
   const [newPassword, setNewPassword] = useState("")
   const [confirmPassword, setConfirmPassword] = useState("")
-
   const [withdrawPassword, setWithdrawPassword] = useState("")
 
   useEffect(() => {
@@ -54,19 +56,20 @@ export function AccountSettingsPage() {
     fetchMe()
   }, [])
 
-  const onUpdateProfile = async (e: React.FormEvent) => {
+  const onUpdateProfile = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault()
 
     try {
       setProfileErr(null)
       setProfileSuccess(null)
-     
+
       const updated = await updateProfile({
         name: name.trim(),
         nickname: nickname.trim(),
         phone: phone.trim(),
         bio: bio.trim(),
       })
+
       setMe(updated)
       setProfileSuccess("회원정보가 수정되었습니다.")
     } catch (e) {
@@ -74,16 +77,30 @@ export function AccountSettingsPage() {
     }
   }
 
-  const onChangePassword = async (e: React.FormEvent) => {
+  const onChangePassword = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault()
+
     setPasswordErr(null)
     setPasswordSuccess(null)
 
-    if (!currentPassword.trim()) return setPasswordErr("현재 비밀번호 입력")
-    if (!newPassword.trim()) return setPasswordErr("새 비밀번호 입력")
-    if (!confirmPassword.trim()) return setPasswordErr("새 비밀번호 확인 입력")
+    if (!currentPassword.trim()) {
+      setPasswordErr("현재 비밀번호를 입력해주세요")
+      return
+    }
+
+    if (!newPassword.trim()) {
+      setPasswordErr("새 비밀번호를 입력해주세요")
+      return
+    }
+
+    if (!confirmPassword.trim()) {
+      setPasswordErr("새 비밀번호 확인을 입력해주세요")
+      return
+    }
+
     if (newPassword.trim() !== confirmPassword.trim()) {
-      return setPasswordErr("비밀번호가 일치하지 않습니다")
+      setPasswordErr("비밀번호가 일치하지 않습니다")
+      return
     }
 
     try {
@@ -92,6 +109,7 @@ export function AccountSettingsPage() {
         newPassword: newPassword.trim(),
         confirmPassword: confirmPassword.trim(),
       })
+
       setCurrentPassword("")
       setNewPassword("")
       setConfirmPassword("")
@@ -101,12 +119,14 @@ export function AccountSettingsPage() {
     }
   }
 
-  const onWithdraw = async (e: React.FormEvent) => {
+  const onWithdraw = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault()
+
     setWithdrawErr(null)
 
     if (!withdrawPassword.trim()) {
-      return setWithdrawErr("탈퇴 확인용 비밀번호를 입력해주세요")
+      setWithdrawErr("탈퇴 확인용 비밀번호를 입력해주세요")
+      return
     }
 
     const ok = window.confirm("정말 탈퇴하시겠습니까?")
@@ -115,10 +135,10 @@ export function AccountSettingsPage() {
     try {
       await withdrawMember({ password: withdrawPassword.trim() })
       tokenStore.clear()
-      
-      nav("/login", { 
+
+      nav("/login", {
         replace: true,
-        state: { withdrawSuccess: true}
+        state: { withdrawSuccess: true },
       })
     } catch (e) {
       setWithdrawErr(apiErrorMessage(e, "회원탈퇴 실패"))
@@ -126,89 +146,53 @@ export function AccountSettingsPage() {
   }
 
   if (loading) {
-    return <div>로딩 중...</div>
+    return <div className="py-20 text-center text-slate-500">로딩 중...</div>
   }
 
   return (
-    <div style={{ maxWidth: 560, margin: "0 auto", padding: "32px 16px" }}>
-      <h1
-        style={{
-          marginBottom: 20,
-          fontSize: 56,
-          fontWeight: 800,
-          color: "#24364b",
-          letterSpacing: -1,
-        }}
-      >
-        MY PAGE
-      </h1>
+    <div className="mx-auto max-w-xl space-y-6 px-4 py-16">
+      <div className="text-center">
+        <h1 className="text-3xl font-bold text-slate-900">계정 설정</h1>
+        <p className="mt-2 text-sm text-slate-600">
+          내 정보를 관리하고 보안을 설정할 수 있어요.
+        </p>
+      </div>
 
       {loadErr && (
-        <div
-          style={{
-            color: "#dc2626",
-            marginBottom: 16,
-            fontSize: 14,
-          }}
-        >
+        <div className="rounded-lg border border-red-200 bg-red-50 px-3 py-2 text-sm text-red-600">
           {loadErr}
         </div>
       )}
 
       {me && (
-        <div
-          style={{
-            marginBottom: 24,
-            padding: 20,
-            border: "1px solid #ddd",
-            borderRadius: 16,
-            background: "white",
-          }}
-        >
-          <div style={{ marginBottom: 8, fontSize: 15 }}>
-            <strong>이메일:</strong> {me.email}
-          </div>
-          <div style={{ fontSize: 15 }}>
-            <strong>상태:</strong> {me.status}
-          </div>
+        <div className="rounded-2xl border border-slate-200 bg-white p-6 shadow-sm">
+          <div className="text-sm text-slate-500">이메일</div>
+          <div className="mt-1 text-base font-medium text-slate-900">{me.email}</div>
+          <div className="mt-4 text-sm text-slate-500">상태</div>
+          <div className="mt-1 text-sm font-semibold text-slate-700">{me.status}</div>
         </div>
       )}
 
       <form
         onSubmit={onUpdateProfile}
-        style={{
-          marginBottom: 24,
-          padding: 24,
-          border: "1px solid #ddd",
-          borderRadius: 16,
-          background: "white",
-        }}
+        className="space-y-4 rounded-2xl border border-slate-200 bg-white p-6 shadow-sm"
       >
-        <h2 style={{ marginTop: 0, marginBottom: 16, color: "#24364b" }}>
-          회원정보 수정
-        </h2>
+        <h2 className="text-lg font-bold text-slate-900">회원정보 수정</h2>
 
         {profileErr && (
-          <div style={{ color: "#dc2626", marginBottom: 12, fontSize: 14 }}>
+          <div className="rounded-lg border border-red-200 bg-red-50 px-3 py-2 text-sm text-red-600">
             {profileErr}
           </div>
         )}
+
         {profileSuccess && (
-          <div style={{ color: "#059669", marginBottom: 12, fontSize: 14 }}>
+          <div className="rounded-lg border border-emerald-200 bg-emerald-50 px-3 py-2 text-sm text-emerald-600">
             {profileSuccess}
           </div>
         )}
 
         <input
-          style={{
-            width: "100%",
-            padding: "12px 14px",
-            marginBottom: 10,
-            boxSizing: "border-box",
-            border: "1px solid #cfd6de",
-            borderRadius: 10,
-            fontSize: 16,
-          }}
+          className={inputClassName}
           placeholder="이름"
           value={name}
           onChange={(e) => {
@@ -219,15 +203,7 @@ export function AccountSettingsPage() {
         />
 
         <input
-          style={{
-            width: "100%",
-            padding: "12px 14px",
-            marginBottom: 10,
-            boxSizing: "border-box",
-            border: "1px solid #cfd6de",
-            borderRadius: 10,
-            fontSize: 16,
-          }}
+          className={inputClassName}
           placeholder="닉네임"
           value={nickname}
           onChange={(e) => {
@@ -238,15 +214,7 @@ export function AccountSettingsPage() {
         />
 
         <input
-          style={{
-            width: "100%",
-            padding: "12px 14px",
-            marginBottom: 10,
-            boxSizing: "border-box",
-            border: "1px solid #cfd6de",
-            borderRadius: 10,
-            fontSize: 16,
-          }}
+          className={inputClassName}
           placeholder="전화번호"
           value={phone}
           onChange={(e) => {
@@ -257,38 +225,19 @@ export function AccountSettingsPage() {
         />
 
         <textarea
-          style={{
-            width: "100%",
-            padding: "12px 14px",
-            marginBottom: 12,
-            boxSizing: "border-box",
-            minHeight: 110,
-            border: "1px solid #cfd6de",
-            borderRadius: 10,
-            fontSize: 16,
-            resize: "vertical",
-          }}
+          className={`${inputClassName} min-h-[110px] resize-y`}
           placeholder="한 줄 소개"
           value={bio}
           onChange={(e) => {
             setBio(e.target.value)
             if (profileErr) setProfileErr(null)
             if (profileSuccess) setProfileSuccess(null)
-            }}
+          }}
         />
 
         <button
           type="submit"
-          style={{
-            padding: "12px 18px",
-            border: "none",
-            borderRadius: 10,
-            background: "#24364b",
-            color: "white",
-            fontSize: 15,
-            fontWeight: 700,
-            cursor: "pointer",
-          }}
+          className="w-full rounded-xl bg-gradient-to-r from-indigo-600 to-indigo-500 px-4 py-3 text-sm font-semibold text-white transition hover:opacity-90"
         >
           회원정보 수정
         </button>
@@ -296,61 +245,38 @@ export function AccountSettingsPage() {
 
       <form
         onSubmit={onChangePassword}
-        style={{
-          marginBottom: 24,
-          padding: 24,
-          border: "1px solid #ddd",
-          borderRadius: 16,
-          background: "white",
-        }}
+        className="space-y-4 rounded-2xl border border-slate-200 bg-white p-6 shadow-sm"
       >
-        <h2 style={{ marginTop: 0, marginBottom: 16, color: "#24364b" }}>
-          비밀번호 변경
-        </h2>
+        <h2 className="text-lg font-bold text-slate-900">비밀번호 변경</h2>
 
         {passwordErr && (
-          <div style={{ color: "#dc2626", marginBottom: 12, fontSize: 14 }}>
+          <div className="rounded-lg border border-red-200 bg-red-50 px-3 py-2 text-sm text-red-600">
             {passwordErr}
           </div>
         )}
+
         {passwordSuccess && (
-          <div style={{ color: "#059669", marginBottom: 12, fontSize: 14 }}>
+          <div className="rounded-lg border border-emerald-200 bg-emerald-50 px-3 py-2 text-sm text-emerald-600">
             {passwordSuccess}
           </div>
         )}
 
         <input
           type="password"
-          style={{
-            width: "100%",
-            padding: "12px 14px",
-            marginBottom: 10,
-            boxSizing: "border-box",
-            border: "1px solid #cfd6de",
-            borderRadius: 10,
-            fontSize: 16,
-          }}
           placeholder="현재 비밀번호"
+          className={inputClassName}
           value={currentPassword}
           onChange={(e) => {
             setCurrentPassword(e.target.value)
-            if(passwordErr) setPasswordErr(null)
-            if(passwordSuccess) setPasswordSuccess(null)
+            if (passwordErr) setPasswordErr(null)
+            if (passwordSuccess) setPasswordSuccess(null)
           }}
         />
 
         <input
           type="password"
-          style={{
-            width: "100%",
-            padding: "12px 14px",
-            marginBottom: 10,
-            boxSizing: "border-box",
-            border: "1px solid #cfd6de",
-            borderRadius: 10,
-            fontSize: 16,
-          }}
           placeholder="새 비밀번호"
+          className={inputClassName}
           value={newPassword}
           onChange={(e) => {
             setNewPassword(e.target.value)
@@ -361,36 +287,19 @@ export function AccountSettingsPage() {
 
         <input
           type="password"
-          style={{
-            width: "100%",
-            padding: "12px 14px",
-            marginBottom: 12,
-            boxSizing: "border-box",
-            border: "1px solid #cfd6de",
-            borderRadius: 10,
-            fontSize: 16,
-          }}
           placeholder="새 비밀번호 확인"
+          className={inputClassName}
           value={confirmPassword}
           onChange={(e) => {
             setConfirmPassword(e.target.value)
             if (passwordErr) setPasswordErr(null)
-            if (passwordSuccess) setPasswordSuccess(null) 
+            if (passwordSuccess) setPasswordSuccess(null)
           }}
         />
 
         <button
           type="submit"
-          style={{
-            padding: "12px 18px",
-            border: "none",
-            borderRadius: 10,
-            background: "#24364b",
-            color: "white",
-            fontSize: 15,
-            fontWeight: 700,
-            cursor: "pointer",
-          }}
+          className="w-full rounded-xl bg-gradient-to-r from-indigo-600 to-indigo-500 px-4 py-3 text-sm font-semibold text-white transition hover:opacity-90"
         >
           비밀번호 변경
         </button>
@@ -398,45 +307,25 @@ export function AccountSettingsPage() {
 
       <form
         onSubmit={onWithdraw}
-        style={{
-          padding: 24,
-          border: "1px solid #f1c0c0",
-          borderRadius: 16,
-          background: "#fffafa",
-        }}
+        className="space-y-4 rounded-2xl border border-red-200 bg-red-50 p-6"
       >
-        <h2 style={{ marginTop: 0, marginBottom: 16, color: "#dc2626" }}>
-          회원탈퇴
-        </h2>
-        <div
-          style={{
-            marginBottom: 12,
-            fontSize: 14,
-            color: "#7f1d1d",
-            lineHeight: 1.5,
-          }}
-        >
-          탈퇴 시 계정은 비활성화되며,<br />
-          작성한 게시글과 댓글은 삭제되지 않고 작성자 정보만 변경됩니다.
-        </div>
+        <h2 className="text-lg font-bold text-red-600">회원탈퇴</h2>
+
+        <p className="text-sm leading-6 text-red-700">
+          탈퇴 시 계정은 비활성화되며 작성한 게시글과 댓글은 삭제되지 않고
+          작성자 정보만 변경됩니다.
+        </p>
+
         {withdrawErr && (
-          <div style={{ color: "#dc2626", marginBottom: 12, fontSize: 14 }}>
+          <div className="rounded-lg border border-red-300 bg-red-100 px-3 py-2 text-sm text-red-600">
             {withdrawErr}
           </div>
         )}
 
         <input
           type="password"
-          style={{
-            width: "100%",
-            padding: "12px 14px",
-            marginBottom: 12,
-            boxSizing: "border-box",
-            border: "1px solid #f0b6b6",
-            borderRadius: 10,
-            fontSize: 16,
-          }}
           placeholder="비밀번호 확인"
+          className="w-full rounded-xl border border-red-300 px-4 py-3 text-sm outline-none focus:border-red-400 focus:ring-2 focus:ring-red-100"
           value={withdrawPassword}
           onChange={(e) => {
             setWithdrawPassword(e.target.value)
@@ -446,16 +335,7 @@ export function AccountSettingsPage() {
 
         <button
           type="submit"
-          style={{
-            color: "white",
-            background: " #dc2626",
-            border: "none",
-            padding: "12px 18px",
-            borderRadius: 10,
-            fontSize: 15,
-            fontWeight: 700,
-            cursor: "pointer",
-          }}
+          className="w-full rounded-xl bg-red-500 px-4 py-3 text-sm font-semibold text-white transition hover:bg-red-600"
         >
           회원탈퇴 진행
         </button>

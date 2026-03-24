@@ -14,6 +14,8 @@ public class MemberSignupResponse {
     private String email;
     private String name;
     private  String nickname;
+    private  String phone;
+    private  String bio;
     private Role role;
 
 }

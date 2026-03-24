@@ -62,7 +62,7 @@ function ScopeTab({
       onClick={onClick}
       className={`rounded-full px-4 py-2 text-sm font-semibold transition ${
         active
-          ? "bg-slate-900 text-white"
+          ? "bg-indigo-600 text-white"
           : "border border-slate-300 bg-white text-slate-700 hover:bg-slate-50"
       }`}
     >
@@ -80,10 +80,10 @@ function StatusPill({
 }) {
   const className =
     tone === "upcoming"
-      ? "bg-emerald-50 text-emerald-700 border border-emerald-200"
+      ? "border border-emerald-200 bg-emerald-50 text-emerald-700"
       : tone === "today"
-      ? "bg-blue-50 text-blue-700 border border-blue-200"
-      : "bg-slate-100 text-slate-500 border border-slate-200"
+      ? "border border-indigo-200 bg-indigo-50 text-indigo-700"
+      : "border border-slate-200 bg-slate-100 text-slate-500"
 
   return (
     <span className={`inline-flex rounded-full px-2.5 py-1 text-xs font-semibold ${className}`}>
@@ -263,13 +263,24 @@ export function ReservationsPage() {
       return
     }
 
-    if (!roomId) return setErr("방을 선택하세요")
+    if (!roomId) {
+      setErr("방을 선택하세요")
+      return
+    }
 
     const t = title.trim()
-    if (!t) return setErr("예약 제목을 입력하세요")
-    if (!selectedTime) return setErr("예약 시간을 선택하세요")
+    if (!t) {
+      setErr("예약 제목을 입력하세요")
+      return
+    }
+
+    if (!selectedTime) {
+      setErr("예약 시간을 선택하세요")
+      return
+    }
 
     setSuccessMessage(null)
+
     try {
       setBusy(true)
       setErr(null)
@@ -307,6 +318,7 @@ export function ReservationsPage() {
     if (!ok) return
 
     setSuccessMessage(null)
+
     try {
       setBusy(true)
       setErr(null)
@@ -359,7 +371,8 @@ export function ReservationsPage() {
     <div className="space-y-6">
       <section className="flex flex-col gap-4 lg:flex-row lg:items-end lg:justify-between">
         <div>
-          <h1 className="text-4xl font-bold tracking-tight text-slate-900">예약</h1>
+          <p className="text-sm font-medium text-indigo-600">personal Reservation</p>
+          <h1 className="mt-2 text-4xl font-bold tracking-tight text-slate-900">예약</h1>
           <p className="mt-2 text-lg leading-8 text-slate-600">
             스터디룸 예약 현황을 확인하고 원하는 시간대를 선택해보세요.
           </p>
@@ -412,7 +425,7 @@ export function ReservationsPage() {
                   type="date"
                   value={mineDate}
                   onChange={(e) => setMineDate(e.target.value)}
-                  className="h-11 rounded-2xl border border-slate-300 bg-white px-4 text-sm text-slate-700 outline-none transition focus:border-slate-400"
+                  className="h-11 rounded-2xl border border-slate-300 bg-white px-4 text-sm text-slate-700 outline-none transition focus:border-indigo-400 focus:ring-4 focus:ring-indigo-100"
                 />
                 <button
                   type="button"

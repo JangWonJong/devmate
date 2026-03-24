@@ -4,6 +4,9 @@ import com.devs.devmate.global.entity.BaseEntity;
 import jakarta.persistence.*;
 import lombok.*;
 
+import java.util.ArrayList;
+import java.util.List;
+
 @Entity
 @Getter
 @NoArgsConstructor(access = AccessLevel.PROTECTED)
@@ -44,6 +47,9 @@ public class Member extends BaseEntity {
     @Builder.Default
     private MemberStatus status = MemberStatus.ACTIVE;
 
+    @OneToMany(mappedBy = "member", cascade = CascadeType.ALL, orphanRemoval = true)
+    private List<ProfileLink> profileLinks = new ArrayList<>();
+
     public void updateProfile(String name, String nickname, String phone, String bio) {
         this.name = name;
         this.nickname = nickname;
@@ -61,6 +67,10 @@ public class Member extends BaseEntity {
 
     public boolean isDeleted() {
         return this.status == MemberStatus.DELETED;
+    }
+
+    public void addProfileLink(ProfileLink profileLink) {
+        this.profileLinks.add(profileLink);
     }
 
 }

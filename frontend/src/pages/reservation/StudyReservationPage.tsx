@@ -190,57 +190,66 @@ export function StudyReservationPage() {
   }
 
   return (
-    <div className="space-y-6">
-      <section className="flex flex-col gap-4 lg:flex-row lg:items-end lg:justify-between">
-        <div>
-          <h1 className="text-4xl font-bold tracking-tight text-slate-900">
-            스터디 예약
-          </h1>
-          <p className="mt-2 text-lg leading-8 text-slate-600">
-            가능한 시간대를 확인하고 스터디 예약을 진행해보세요.
-          </p>
-        </div>
+  <div className="space-y-6">
+    <section className="flex flex-col gap-4 lg:flex-row lg:items-end lg:justify-between">
+      <div>
+        <p className="text-sm font-medium text-indigo-600">
+          Study Reservation
+        </p>
+        <h1 className="mt-2 text-4xl font-bold tracking-tight text-slate-900">
+          스터디 예약
+        </h1>
+        <p className="mt-2 text-lg leading-8 text-slate-600">
+          가능한 시간대를 확인하고 스터디 예약을 진행해보세요.
+        </p>
+      </div>
 
-        <button
-          type="button"
-          onClick={() => nav(-1)}
-          className="inline-flex items-center gap-2 rounded-2xl border border-slate-300 px-4 py-2.5 text-sm font-semibold text-slate-700 transition hover:bg-slate-50"
-        >
-          <ChevronLeft className="h-4 w-4" />
-          뒤로가기
-        </button>
-      </section>
+      <button
+        type="button"
+        onClick={() => nav(-1)}
+        className="inline-flex items-center gap-2 rounded-2xl border border-slate-300 px-4 py-2.5 text-sm font-semibold text-slate-700 transition hover:bg-slate-50"
+      >
+        <ChevronLeft className="h-4 w-4" />
+        뒤로가기
+      </button>
+    </section>
 
-      {err && (
-        <div className="rounded-2xl border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-700">
-          {err}
-        </div>
-      )}
+    {err && (
+      <div className="rounded-2xl border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-700">
+        {err}
+      </div>
+    )}
 
-      {successMessage && (
-        <div className="rounded-2xl border border-emerald-200 bg-emerald-50 px-4 py-3 text-sm font-semibold text-emerald-700">
-          {successMessage}
-        </div>
-      )}
+    {successMessage && (
+      <div className="rounded-2xl border border-emerald-200 bg-emerald-50 px-4 py-3 text-sm font-semibold text-emerald-700">
+        {successMessage}
+      </div>
+    )}
 
-      <StudyInfoCard study={study} />
+    <div className="grid gap-6 xl:grid-cols-[minmax(0,1fr)_1.1fr]">
+      <div className="space-y-6">
+        <StudyInfoCard study={study} />
+      </div>
 
-      <StudyReservationCreateSection
-        date={date}
-        roomId={roomId}
-        rooms={rooms}
-        durationHours={durationHours}
-        selectedTime={selectedTime}
-        saving={saving}
-        items={items}
-        availability={availability}
-        availabilityLoading={availabilityLoading}
-        onChangeDate={setDate}
-        onChangeRoomId={setRoomId}
-        onChangeDurationHours={setDurationHours}
-        onChangeSelectedTime={setSelectedTime}
-        onCreate={onCreate}
-      />
+      <div>
+        <StudyReservationCreateSection
+          date={date}
+          roomId={roomId}
+          rooms={rooms}
+          durationHours={durationHours}
+          selectedTime={selectedTime}
+          saving={saving}
+          items={items}
+          availability={availability}
+          availabilityLoading={availabilityLoading}
+          onChangeDate={setDate}
+          onChangeRoomId={setRoomId}
+          onChangeDurationHours={setDurationHours}
+          onChangeSelectedTime={setSelectedTime}
+          onCreate={onCreate}
+        />
+      </div>
     </div>
-  )
+  </div>
+)
 }

@@ -1,10 +1,13 @@
 package com.devs.devmate.member.dto;
 
 
+import jakarta.validation.Valid;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.Size;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
+
+import java.util.List;
 
 @Getter
 @NoArgsConstructor
@@ -23,6 +26,9 @@ public class MemberUpdateRequest {
 
     @Size(max = 255, message = "한줄 소개는 255자 이하로 가능합니다")
     private String bio;
+
+    @Valid
+    private List<ProfileLinkRequest> links;
 
 }
 

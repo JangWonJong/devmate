@@ -4,6 +4,8 @@ import com.devs.devmate.member.entity.MemberStatus;
 import lombok.AllArgsConstructor;
 import lombok.Getter;
 
+import java.util.List;
+
 @Getter
 @AllArgsConstructor
 public class MeResponse {
@@ -14,4 +16,5 @@ public class MeResponse {
     private String phone;
     private String bio;
     MemberStatus status;
+    private List<ProfileLinkResponse> links;
 }

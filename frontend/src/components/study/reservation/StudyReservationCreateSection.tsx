@@ -1,7 +1,12 @@
 import { CalendarDays, Clock3 } from "lucide-react"
 import type { RoomResponse } from "../../../api/rooms"
 import type { AvailabilityResponse, ReservationResponse } from "../../../api/reservations"
-import { addHours, canSelectDuration, getSlotDescription, hhmm } from "../../../utils/reservationUtils"
+import {
+  addHours,
+  canSelectDuration,
+  getSlotDescription,
+  hhmm,
+} from "../../../utils/reservationUtils"
 import { ReservationTimeline } from "../../../pages/reservation/ReservationTimeline"
 
 function SlotButton({
@@ -25,22 +30,23 @@ function SlotButton({
       title={description}
       className={`rounded-2xl border px-3 py-4 text-left transition ${
         selected
-          ? "border-blue-600 bg-blue-600 text-white shadow-sm"
+          ? "border-indigo-600 bg-indigo-600 text-white shadow-sm"
           : disabled
           ? "cursor-not-allowed border-slate-200 bg-slate-50 text-slate-400"
-          : "border-slate-200 bg-white hover:border-blue-300 hover:bg-blue-50"
+          : "border-slate-200 bg-white hover:border-indigo-300 hover:bg-indigo-50 hover:shadow-sm"
       }`}
     >
       <div className={`text-lg font-bold ${selected ? "text-white" : "text-slate-800"}`}>
         {hhmm(time)}
       </div>
+
       <div
         className={`mt-2 min-h-[20px] text-xs leading-5 ${
           selected
-            ? "text-blue-100"
+            ? "text-indigo-100"
             : disabled
             ? description.includes("이미")
-              ? "text-red-500"
+              ? "text-rose-500"
               : "text-amber-500"
             : "text-transparent"
         }`}
@@ -85,18 +91,25 @@ export default function StudyReservationCreateSection({
   onCreate,
 }: StudyReservationCreateSectionProps) {
   return (
-    <div className="space-y-6">
+    <div className="space-y-8">
       <section className="rounded-[28px] border border-slate-200 bg-white p-6 shadow-sm">
-        <h2 className="mb-5 text-2xl font-bold tracking-tight text-slate-900">
-          예약 현황
-        </h2>
+        <div className="mb-4 flex flex-col gap-1 sm:flex-row sm:items-center sm:justify-between">
+          <h2 className="text-2xl font-bold tracking-tight text-slate-900">
+            예약 현황
+          </h2>
+          <p className="text-sm text-slate-500">
+            실시간 예약 상태
+          </p>
+        </div>
 
-        <ReservationTimeline
-          items={items}
-          roomId={roomId}
-          previewStartTime={selectedTime}
-          previewEndTime={selectedTime ? addHours(selectedTime, durationHours) : null}
-        />
+        <div className="mt-4">
+          <ReservationTimeline
+            items={items}
+            roomId={roomId}
+            previewStartTime={selectedTime}
+            previewEndTime={selectedTime ? addHours(selectedTime, durationHours) : null}
+          />
+        </div>
       </section>
 
       <section className="rounded-[28px] border border-slate-200 bg-white p-6 shadow-sm">
@@ -114,7 +127,7 @@ export default function StudyReservationCreateSection({
               type="date"
               value={date}
               onChange={(e) => onChangeDate(e.target.value)}
-              className="h-12 w-full rounded-2xl border border-slate-300 bg-white px-4 text-sm text-slate-700 outline-none transition focus:border-slate-400"
+              className="h-12 w-full rounded-2xl border border-slate-300 bg-white px-4 text-sm text-slate-700 outline-none transition focus:border-indigo-400 focus:ring-4 focus:ring-indigo-100"
             />
           </div>
 
@@ -123,7 +136,7 @@ export default function StudyReservationCreateSection({
             <select
               value={roomId?.toString() ?? ""}
               onChange={(e) => onChangeRoomId(e.target.value ? Number(e.target.value) : null)}
-              className="h-12 w-full rounded-2xl border border-slate-300 bg-white px-4 text-sm text-slate-700 outline-none transition focus:border-slate-400"
+              className="h-12 w-full rounded-2xl border border-slate-300 bg-white px-4 text-sm text-slate-700 outline-none transition focus:border-indigo-400 focus:ring-4 focus:ring-indigo-100"
             >
               <option value="" disabled>
                 방 선택
@@ -141,7 +154,7 @@ export default function StudyReservationCreateSection({
             <select
               value={durationHours}
               onChange={(e) => onChangeDurationHours(Number(e.target.value))}
-              className="h-12 w-full rounded-2xl border border-slate-300 bg-white px-4 text-sm text-slate-700 outline-none transition focus:border-slate-400"
+              className="h-12 w-full rounded-2xl border border-slate-300 bg-white px-4 text-sm text-slate-700 outline-none transition focus:border-indigo-400 focus:ring-4 focus:ring-indigo-100"
             >
               <option value={1}>1시간</option>
               <option value={2}>2시간</option>
@@ -150,7 +163,7 @@ export default function StudyReservationCreateSection({
           </div>
         </div>
 
-        <div className="mt-6 mb-3 flex items-center gap-2 text-sm font-medium text-slate-500">
+        <div className="mb-3 mt-6 flex items-center gap-2 text-sm font-medium text-slate-500">
           <Clock3 className="h-4 w-4" />
           <span>시간 선택 (1시간 단위)</span>
         </div>
@@ -197,16 +210,34 @@ export default function StudyReservationCreateSection({
         </div>
 
         <div className="mt-6 flex flex-col gap-4 rounded-2xl border border-slate-200 bg-slate-50 p-4 md:flex-row md:items-center md:justify-between">
-          <div className="text-sm text-slate-600">
-            {selectedTime
-              ? `선택한 시간: ${selectedTime} ~ ${addHours(selectedTime, durationHours)} (${durationHours}시간)`
-              : "시간을 선택하세요"}
+          <div>
+            <div className="text-xs font-medium uppercase tracking-wide text-slate-400">
+              Selected Time
+            </div>
+            <div
+              className={`mt-1 text-sm font-semibold ${
+                selectedTime ? "text-indigo-600" : "text-slate-600"
+              }`}
+            >
+              {selectedTime ? (
+                <>
+                  선택한 시간:{" "}
+                  <span className="font-bold">
+                    {selectedTime} ~ {addHours(selectedTime, durationHours)}
+                  </span>{" "}
+                  ({durationHours}시간)
+                </>
+              ) : (
+                "시간을 선택하세요"
+              )}
+            </div>
           </div>
 
           <button
+            type="button"
             disabled={saving}
             onClick={onCreate}
-            className="rounded-2xl bg-slate-900 px-5 py-3 text-sm font-semibold text-white transition hover:bg-slate-800 disabled:cursor-not-allowed disabled:opacity-50"
+            className="rounded-2xl bg-indigo-600 px-5 py-3 text-sm font-semibold text-white transition hover:bg-indigo-500 disabled:cursor-not-allowed disabled:opacity-50"
           >
             스터디 예약하기
           </button>

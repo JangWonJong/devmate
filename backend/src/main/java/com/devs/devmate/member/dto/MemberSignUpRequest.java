@@ -1,11 +1,14 @@
 package com.devs.devmate.member.dto;
 
 
+import jakarta.validation.Valid;
 import jakarta.validation.constraints.Email;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.Size;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
+
+import java.util.List;
 
 @Getter
 @NoArgsConstructor
@@ -30,6 +33,13 @@ public class MemberSignUpRequest {
     @Size(max = 30, message = "닉네임은 30자 이하로 가능합니다")
     private String nickname;
 
+    @Size(max = 30, message = "전화번호는 30자 이하로 가능합니다")
+    private String phone;
 
+    @Size(max = 255, message = "한줄 소개는 255자 이하로 가능합니다")
+    private String bio;
+
+    @Valid
+    private List<ProfileLinkRequest> links;
 
 }

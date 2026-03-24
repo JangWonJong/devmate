@@ -22,7 +22,7 @@ type StudyInfoCardProps = {
 
 export default function StudyInfoCard({ study }: StudyInfoCardProps) {
   return (
-    <section className="rounded-[28px] border border-slate-200 bg-white p-6 shadow-sm">
+    <section className="sticky top-24 rounded-[28px] border border-slate-200 bg-white p-6 shadow-sm">
       <div className="mb-5 flex items-center justify-between gap-3">
         <h2 className="text-2xl font-bold tracking-tight text-slate-900">
           스터디 정보

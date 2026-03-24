@@ -12,14 +12,14 @@ function StatusPill({
 }) {
   const className =
     tone === "upcoming"
-      ? "bg-emerald-50 text-emerald-700 border border-emerald-200"
+      ? "border border-emerald-200 bg-emerald-50 text-emerald-700"
       : tone === "today"
-      ? "bg-blue-50 text-blue-700 border border-blue-200"
+      ? "border border-indigo-200 bg-indigo-50 text-indigo-700"
       : tone === "study"
-      ? "bg-indigo-50 text-indigo-700 border border-indigo-200"
+      ? "border border-indigo-200 bg-indigo-50 text-indigo-700"
       : tone === "private"
-      ? "bg-slate-100 text-slate-600 border border-slate-200"
-      : "bg-slate-100 text-slate-500 border border-slate-200"
+      ? "border border-slate-200 bg-slate-100 text-slate-600"
+      : "border border-slate-200 bg-slate-100 text-slate-500"
 
   return (
     <span className={`inline-flex rounded-full px-2.5 py-1 text-xs font-semibold ${className}`}>
@@ -29,8 +29,14 @@ function StatusPill({
 }
 
 function getReservationStatusPill(statusLabel: string) {
-  if (statusLabel === "예정 예약") return <StatusPill label={statusLabel} tone="upcoming" />
-  if (statusLabel === "오늘 예약") return <StatusPill label={statusLabel} tone="today" />
+  if (statusLabel === "예정 예약") {
+    return <StatusPill label={statusLabel} tone="upcoming" />
+  }
+
+  if (statusLabel === "오늘 예약") {
+    return <StatusPill label={statusLabel} tone="today" />
+  }
+
   return <StatusPill label={statusLabel} tone="past" />
 }
 
@@ -118,7 +124,7 @@ export default function ReservationCard({
             <button
               type="button"
               onClick={() => onMoveToStudyPost(reservation.postId)}
-              className="text-sm font-medium text-blue-700 underline underline-offset-4"
+              className="text-sm font-medium text-indigo-700 underline underline-offset-4"
             >
               스터디 글 보기
             </button>

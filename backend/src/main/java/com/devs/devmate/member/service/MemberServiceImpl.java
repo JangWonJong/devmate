@@ -6,6 +6,8 @@ import com.devs.devmate.global.exception.BusinessException;
 import com.devs.devmate.global.exception.ErrorCode;
 import com.devs.devmate.member.dto.*;
 import com.devs.devmate.member.entity.Member;
+import com.devs.devmate.member.entity.ProfileLink;
+import com.devs.devmate.member.entity.ProfileLinkType;
 import com.devs.devmate.member.repository.MemberRepository;
 import com.devs.devmate.reservation.entity.Reservation;
 import com.devs.devmate.reservation.repository.ReservationRepository;
@@ -16,6 +18,10 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+
+import java.util.ArrayList;
+import java.util.Comparator;
+import java.util.List;
 
 
 @Service
@@ -40,11 +46,32 @@ public class MemberServiceImpl implements MemberService{
         return member;
     }
 
+    private List<ProfileLinkResponse> toProfileLinkResponses(Member member) {
+        return member.getProfileLinks().stream()
+                .sorted(Comparator.comparing(ProfileLink::getDisplayOrder))
+                .map(link -> new ProfileLinkResponse(
+                        link.getId(),
+                        link.getType().name(),
+                        link.getLabel(),
+                        link.getUrl(),
+                        link.getDisplayOrder()
+                ))
+                .toList();
+    }
+
+    private String normalize(String value) {
+        if (value == null) return null;
+        String trimmed = value.trim();
+        return trimmed.isBlank() ? null : trimmed;
+    }
+
     @Override
     public MemberSignupResponse signup(MemberSignUpRequest request){
         String email = request.getEmail().trim().toLowerCase();
         String name = request.getName().trim();
         String nickname = request.getNickname().trim();
+        String phone = normalize(request.getPhone());
+        String bio = normalize(request.getBio());
 
         if (!request.getPassword().equals(request.getConfirmPassword())) {
             throw new BusinessException(ErrorCode.PASSWORD_CONFIRM_MISMATCH);
@@ -64,7 +91,11 @@ public class MemberServiceImpl implements MemberService{
                 .password(encodedPassword)
                 .name(name)
                 .nickname(nickname)
+                .phone(phone)
+                .bio(bio)
                 .build();
+        List<ProfileLink> profileLinks = toProfileLinks(member, request.getLinks());
+        profileLinks.forEach(member::addProfileLink);
 
         Member savedMember = memberRepository.save(member);
 
@@ -73,6 +104,8 @@ public class MemberServiceImpl implements MemberService{
                 .email(savedMember.getEmail())
                 .name(savedMember.getName())
                 .nickname(savedMember.getNickname())
+                .phone(savedMember.getPhone())
+                .bio(savedMember.getBio())
                 .role(savedMember.getRole())
                 .build();
     }
@@ -81,6 +114,7 @@ public class MemberServiceImpl implements MemberService{
     @Transactional(readOnly = true)
     public MeResponse getMe(Long memberId) {
         Member member = findActiveMember(memberId);
+
         return new MeResponse(
                 member.getId(),
                 member.getEmail(),
@@ -88,7 +122,8 @@ public class MemberServiceImpl implements MemberService{
                 member.getNickname(),
                 member.getPhone(),
                 member.getBio(),
-                member.getStatus()
+                member.getStatus(),
+                toProfileLinkResponses(member)
         );
     }
 
@@ -98,8 +133,8 @@ public class MemberServiceImpl implements MemberService{
 
         String name = request.getName().trim();
         String nickname = request.getNickname().trim();
-        String phone = request.getPhone() == null ? null : request.getPhone().trim();
-        String bio = request.getBio() == null ? null : request.getBio().trim();
+        String phone = normalize(request.getPhone());
+        String bio = normalize(request.getBio());
 
         if (!member.getNickname().equals(nickname)
                 && memberRepository.existsByNickname(nickname)) {
@@ -108,6 +143,11 @@ public class MemberServiceImpl implements MemberService{
 
         member.updateProfile(name, nickname, phone, bio);
 
+        member.getProfileLinks().clear();
+
+        List<ProfileLink> newLinks = toProfileLinks(member, request.getLinks());
+        newLinks.forEach(member::addProfileLink);
+
         return new MeResponse(
                 member.getId(),
                 member.getEmail(),
@@ -115,8 +155,45 @@ public class MemberServiceImpl implements MemberService{
                 member.getNickname(),
                 member.getPhone(),
                 member.getBio(),
-                member.getStatus()
+                member.getStatus(),
+                toProfileLinkResponses(member)
         );
+    }
+
+
+    private List<ProfileLink> toProfileLinks(Member member, List<ProfileLinkRequest> links) {
+        if (links == null || links.isEmpty()) {
+            return List.of();
+
+        }
+
+        List<ProfileLink> result = new ArrayList<>();
+        int order = 0;
+
+        for (ProfileLinkRequest link : links) {
+            String type = link.getType() == null ? null : link.getType().trim();
+            String label = link.getLabel() == null ? null : link.getLabel().trim();
+            String url = link.getUrl() == null ? null : link.getUrl().trim();
+
+            if (type == null || type.isBlank()) continue;
+            if (label == null || label.isBlank()) continue;
+            if (url == null || url.isBlank()) continue;
+
+            result.add(
+                    ProfileLink.builder()
+                            .member(member)
+                            .type(ProfileLinkType.valueOf(type))
+                            .label(label)
+                            .url(url)
+                            .displayOrder(
+                                    link.getDisplayOrder() != null ? link.getDisplayOrder() : order
+                            )
+                            .build()
+            );
+            order++;
+        }
+
+        return result;
     }
 
     @Override

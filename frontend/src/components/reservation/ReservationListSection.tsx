@@ -47,10 +47,10 @@ export default function ReservationListSection({
               <div className="text-sm font-semibold text-slate-500">{groupDate}</div>
 
               <div className="space-y-3">
-                {reservations.map((r) => (
+                {reservations.map((reservation) => (
                   <ReservationCard
-                    key={r.id}
-                    reservation={r}
+                    key={reservation.id}
+                    reservation={reservation}
                     scope={scope}
                     meId={meId}
                     busy={busy}

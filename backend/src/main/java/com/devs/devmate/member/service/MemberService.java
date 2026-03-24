@@ -1,6 +1,10 @@
 package com.devs.devmate.member.service;
 
 import com.devs.devmate.member.dto.*;
+import com.devs.devmate.member.entity.Member;
+import com.devs.devmate.member.entity.ProfileLink;
+
+import java.util.List;
 
 public interface MemberService {
 
