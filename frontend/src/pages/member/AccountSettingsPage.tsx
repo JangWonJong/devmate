@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react"
+import { useEffect, useMemo, useState } from "react"
 import { useNavigate } from "react-router-dom"
 import { apiErrorMessage } from "../../utils/error"
 import {
@@ -14,6 +14,55 @@ import { tokenStore } from "../../auth/token"
 
 const inputClassName =
   "w-full rounded-xl border border-slate-300 px-4 py-3 text-sm outline-none focus:border-indigo-500 focus:ring-2 focus:ring-indigo-100"
+
+type ProfileSnapshot = {
+  name: string
+  nickname: string
+  phone: string
+  bio: string
+  links: ProfileLinkForm[]
+}
+
+const normalizeText = (value: string | null | undefined) => (value ?? "").trim()
+
+const normalizeLinks = (links: ProfileLinkForm[]) =>
+  links
+    .map((link, index) => ({
+      type: link.type,
+      label: normalizeText(link.label),
+      url: normalizeText(link.url),
+      displayOrder: index,
+    }))
+    .filter((link) => link.label || link.url)
+
+const validateLinks = (links: ProfileLinkForm[]) => {
+  for (let i = 0; i < links.length; i++) {
+    const label = links[i].label.trim()
+    const url = links[i].url.trim()
+
+    const hasLabel = Boolean(label)
+    const hasUrl = Boolean(url)
+
+    if (!hasLabel && !hasUrl) continue
+
+    if (!hasLabel) {
+      return `프로필 링크 ${i + 1}번의 이름을 입력해주세요.`
+    }
+
+    if (!hasUrl) {
+      return `프로필 링크 ${i + 1}번의 주소를 입력해주세요.`
+    }
+
+    const isValidUrl =
+      url.startsWith("http://") || url.startsWith("https://")
+
+    if (!isValidUrl) {
+      return `프로필 링크 ${i + 1}번의 주소는 http:// 또는 https://로 시작해야 해요.`
+    }
+  }
+
+  return null
+}
 
 export function AccountSettingsPage() {
   const nav = useNavigate()
@@ -33,28 +82,41 @@ export function AccountSettingsPage() {
   const [phone, setPhone] = useState("")
   const [bio, setBio] = useState("")
   const [links, setLinks] = useState<ProfileLinkForm[]>([])
+
   const [currentPassword, setCurrentPassword] = useState("")
   const [newPassword, setNewPassword] = useState("")
   const [confirmPassword, setConfirmPassword] = useState("")
   const [withdrawPassword, setWithdrawPassword] = useState("")
+
+  const [originalProfile, setOriginalProfile] = useState<ProfileSnapshot | null>(null)
 
   useEffect(() => {
     const fetchMe = async () => {
       try {
         setLoadErr(null)
         const data = await getMe()
+
+        const mappedLinks = (data.links ?? []).map((link, index) => ({
+          type: link.type,
+          label: link.label,
+          url: link.url,
+          displayOrder: link.displayOrder ?? index,
+        }))
+
         setMe(data)
         setName(data.name ?? "")
         setNickname(data.nickname ?? "")
         setPhone(data.phone ?? "")
         setBio(data.bio ?? "")
-        setLinks((data.links ?? []).map((link, index) => ({
-                  type: link.type,
-                  label: link.label,
-                  url: link.url,
-                  displayOrder: link.displayOrder ?? index,
-                }))
-              )
+        setLinks(mappedLinks)
+
+        setOriginalProfile({
+          name: data.name ?? "",
+          nickname: data.nickname ?? "",
+          phone: data.phone ?? "",
+          bio: data.bio ?? "",
+          links: mappedLinks,
+        })
       } catch (e) {
         setLoadErr(apiErrorMessage(e, "내 정보 조회 실패"))
       } finally {
@@ -65,13 +127,41 @@ export function AccountSettingsPage() {
     fetchMe()
   }, [])
 
+  const isProfileDirty = useMemo(() => {
+    if (!originalProfile) return false
+
+    const current = {
+      name: normalizeText(name),
+      nickname: normalizeText(nickname),
+      phone: normalizeText(phone),
+      bio: normalizeText(bio),
+      links: normalizeLinks(links),
+    }
+
+    const original = {
+      name: normalizeText(originalProfile.name),
+      nickname: normalizeText(originalProfile.nickname),
+      phone: normalizeText(originalProfile.phone),
+      bio: normalizeText(originalProfile.bio),
+      links: normalizeLinks(originalProfile.links),
+    }
+
+    return JSON.stringify(current) !== JSON.stringify(original)
+  }, [originalProfile, name, nickname, phone, bio, links])
+
   const onUpdateProfile = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault()
 
-    try {
-      setProfileErr(null)
-      setProfileSuccess(null)
+    setProfileErr(null)
+    setProfileSuccess(null)
 
+    const linkValidationError = validateLinks(links)
+    if (linkValidationError) {
+      setProfileErr(linkValidationError)
+      return
+    }
+
+    try {
       const updated = await updateProfile({
         name: name.trim(),
         nickname: nickname.trim(),
@@ -87,22 +177,31 @@ export function AccountSettingsPage() {
           .filter((link) => link.label && link.url),
       })
 
+      const mappedLinks = (updated.links ?? []).map((link, index) => ({
+        type: link.type,
+        label: link.label,
+        url: link.url,
+        displayOrder: link.displayOrder ?? index,
+      }))
+
       setMe(updated)
       setName(updated.name ?? "")
       setNickname(updated.nickname ?? "")
       setPhone(updated.phone ?? "")
       setBio(updated.bio ?? "")
-      setLinks(
-        (updated.links ?? []).map((link, index) => ({
-          type: link.type,
-          label: link.label,
-          url: link.url,
-          displayOrder: link.displayOrder ?? index,
-        }))
-      )
-      setProfileSuccess("회원정보가 수정되었습니다.")
+      setLinks(mappedLinks)
+
+      setOriginalProfile({
+        name: updated.name ?? "",
+        nickname: updated.nickname ?? "",
+        phone: updated.phone ?? "",
+        bio: updated.bio ?? "",
+        links: mappedLinks,
+      })
+
+      setProfileSuccess("프로필이 저장되었습니다.")
     } catch (e) {
-      setProfileErr(apiErrorMessage(e, "회원정보 수정 실패"))
+      setProfileErr(apiErrorMessage(e, "프로필 저장 실패"))
     }
   }
 
@@ -149,18 +248,22 @@ export function AccountSettingsPage() {
   }
 
   const addLink = () => {
-  setLinks((prev) => [
-    ...prev,
-    {
-      type: "ETC",
-      label: "",
-      url: "",
-      displayOrder: prev.length,
-    },
-  ])
+    setProfileErr(null)
+    setProfileSuccess(null)
+    setLinks((prev) => [
+      ...prev,
+      {
+        type: "ETC",
+        label: "",
+        url: "",
+        displayOrder: prev.length,
+      },
+    ])
   }
 
   const removeLink = (index: number) => {
+    setProfileErr(null)
+    setProfileSuccess(null)
     setLinks((prev) =>
       prev
         .filter((_, i) => i !== index)
@@ -176,10 +279,10 @@ export function AccountSettingsPage() {
     key: K,
     value: ProfileLinkForm[K]
   ) => {
+    setProfileErr(null)
+    setProfileSuccess(null)
     setLinks((prev) =>
-      prev.map((link, i) =>
-        i === index ? { ...link, [key]: value } : link
-      )
+      prev.map((link, i) => (i === index ? { ...link, [key]: value } : link))
     )
   }
 
@@ -232,6 +335,7 @@ export function AccountSettingsPage() {
         <div className="rounded-2xl border border-slate-200 bg-white p-6 shadow-sm">
           <div className="text-sm text-slate-500">이메일</div>
           <div className="mt-1 text-base font-medium text-slate-900">{me.email}</div>
+
           <div className="mt-4 text-sm text-slate-500">상태</div>
           <div className="mt-1 text-sm font-semibold text-slate-700">{me.status}</div>
         </div>
@@ -252,6 +356,12 @@ export function AccountSettingsPage() {
         {profileSuccess && (
           <div className="rounded-lg border border-emerald-200 bg-emerald-50 px-3 py-2 text-sm text-emerald-600">
             {profileSuccess}
+          </div>
+        )}
+
+        {isProfileDirty && !profileSuccess && (
+          <div className="rounded-lg border border-amber-200 bg-amber-50 px-3 py-2 text-sm text-amber-700">
+            저장되지 않은 변경사항이 있어요.
           </div>
         )}
 
@@ -298,77 +408,83 @@ export function AccountSettingsPage() {
             if (profileSuccess) setProfileSuccess(null)
           }}
         />
+
         <div className="space-y-3">
-        <div className="flex items-center justify-between">
-          <h3 className="text-sm font-semibold text-slate-900">프로필 링크</h3>
-          <button
-            type="button"
-            onClick={addLink}
-            className="rounded-lg border border-slate-300 bg-white px-3 py-2 text-xs font-medium text-slate-700 transition hover:bg-slate-50"
-          >
-            링크 추가
-          </button>
+          <div className="flex items-center justify-between">
+            <h3 className="text-sm font-semibold text-slate-900">프로필 링크</h3>
+            <button
+              type="button"
+              onClick={addLink}
+              className="rounded-lg border border-slate-300 bg-white px-3 py-2 text-xs font-medium text-slate-700 transition hover:bg-slate-50"
+            >
+              링크 추가
+            </button>
+          </div>
+
+          {links.length === 0 ? (
+            <div className="rounded-xl border border-slate-200 bg-slate-50 px-4 py-3 text-sm text-slate-500">
+              등록된 프로필 링크가 없어요.
+            </div>
+          ) : (
+            <div className="space-y-3">
+              {links.map((link, index) => (
+                <div
+                  key={index}
+                  className="rounded-xl border border-slate-200 bg-slate-50 p-4"
+                >
+                  <div className="grid gap-3 md:grid-cols-[140px_1fr]">
+                    <select
+                      className="rounded-xl border border-slate-300 bg-white px-4 py-3 text-sm outline-none focus:border-indigo-500 focus:ring-2 focus:ring-indigo-100"
+                      value={link.type}
+                      onChange={(e) =>
+                        updateLink(index, "type", e.target.value as ProfileLinkType)
+                      }
+                    >
+                      <option value="GITHUB">GitHub</option>
+                      <option value="BLOG">Blog</option>
+                      <option value="PORTFOLIO">Portfolio</option>
+                      <option value="ETC">기타</option>
+                    </select>
+
+                    <input
+                      className="rounded-xl border border-slate-300 bg-white px-4 py-3 text-sm outline-none focus:border-indigo-500 focus:ring-2 focus:ring-indigo-100"
+                      placeholder="링크 이름"
+                      value={link.label}
+                      onChange={(e) => updateLink(index, "label", e.target.value)}
+                    />
+                  </div>
+
+                  <div className="mt-3 flex gap-3">
+                    <input
+                      className="flex-1 rounded-xl border border-slate-300 bg-white px-4 py-3 text-sm outline-none placeholder:text-slate-400 focus:border-indigo-500 focus:ring-2 focus:ring-indigo-100"
+                      placeholder="https://..."
+                      value={link.url}
+                      onChange={(e) => updateLink(index, "url", e.target.value)}
+                    />
+
+                    <button
+                      type="button"
+                      onClick={() => removeLink(index)}
+                      className="rounded-xl border border-red-200 bg-red-50 px-4 py-3 text-sm font-medium text-red-600 transition hover:bg-red-100"
+                    >
+                      삭제
+                    </button>
+                  </div>
+                </div>
+              ))}
+            </div>
+          )}
         </div>
 
-        {links.length === 0 ? (
-          <div className="rounded-xl border border-slate-200 bg-slate-50 px-4 py-3 text-sm text-slate-500">
-            등록된 프로필 링크가 없어요.
-          </div>
-        ) : (
-          <div className="space-y-3">
-            {links.map((link, index) => (
-              <div
-                key={index}
-                className="rounded-xl border border-slate-200 bg-slate-50 p-4"
-              >
-                <div className="grid gap-3 md:grid-cols-[140px_1fr]">
-                  <select
-                    className="rounded-xl border border-slate-300 bg-white px-4 py-3 text-sm outline-none focus:border-indigo-500 focus:ring-2 focus:ring-indigo-100"
-                    value={link.type}
-                    onChange={(e) =>
-                      updateLink(index, "type", e.target.value as ProfileLinkType)
-                    }
-                  >
-                    <option value="GITHUB">GitHub</option>
-                    <option value="BLOG">Blog</option>
-                    <option value="PORTFOLIO">Portfolio</option>
-                    <option value="ETC">기타</option>
-                  </select>
+        <p className="text-xs text-slate-500">
+          링크 이름과 주소를 모두 입력해야 저장되며, 추가/삭제 변경사항은 프로필 저장 시 반영돼요.
+        </p>
 
-                  <input
-                    className="rounded-xl border border-slate-300 bg-white px-4 py-3 text-sm outline-none focus:border-indigo-500 focus:ring-2 focus:ring-indigo-100"
-                    placeholder="링크 이름"
-                    value={link.label}
-                    onChange={(e) => updateLink(index, "label", e.target.value)}
-                  />
-                </div>
-
-                <div className="mt-3 flex gap-3">
-                  <input
-                    className="flex-1 rounded-xl border border-slate-300 bg-white px-4 py-3 text-sm outline-none placeholder:text-slate-400 focus:border-indigo-500 focus:ring-2 focus:ring-indigo-100"
-                    placeholder="https://..."
-                    value={link.url}
-                    onChange={(e) => updateLink(index, "url", e.target.value)}
-                  />
-
-                  <button
-                    type="button"
-                    onClick={() => removeLink(index)}
-                    className="rounded-xl border border-red-200 bg-red-50 px-4 py-3 text-sm font-medium text-red-600 transition hover:bg-red-100"
-                  >
-                    삭제
-                  </button>
-                </div>
-              </div>
-            ))}
-          </div>
-        )}
-      </div>
         <button
           type="submit"
           className="w-full rounded-xl bg-gradient-to-r from-indigo-600 to-indigo-500 px-4 py-3 text-sm font-semibold text-white transition hover:opacity-90"
         >
-          회원정보 수정
+          프로필 저장
         </button>
       </form>
 
@@ -441,8 +557,7 @@ export function AccountSettingsPage() {
         <h2 className="text-lg font-bold text-red-600">회원탈퇴</h2>
 
         <p className="text-sm leading-6 text-red-700">
-          탈퇴 시 계정은 비활성화되며 작성한 게시글과 댓글은 삭제되지 않고
-          작성자 정보만 변경됩니다.
+          탈퇴 시 계정은 비활성화되며 작성한 게시글과 댓글은 삭제되지 않고 작성자 정보만 변경됩니다.
         </p>
 
         {withdrawErr && (
