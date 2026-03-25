@@ -5,11 +5,14 @@ import com.devs.devmate.member.entity.Member;
 import jakarta.persistence.*;
 import lombok.*;
 
+import java.util.ArrayList;
+import java.util.List;
+
 
 @Entity
 @Getter
 @NoArgsConstructor(access = AccessLevel.PROTECTED)
-@AllArgsConstructor
+@AllArgsConstructor(access = AccessLevel.PRIVATE)
 @Builder
 @Table(name = "posts")
 public class Post extends BaseEntity {
@@ -33,6 +36,10 @@ public class Post extends BaseEntity {
     @Builder.Default
     private boolean solved = false;
 
+    @OneToMany(mappedBy = "post", cascade = CascadeType.ALL, orphanRemoval = true)
+    @Builder.Default
+    private List<PostAttachment> attachments = new ArrayList<>();
+
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "member_id", nullable = false)
     private Member member;
@@ -53,6 +60,10 @@ public class Post extends BaseEntity {
 
     public void markUnsolved(){
         this.solved = false;
+    }
+
+    public void addAttachment(PostAttachment attachment) {
+        this.attachments.add(attachment);
     }
 
 }

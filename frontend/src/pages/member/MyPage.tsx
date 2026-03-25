@@ -6,16 +6,6 @@ import { listMyReservations } from "../../api/reservations"
 import { listPosts, type PostResponse } from "../../api/posts"
 import { listMyComments, type MyCommentResponse } from "../../api/comments"
 import { apiErrorMessage } from "../../utils/error"
-import {
-  pageStyle,
-  cardStyle,
-  primaryButtonStyle,
-  secondaryButtonStyle,
-  errorBoxStyle,
-  mutedBoxStyle,
-  listItemCardStyle,
-  titleHeroStyle,
-} from "../../styles/commonStyles"
 
 function isUpcomingReservation(date: string, endTime: string) {
   const now = new Date()
@@ -25,9 +15,11 @@ function isUpcomingReservation(date: string, endTime: string) {
 
 function StatCard({ label, value }: { label: string; value: string }) {
   return (
-    <div style={cardStyle}>
-      <div style={{ fontSize: 14, color: "#666", marginBottom: 8 }}>{label}</div>
-      <div style={{ fontSize: 28, fontWeight: 800, color: "#24364b" }}>{value}</div>
+    <div className="rounded-2xl border border-slate-200 bg-white p-5 shadow-sm">
+      <div className="text-sm font-medium text-slate-500">{label}</div>
+      <div className="mt-3 text-3xl font-bold tracking-tight text-slate-900">
+        {value}
+      </div>
     </div>
   )
 }
@@ -42,19 +34,15 @@ function SectionHeader({
   onClick?: () => void
 }) {
   return (
-    <div
-      style={{
-        display: "flex",
-        justifyContent: "space-between",
-        alignItems: "center",
-        gap: 12,
-        flexWrap: "wrap",
-      }}
-    >
-      <div style={{ fontSize: 22, fontWeight: 800, color: "#24364b" }}>{title}</div>
+    <div className="flex flex-wrap items-center justify-between gap-3">
+      <h2 className="text-xl font-bold tracking-tight text-slate-900">{title}</h2>
 
       {actionLabel && onClick && (
-        <button onClick={onClick} style={secondaryButtonStyle}>
+        <button
+          type="button"
+          onClick={onClick}
+          className="rounded-xl border border-slate-300 bg-white px-4 py-2 text-sm font-medium text-slate-700 transition hover:bg-slate-50"
+        >
           {actionLabel}
         </button>
       )}
@@ -65,15 +53,11 @@ function SectionHeader({
 function PostTypeBadge({ type }: { type: "QUESTION" | "STUDY" }) {
   return (
     <span
-      style={{
-        fontSize: 11,
-        padding: "2px 8px",
-        borderRadius: 999,
-        background: type === "STUDY" ? "#eef4ff" : "#f5f5f5",
-        border: "1px solid #ddd",
-        fontWeight: 700,
-        color: "#555",
-      }}
+      className={`inline-flex rounded-full px-2.5 py-1 text-xs font-semibold ${
+        type === "STUDY"
+          ? "border border-indigo-200 bg-indigo-50 text-indigo-700"
+          : "border border-slate-200 bg-slate-100 text-slate-600"
+      }`}
     >
       {type === "STUDY" ? "스터디" : "질문"}
     </span>
@@ -83,15 +67,11 @@ function PostTypeBadge({ type }: { type: "QUESTION" | "STUDY" }) {
 function SolvedBadge({ solved }: { solved: boolean }) {
   return (
     <span
-      style={{
-        fontSize: 11,
-        padding: "2px 8px",
-        borderRadius: 999,
-        background: solved ? "#f0fdf4" : "#fafafa",
-        border: "1px solid #ddd",
-        fontWeight: 700,
-        color: solved ? "#15803d" : "#555",
-      }}
+      className={`inline-flex rounded-full px-2.5 py-1 text-xs font-semibold ${
+        solved
+          ? "border border-emerald-200 bg-emerald-50 text-emerald-700"
+          : "border border-slate-200 bg-slate-100 text-slate-600"
+      }`}
     >
       {solved ? "해결됨" : "미해결"}
     </span>
@@ -109,29 +89,16 @@ function PostItem({
     <button
       type="button"
       onClick={onClick}
-      style={{
-        ...listItemCardStyle,
-        textAlign: "left",
-        cursor: "pointer",
-        width: "100%",
-      }}
+      className="w-full rounded-2xl border border-slate-200 bg-slate-50 p-4 text-left transition hover:-translate-y-0.5 hover:shadow-sm"
     >
-      <div
-        style={{
-          display: "flex",
-          alignItems: "center",
-          gap: 8,
-          flexWrap: "wrap",
-          marginBottom: 8,
-        }}
-      >
+      <div className="mb-3 flex flex-wrap items-center gap-2">
         <PostTypeBadge type={post.type} />
         <SolvedBadge solved={post.solved} />
       </div>
 
-      <div style={{ fontSize: 18, fontWeight: 700, color: "#24364b" }}>{post.title}</div>
+      <div className="text-base font-semibold text-slate-900">{post.title}</div>
 
-      <div style={{ marginTop: 6, fontSize: 13, color: "#666" }}>
+      <div className="mt-2 text-sm text-slate-500">
         {new Date(post.createdAt).toLocaleDateString("ko-KR")}
       </div>
     </button>
@@ -149,58 +116,29 @@ function CommentItem({
     <button
       type="button"
       onClick={onClick}
-      style={{
-        ...listItemCardStyle,
-        textAlign: "left",
-        cursor: "pointer",
-        width: "100%",
-        transition: "all 0.15s ease",
-      }}
-      onMouseEnter={(e) => {
-        e.currentTarget.style.transform = "translateY(-2px)"
-        e.currentTarget.style.boxShadow = "0 6px 20px rgba(0,0,0,0.08)"
-      }}
-      onMouseLeave={(e) => {
-        e.currentTarget.style.transform = "none"
-        e.currentTarget.style.boxShadow = "none"
-      }}
+      className="w-full rounded-2xl border border-slate-200 bg-slate-50 p-4 text-left transition hover:-translate-y-0.5 hover:shadow-sm"
     >
-      <div style={{ display: "flex", gap: 8, marginBottom: 8 }}>
+      <div className="mb-3 flex flex-wrap items-center gap-2">
         <span
-          style={{
-            fontSize: 11,
-            padding: "2px 8px",
-            borderRadius: 999,
-            background: comment.adopted ? "#ecfdf5" : "#fafafa",
-            border: comment.adopted ? "1px solid #86efac" : "1px solid #ddd",
-            fontWeight: 700,
-            color: comment.adopted ? "#15803d" : "#555",
-          }}
+          className={`inline-flex rounded-full px-2.5 py-1 text-xs font-semibold ${
+            comment.adopted
+              ? "border border-emerald-200 bg-emerald-50 text-emerald-700"
+              : "border border-slate-200 bg-slate-100 text-slate-600"
+          }`}
         >
           {comment.adopted ? "채택됨" : "일반 댓글"}
         </span>
       </div>
 
-      <div style={{ fontSize: 16, fontWeight: 800, color: "#111", marginBottom: 6 }}>
+      <div className="mb-2 text-base font-semibold text-slate-900">
         {comment.postTitle}
       </div>
 
-      <div
-        style={{
-          fontSize: 14,
-          color: "#555",
-          lineHeight: 1.5,
-          display: "-webkit-box",
-          WebkitLineClamp: 2,
-          WebkitBoxOrient: "vertical",
-          overflow: "hidden",
-          wordBreak: "break-word",
-        }}
-      >
+      <div className="line-clamp-2 break-words text-sm leading-6 text-slate-600">
         {comment.content}
       </div>
 
-      <div style={{ marginTop: 8, fontSize: 13, color: "#666" }}>
+      <div className="mt-3 text-sm text-slate-500">
         {new Date(comment.createdAt).toLocaleDateString("ko-KR")}
       </div>
     </button>
@@ -225,13 +163,14 @@ export function MyPage() {
       try {
         setErr(null)
 
-        const [meData, myStudies, myReservationsPage, myPostsPage, myCommentsData] = await Promise.all([
-          getMe(),
-          getMyStudies(),
-          listMyReservations({ page: 0, size: 100, sort: "date,desc" }),
-          listPosts({ mine: true, page: 0, size: 5, sort: "id,desc" }),
-          listMyComments()
-        ])
+        const [meData, myStudies, myReservationsPage, myPostsPage, myCommentsData] =
+          await Promise.all([
+            getMe(),
+            getMyStudies(),
+            listMyReservations({ page: 0, size: 100, sort: "date,desc" }),
+            listPosts({ mine: true, page: 0, size: 5, sort: "id,desc" }),
+            listMyComments(),
+          ])
 
         setMe(meData)
         setMyStudiesCount(myStudies.length)
@@ -255,156 +194,204 @@ export function MyPage() {
   }, [])
 
   if (loading) {
-    return <div style={mutedBoxStyle}>로딩 중...</div>
+    return (
+      <div className="mx-auto max-w-5xl px-4 py-16">
+        <div className="rounded-2xl border border-slate-200 bg-white px-4 py-6 text-center text-sm text-slate-500 shadow-sm">
+          로딩 중...
+        </div>
+      </div>
+    )
   }
 
   return (
-    <div style={{ ...pageStyle, maxWidth: 900 }}>
-      <div
-        style={{
-          display: "flex",
-          justifyContent: "space-between",
-          alignItems: "flex-start",
-          gap: 16,
-          flexWrap: "wrap",
-          marginBottom: 24,
-        }}
-      >
+    <div className="mx-auto max-w-5xl space-y-6 px-4 py-10">
+      <section className="flex flex-col gap-4 lg:flex-row lg:items-end lg:justify-between">
         <div>
-          <h1 style={titleHeroStyle}>MY PAGE</h1>
-          <div style={{ color: "#666", fontSize: 16 }}>
+          <p className="text-sm font-medium text-indigo-600">My Page</p>
+          <h1 className="mt-2 text-4xl font-bold tracking-tight text-slate-900">
+            마이페이지
+          </h1>
+          <p className="mt-2 text-base text-slate-600">
             내 활동과 계정 정보를 한눈에 확인해보세요.
-          </div>
+          </p>
         </div>
 
-        <button onClick={() => nav("/mypage/settings")} style={primaryButtonStyle}>
+        <button
+          type="button"
+          onClick={() => nav("/mypage/settings")}
+          className="rounded-xl bg-gradient-to-r from-indigo-600 to-indigo-500 px-4 py-3 text-sm font-semibold text-white transition hover:opacity-90"
+        >
           계정 설정
         </button>
-      </div>
+      </section>
 
-      {err && <div style={errorBoxStyle}>{err}</div>}
+      {err && (
+        <div className="rounded-2xl border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-600">
+          {err}
+        </div>
+      )}
 
       {me && (
-        <div style={{ ...cardStyle, marginBottom: 24 }}>
-          <div
-            style={{
-              fontSize: 24,
-              fontWeight: 800,
-              color: "#24364b",
-              marginBottom: 8,
-            }}
-          >
+        <section className="rounded-2xl border border-slate-200 bg-white p-6 shadow-sm">
+          <div className="text-2xl font-bold tracking-tight text-slate-900">
             {me.nickname}
           </div>
 
-          <div style={{ color: "#666", marginBottom: 8, fontSize: 16 }}>{me.email}</div>
+          <div className="mt-2 text-sm text-slate-500">{me.email}</div>
 
-          {me.name && (
-            <div style={{ marginBottom: 6, fontSize: 16 }}>
-              <strong>이름:</strong> {me.name}
+          <div className="mt-4 space-y-2 text-sm text-slate-700">
+          <div>
+            <span className="font-semibold">이름</span>
+            <span className="ml-2">{me.name}</span>
+          </div>
+          {me.phone && (
+            <div>
+              <span className="font-semibold">전화번호</span>
+              <span className="ml-2">{me.phone}</span>
             </div>
           )}
+          <div>
+            <span className="font-semibold">상태</span>
+            <span className="ml-2">{me.status}</span>
+          </div>
+          </div>
+          <div className="mt-5">
+          <div className="mb-2 text-xs font-semibold text-slate-500">
+            한 줄 소개
+          </div>
 
-          {me.bio && (
-            <div style={{ color: "#555", fontSize: 15, marginTop: 6 }}>
+          {me.bio ? (
+            <div className="rounded-xl border border-slate-200 bg-gradient-to-br from-slate-50 to-white px-4 py-3 text-sm leading-6 text-slate-700 shadow-sm">
               {me.bio}
+            </div>
+          ) : (
+            <div className="rounded-xl border border-dashed border-slate-200 bg-slate-50 px-4 py-3 text-sm text-slate-400">
+              아직 소개가 없습니다.
             </div>
           )}
         </div>
-      )}
-      {(me?.links ?? []).length > 0 && (
-        <section className="mb-6 rounded-2xl border border-slate-200 bg-white p-6 shadow-sm">
-          <h2 className="text-lg font-bold text-slate-900">프로필 링크</h2>
+          {(me?.links ?? []).length > 0 && (
+            <div className="mt-5 border-t border-slate-200 pt-5">
+              <div className="text-sm font-semibold text-slate-900">프로필 링크</div>
 
-          <div className="mt-4 grid gap-3">
-            {(me?.links ?? [])
-              .slice()
-              .sort((a, b) => (a.displayOrder ?? 0) - (b.displayOrder ?? 0))
-              .map((link, index) => (
-                <div
-                  key={`${link.type}-${link.label}-${index}`}
-                  className="flex items-center justify-between rounded-xl border border-slate-200 bg-slate-50 px-4 py-3"
-                >
-                  <div className="min-w-0">
-                    <div className="text-xs text-slate-500">{link.label}</div>
-                    <div className="truncate text-sm font-medium text-slate-900">
-                      {link.url}
+              <div className="mt-3 grid gap-3">
+                {(me?.links ?? [])
+                  .slice()
+                  .sort((a, b) => (a.displayOrder ?? 0) - (b.displayOrder ?? 0))
+                  .map((link, index) => (
+                    <div
+                      key={`${link.type}-${link.label}-${index}`}
+                      className="flex items-center justify-between rounded-xl border border-slate-200 bg-slate-50 px-4 py-3"
+                    >
+                      <div className="min-w-0">
+                        <div className="text-xs text-slate-500">{link.label}</div>
+                        <div className="truncate text-sm font-medium text-slate-900">
+                          {link.url}
+                        </div>
+                      </div>
+
+                      <a
+                        href={link.url}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="ml-4 rounded-lg bg-indigo-600 px-3 py-1.5 text-xs font-medium text-white transition hover:opacity-90"
+                      >
+                        이동
+                      </a>
                     </div>
-                  </div>
-
-                  <a
-                    href={link.url}
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    className="ml-4 rounded-lg bg-indigo-600 px-3 py-1.5 text-xs font-medium text-white transition hover:opacity-90"
-                  >
-                    이동
-                  </a>
-                </div>
-              ))}
-          </div>
+                  ))}
+              </div>
+            </div>
+          )}
         </section>
       )}
-      <div
-        style={{
-          display: "grid",
-          gridTemplateColumns: "repeat(2, minmax(0, 1fr))",
-          gap: 16,
-          marginBottom: 24,
-        }}
-      >
+
+      <section className="rounded-2xl border border-slate-200 bg-white p-6 shadow-sm">
+        <div className="space-y-4">
+          <SectionHeader title="빠른 이동" />
+
+          <div className="flex flex-wrap gap-3">
+            <button
+              type="button"
+              onClick={() => nav("/posts?scope=mine")}
+              className="rounded-xl border border-slate-300 bg-white px-4 py-2 text-sm font-medium text-slate-700 transition hover:bg-slate-50"
+            >
+              내 글 보기
+            </button>
+            <button
+              type="button"
+              onClick={() => nav("/mystudies")}
+              className="rounded-xl border border-slate-300 bg-white px-4 py-2 text-sm font-medium text-slate-700 transition hover:bg-slate-50"
+            >
+              내 스터디 보기
+            </button>
+
+            <button
+              type="button"
+              onClick={() => nav("/reservations?scope=mine")}
+              className="rounded-xl border border-slate-300 bg-white px-4 py-2 text-sm font-medium text-slate-700 transition hover:bg-slate-50"
+            >
+              내 예약 보기
+            </button>
+          </div>
+        </div>
+      </section>
+      <section className="grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
         <StatCard label="내 상태" value={me?.status ?? "-"} />
         <StatCard label="내 글" value={`${myPostsCount}개`} />
         <StatCard label="참여 중 스터디" value={`${myStudiesCount}개`} />
         <StatCard label="예정 예약" value={`${upcomingReservationsCount}건`} />
-      </div>
+      </section>
 
-      <div style={{ ...cardStyle, marginBottom: 24, display: "grid", gap: 12 }}>
-        <SectionHeader
-          title="내가 쓴 글"
-          actionLabel="전체 글 보기"
-          onClick={() => nav("/?mine=true")}
-        />
+      <section className="rounded-2xl border border-slate-200 bg-white p-6 shadow-sm">
+        <div className="space-y-4">
+          <SectionHeader
+            title="내가 쓴 글"
+            actionLabel="전체 글 보기"
+            onClick={() => nav("/posts/?mine=true")}
+          />
 
-        {myPosts.length === 0 ? (
-          <div style={mutedBoxStyle}>작성한 글이 아직 없어요.</div>
-        ) : (
-          myPosts.map((post) => (
-            <PostItem
-              key={post.id}
-              post={post}
-              onClick={() => nav(`/posts/${post.id}`)}
-            />
-          ))
-        )}
-      </div>
-      <div style={{ ...cardStyle, marginBottom: 24, display: "grid", gap: 12 }}>
-        <SectionHeader title="내가 쓴 댓글" />
-        {myComments.length === 0 ? (
-            <div style={mutedBoxStyle}>작성한 댓글이 아직 없어요.</div>
-        ) : (
-            myComments.map((comment) => (
-            <CommentItem
-                key={comment.commentId}
-                comment={comment}
-                onClick={() => nav(`/posts/${comment.postId}`)}
-            />
-            ))
-        )}
-      </div>
-      <div style={{ ...cardStyle, display: "grid", gap: 12 }}>
-        <SectionHeader title="빠른 이동" />
-
-        <div style={{ display: "flex", gap: 10, flexWrap: "wrap" }}>
-          <button onClick={() => nav("/mystudies")} style={secondaryButtonStyle}>
-            내 스터디 보기
-          </button>
-
-          <button onClick={() => nav("/reservations?scope=mine")} style={secondaryButtonStyle}>
-            내 예약 보기
-          </button>
+          {myPosts.length === 0 ? (
+            <div className="rounded-xl border border-slate-200 bg-slate-50 px-4 py-4 text-sm text-slate-500">
+              작성한 글이 아직 없어요.
+            </div>
+          ) : (
+            <div className="space-y-3">
+              {myPosts.map((post) => (
+                <PostItem
+                  key={post.id}
+                  post={post}
+                  onClick={() => nav(`/posts/${post.id}`)}
+                />
+              ))}
+            </div>
+          )}
         </div>
-      </div>
+      </section>
+
+      <section className="rounded-2xl border border-slate-200 bg-white p-6 shadow-sm">
+        <div className="space-y-4">
+          <SectionHeader title="내가 쓴 댓글" />
+
+          {myComments.length === 0 ? (
+            <div className="rounded-xl border border-slate-200 bg-slate-50 px-4 py-4 text-sm text-slate-500">
+              작성한 댓글이 아직 없어요.
+            </div>
+          ) : (
+            <div className="space-y-3">
+              {myComments.map((comment) => (
+                <CommentItem
+                  key={comment.commentId}
+                  comment={comment}
+                  onClick={() => nav(`/posts/${comment.postId}`)}
+                />
+              ))}
+            </div>
+          )}
+        </div>
+      </section>
+
+      
     </div>
   )
 }

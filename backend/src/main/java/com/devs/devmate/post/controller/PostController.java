@@ -11,7 +11,11 @@ import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
+import org.springframework.http.MediaType;
 import org.springframework.web.bind.annotation.*;
+import org.springframework.web.multipart.MultipartFile;
+
+import java.util.List;
 
 @RestController
 @RequiredArgsConstructor
@@ -20,8 +24,11 @@ public class PostController {
 
     private final PostService postService;
 
-    @PostMapping
-    public ApiResponse<Long> create(@RequestBody @Valid PostCreateRequest request){
+    @PostMapping(consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
+    public ApiResponse<Long> create(
+            @RequestPart("request") @Valid PostCreateRequest request,
+            @RequestPart(value = "files", required = false) List<MultipartFile> files
+    ){
         Long memberId = SecurityUtil.currentMemberId();
         return ApiResponse.ok(postService.create(memberId, request));
     }
@@ -44,11 +51,14 @@ public class PostController {
         return ApiResponse.ok(postService.get(postId));
     }
 
-    @PatchMapping("/{postId}")
-    public ApiResponse<Void> update(@PathVariable Long postId,
-                                            @RequestBody @Valid PostUpdateRequest request){
+    @PatchMapping(value = "/{postId}", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
+    public ApiResponse<Void> update(
+            @PathVariable Long postId,
+            @RequestPart("request") @Valid PostUpdateRequest request,
+            @RequestPart(value = "files", required = false) List<MultipartFile> files
+    ){
         Long memberId = SecurityUtil.currentMemberId();
-        postService.update(memberId, postId, request);
+        postService.update(memberId, postId, request, files);
         return ApiResponse.ok();
     }
 
