@@ -39,6 +39,7 @@ out/
 # Backend (Gradle / Spring)
 backend/.gradle/
 backend/build/
+backend/uploads/
 backend/out/
 backend/.classpath
 backend/.project
