@@ -14,6 +14,7 @@ export type PostResponse = {
     type: "QUESTION" | "STUDY"
     createdAt: string
     updatedAt: string
+    attachments: PostAttachmentResponse[]
 }
 
 export type PostUpdateRequest = {
@@ -22,12 +23,37 @@ export type PostUpdateRequest = {
     solved: boolean
 }
 
-export async function createPost(req: PostCreateRequest) {
+export type PostAttachmentResponse = {
+  id: number
+  originalFileName: string
+  fileUrl: string
+  contentType: string
+  fileSize: number
+  displayOrder: number
+}
 
-    const {data} = await http.post<ApiResponse<number>>("/api/posts", req)
-    if (!data.success || data.data == null) throw new Error(data.error?.message ?? "Create failed")
-    return data.data
-    
+export async function createPost(
+  req: PostCreateRequest,
+  files: File[] = []
+) {
+  const formData = new FormData()
+
+  formData.append(
+    "request",
+    new Blob([JSON.stringify(req)], { type: "application/json" })
+  )
+
+  files.forEach((file) => {
+    formData.append("files", file)
+  })
+
+  const { data } = await http.post<ApiResponse<number>>("/api/posts", formData)
+
+  if (!data.success || data.data == null) {
+    throw new Error(data.error?.message ?? "Create failed")
+  }
+
+  return data.data
 }
 
 export async function listPosts(params?: {
@@ -69,9 +95,31 @@ export async function deletePost(id:string) {
     
 }
 
-export async function updatePost(id:string, req: PostUpdateRequest) {
-    const {data} = await http.patch<ApiResponse<void>>(`/api/posts/${id}`, req)
-    if (!data.success) throw new Error(data.error?.message ?? "Update failed")
+
+export async function updatePost(
+  id: string,
+  req: PostUpdateRequest,
+  files: File[] = []
+) {
+  const formData = new FormData()
+
+  formData.append(
+    "request",
+    new Blob([JSON.stringify(req)], { type: "application/json" })
+  )
+
+  files.forEach((file) => {
+    formData.append("files", file)
+  })
+
+  const { data } = await http.patch<ApiResponse<void>>(
+    `/api/posts/${id}`,
+    formData
+  )
+
+  if (!data.success) {
+    throw new Error(data.error?.message ?? "Update failed")
+  }
 }
 
 

@@ -1,4 +1,5 @@
 import { useNavigate } from "react-router-dom"
+import type { PostResponse } from "../../../api/posts"
 
 function StatusBadge({ solved }: { solved: boolean }) {
   return (
@@ -49,14 +50,7 @@ function ActionButton({
 }
 
 type PostDetailHeaderProps = {
-  post: {
-    id: number
-    title: string
-    content: string
-    authorNickname: string
-    solved: boolean
-    type: string
-  }
+  post: PostResponse
   isMine: boolean
   canSolve: boolean
   busy: boolean
@@ -107,13 +101,35 @@ export default function PostDetailHeader({
       <div className="rounded-3xl bg-slate-50 px-6 py-5 text-base leading-8 text-slate-700">
         <div className="whitespace-pre-wrap">{post.content}</div>
       </div>
+      {post.attachments && post.attachments.length > 0 && (
+        <div className="mt-6 space-y-3">
+          <div className="text-sm font-semibold text-slate-700">첨부 이미지</div>
 
+          <div className="grid gap-4 sm:grid-cols-2">
+            {post.attachments.map((file) => (
+              <div
+                key={file.id}
+                className="overflow-hidden rounded-2xl border border-slate-200 bg-white"
+              >
+                <img
+                  src={`${import.meta.env.VITE_API_BASE_URL}${file.fileUrl}`}
+                  alt={file.originalFileName}
+                  className="w-full object-cover"
+                />
+                <div className="px-3 py-2 text-xs text-slate-500">
+                  {file.originalFileName}
+                </div>
+              </div>
+            ))}
+          </div>
+        </div>
+      )}
       {actionErr && (
         <div className="mt-4 rounded-2xl border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-700">
           {actionErr}
         </div>
       )}
-
+      
       <div className="mt-6 flex flex-col gap-4">
         <div className="flex flex-wrap gap-3">
           <ActionButton onClick={() => nav("/posts")}>목록</ActionButton>

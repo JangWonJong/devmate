@@ -10,6 +10,7 @@ export function NewPostPage() {
   const [err, setErr] = useState<string | null>(null)
   const [loading, setLoading] = useState(false)
   const [type, setType] = useState<"QUESTION" | "STUDY">("QUESTION")
+  const [files, setFiles] = useState<File[]>([])
 
   const onSubmit = async () => {
     setErr(null)
@@ -22,7 +23,7 @@ export function NewPostPage() {
 
     try {
       setLoading(true)
-      const id = await createPost({ title: t, content: c, type })
+      const id = await createPost({ title: t, content: c, type }, files)
       nav(`/posts/${id}`)
     } catch (e: any) {
       setErr(e.message ?? "등록 실패")
@@ -109,7 +110,49 @@ export function NewPostPage() {
               className="min-h-[280px] w-full resize-y rounded-2xl border border-slate-300 bg-white px-4 py-4 text-sm leading-7 text-slate-900 outline-none transition placeholder:text-slate-400 focus:border-slate-400"
             />
           </div>
+          <div className="space-y-2">
+            <label className="text-sm font-semibold text-slate-700">
+              이미지 첨부
+            </label>
+            <input
+              type="file"
+              multiple
+              accept="image/png,image/jpeg,image/jpg,image/webp"
+              onChange={(e) => {
+                setFiles(Array.from(e.target.files ?? []))
+              }}
+              className="block w-full rounded-2xl border border-slate-300 px-4 py-3 text-sm"
+            />
+            <p className="text-xs text-slate-500">
+              이미지 파일만 업로드 가능 (최대 5MB)
+            </p>
+          </div>
+          {files.length > 0 && (
+            <div className="rounded-xl border border-slate-200 bg-slate-50 p-4">
+              <div className="mb-2 text-sm font-semibold text-slate-900">
+                첨부 파일
+              </div>
 
+              {files.map((file, index) => (
+                <div
+                  key={index}
+                  className="flex items-center justify-between text-sm"
+                >
+                  <span>{file.name}</span>
+
+                  <button
+                    type="button"
+                    onClick={() =>
+                      setFiles((prev) => prev.filter((_, i) => i !== index))
+                    }
+                    className="text-red-500"
+                  >
+                    제거
+                  </button>
+                </div>
+              ))}
+            </div>
+          )}
           {err && (
             <div className="rounded-2xl border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-700">
               {err}
