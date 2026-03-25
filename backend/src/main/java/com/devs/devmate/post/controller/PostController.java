@@ -30,7 +30,7 @@ public class PostController {
             @RequestPart(value = "files", required = false) List<MultipartFile> files
     ){
         Long memberId = SecurityUtil.currentMemberId();
-        return ApiResponse.ok(postService.create(memberId, request));
+        return ApiResponse.ok(postService.create(memberId, request, files));
     }
 
     @GetMapping

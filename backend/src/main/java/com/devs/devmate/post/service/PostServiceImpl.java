@@ -8,7 +8,9 @@ import com.devs.devmate.member.repository.MemberRepository;
 import com.devs.devmate.post.dto.PostCreateRequest;
 import com.devs.devmate.post.dto.PostResponse;
 import com.devs.devmate.post.dto.PostUpdateRequest;
+import com.devs.devmate.post.dto.StoredFileInfo;
 import com.devs.devmate.post.entity.Post;
+import com.devs.devmate.post.entity.PostAttachment;
 import com.devs.devmate.post.repository.PostRepository;
 import com.devs.devmate.reservation.repository.ReservationRepository;
 import com.devs.devmate.study.repository.StudyMemberRepository;
@@ -18,6 +20,9 @@ import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import org.springframework.web.multipart.MultipartFile;
+
+import java.util.List;
 
 
 @Service
@@ -31,6 +36,7 @@ public class PostServiceImpl implements PostService{
     private final StudyMemberRepository studyMemberRepository;
     private final CommentRepository commentRepository;
     private final ReservationRepository reservationRepository;
+    private final PostFileService postFileService;
 
     private String normalize(String keyword) {
         if (keyword == null) return null;
@@ -38,8 +44,27 @@ public class PostServiceImpl implements PostService{
         return k.isEmpty() ? null : k;
     }
 
+    private void addAttachments(Post post, List<StoredFileInfo> storedFiles) {
+        int order = 0;
+
+        for (StoredFileInfo file : storedFiles) {
+            post.addAttachment(
+                    PostAttachment.builder()
+                            .post(post)
+                            .originalFileName(file.getOriginalFilename())
+                            .storedFileName(file.getStoredFilename())
+                            .fileUrl(file.getFileUrl())
+                            .contentType(file.getContentType())
+                            .fileSize(file.getFileSize())
+                            .displayOrder(order++)
+                            .build()
+            );
+        }
+    }
+
+
     @Override
-    public Long create(Long memberId, PostCreateRequest request) {
+    public Long create(Long memberId, PostCreateRequest request, List<MultipartFile> files) {
         Member member = memberRepository.findById(memberId)
                 .orElseThrow(() -> new BusinessException(ErrorCode.MEMBER_NOT_FOUND));
 
@@ -49,6 +74,11 @@ public class PostServiceImpl implements PostService{
                 .member(member)
                 .type(request.getType())
                 .build();
+
+        List<StoredFileInfo> storedFiles = postFileService.saveFiles(files);
+
+        addAttachments(post, storedFiles);
+
         return postRepository.save(post).getId();
     }
 
@@ -96,15 +126,23 @@ public class PostServiceImpl implements PostService{
     }
 
     @Override
-    public void update(Long memberId, Long postId, PostUpdateRequest request) {
+    public void update(Long memberId, Long postId, PostUpdateRequest request, List<MultipartFile> files) {
 
         Post post = postRepository.findById(postId)
                 .orElseThrow(()-> new BusinessException(ErrorCode.POST_NOT_FOUND));
+
         if (!post.getMember().getId().equals(memberId)){
             throw new BusinessException(ErrorCode.FORBIDDEN_POST);
         }
 
         post.update(request.getTitle(), request.getContent(), request.isSolved());
+
+        post.getAttachments().clear();
+
+        List<StoredFileInfo> storedFiles = postFileService.saveFiles(files);
+
+        addAttachments(post, storedFiles);
+
 
     }
 
