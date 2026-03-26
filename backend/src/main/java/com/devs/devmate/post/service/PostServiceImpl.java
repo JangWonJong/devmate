@@ -85,7 +85,7 @@ public class PostServiceImpl implements PostService{
                 .type(request.getType())
                 .build();
 
-        List<StoredFileInfo> storedFiles = postFileService.saveFiles(files);
+        List<StoredFileInfo> storedFiles = postFileService.saveFiles(files, "posts");
 
         if (storedFiles != null && !storedFiles.isEmpty()) {
 
@@ -163,7 +163,7 @@ public class PostServiceImpl implements PostService{
                     .map(PostAttachment::getStoredFileName)
                     .toList();
 
-            postFileService.deleteFiles(storedFileName);
+            postFileService.deleteFiles(storedFileName, "posts");
 
             post.getAttachments().removeIf(attachment ->
                     request.getRemovedFileIds().contains(attachment.getId()));
@@ -171,7 +171,7 @@ public class PostServiceImpl implements PostService{
 
         if (files != null && !files.isEmpty()) {
 
-            List<StoredFileInfo> storedFiles = postFileService.saveFiles(files);
+            List<StoredFileInfo> storedFiles = postFileService.saveFiles(files, "posts");
 
             addAttachments(post, storedFiles);
         }
@@ -190,7 +190,7 @@ public class PostServiceImpl implements PostService{
 
         List<String> storedFileNames = getStoredFilenames(post);
 
-        postFileService.deleteFiles(storedFileNames);
+        postFileService.deleteFiles(storedFileNames, "posts");
 
         if (post.getType() == Post.PostType.STUDY) {
             studyRepository.findByPostId(postId).ifPresent(study -> {

@@ -9,6 +9,8 @@ import com.devs.devmate.member.entity.Member;
 import com.devs.devmate.member.entity.ProfileLink;
 import com.devs.devmate.member.entity.ProfileLinkType;
 import com.devs.devmate.member.repository.MemberRepository;
+import com.devs.devmate.post.dto.StoredFileInfo;
+import com.devs.devmate.post.service.PostFileService;
 import com.devs.devmate.reservation.entity.Reservation;
 import com.devs.devmate.reservation.repository.ReservationRepository;
 import com.devs.devmate.study.entity.Study;
@@ -18,10 +20,11 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import org.springframework.web.multipart.MultipartFile;
 
-import java.util.ArrayList;
 import java.util.Comparator;
 import java.util.List;
+import java.util.ArrayList;
 
 
 @Service
@@ -34,6 +37,7 @@ public class MemberServiceImpl implements MemberService{
     private final StudyMemberRepository studyMemberRepository;
     private final ReservationRepository reservationRepository;
     private final RefreshTokenRepository refreshTokenRepository;
+    private final PostFileService postFileService;
 
     private Member findActiveMember(Long memberId) {
         Member member = memberRepository.findById(memberId)
@@ -67,8 +71,16 @@ public class MemberServiceImpl implements MemberService{
         return trimmed.isBlank() ? null : trimmed;
     }
 
+    private String extractStoredFileName(String fileUrl) {
+        if (fileUrl == null || fileUrl.isBlank()) {
+            return null;
+        }
+        int idx = fileUrl.lastIndexOf("/");
+        return idx >= 0 ? fileUrl.substring(idx + 1) : fileUrl;
+    }
+
     @Override
-    public MemberSignupResponse signup(MemberSignUpRequest request){
+    public MemberSignupResponse signup(MemberSignUpRequest request, MultipartFile profileImage){
         String email = request.getEmail().trim().toLowerCase();
         String name = request.getName().trim();
         String nickname = request.getNickname().trim();
@@ -88,6 +100,12 @@ public class MemberServiceImpl implements MemberService{
 
         String encodedPassword = passwordEncoder.encode(request.getPassword());
 
+        String profileImageUrl = null;
+    if (profileImage != null && !profileImage.isEmpty()) {
+            List<StoredFileInfo> storedFiles = postFileService.saveFiles(List.of(profileImage), "profiles");
+            profileImageUrl = storedFiles.get(0).getFileUrl();
+        }
+
         Member member = Member.builder()
                 .email(email)
                 .password(encodedPassword)
@@ -95,7 +113,9 @@ public class MemberServiceImpl implements MemberService{
                 .nickname(nickname)
                 .phone(phone)
                 .bio(bio)
+                .profileImageUrl(profileImageUrl)
                 .build();
+
         List<ProfileLink> profileLinks = toProfileLinks(member, request.getLinks());
         profileLinks.forEach(member::addProfileLink);
 
@@ -108,6 +128,7 @@ public class MemberServiceImpl implements MemberService{
                 .nickname(savedMember.getNickname())
                 .phone(savedMember.getPhone())
                 .bio(savedMember.getBio())
+                .profileImageUrl(savedMember.getProfileImageUrl())
                 .role(savedMember.getRole())
                 .build();
     }
@@ -124,13 +145,15 @@ public class MemberServiceImpl implements MemberService{
                 member.getNickname(),
                 member.getPhone(),
                 member.getBio(),
+                member.getProfileImageUrl(),
                 member.getStatus(),
                 toProfileLinkResponses(member)
         );
     }
 
     @Override
-    public MeResponse updateProfile(Long memberId, MemberUpdateRequest request) {
+    public MeResponse updateProfile(Long memberId, MemberUpdateRequest request, MultipartFile profileImage) {
+
         Member member = findActiveMember(memberId);
 
         String name = request.getName().trim();
@@ -146,9 +169,36 @@ public class MemberServiceImpl implements MemberService{
         member.updateProfile(name, nickname, phone, bio);
 
         member.getProfileLinks().clear();
-
         List<ProfileLink> newLinks = toProfileLinks(member, request.getLinks());
         newLinks.forEach(member::addProfileLink);
+
+        if (request.getRemoveProfileImage() != null && request.getRemoveProfileImage()) {
+
+            String oldUrl = member.getProfileImageUrl();
+
+            if (oldUrl != null && !oldUrl.isBlank()) {
+                String storedImageName = extractStoredFileName(oldUrl);
+                postFileService.deleteFiles(List.of(storedImageName), "profiles");
+            }
+            member.updateProfileImage(null);
+        }
+
+        if (profileImage != null && !profileImage.isEmpty()) {
+
+            String oldUrl = member.getProfileImageUrl();
+
+            if (oldUrl != null && !oldUrl.isBlank()) {
+                String storedImageName = extractStoredFileName(oldUrl);
+                postFileService.deleteFiles(List.of(storedImageName), "profiles");
+            }
+
+            List<StoredFileInfo> storedImages =
+                    postFileService.saveFiles(List.of(profileImage), "profiles");
+
+            if (!storedImages.isEmpty()) {
+                member.updateProfileImage(storedImages.get(0).getFileUrl());
+            }
+        }
 
         return new MeResponse(
                 member.getId(),
@@ -157,6 +207,7 @@ public class MemberServiceImpl implements MemberService{
                 member.getNickname(),
                 member.getPhone(),
                 member.getBio(),
+                member.getProfileImageUrl(),
                 member.getStatus(),
                 toProfileLinkResponses(member)
         );
@@ -255,6 +306,14 @@ public class MemberServiceImpl implements MemberService{
             reservation.cancel();
         }
         refreshTokenRepository.deleteByMemberId(memberId);
+
+        String profileImageUrl = member.getProfileImageUrl();
+
+        if (profileImageUrl != null && !profileImageUrl.isBlank()) {
+            String storedFileName = extractStoredFileName(profileImageUrl);
+            postFileService.deleteFiles(List.of(storedFileName), "profiles");
+        }
+
         member.withdraw();
     }
 

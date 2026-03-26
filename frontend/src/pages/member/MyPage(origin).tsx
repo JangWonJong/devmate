@@ -233,70 +233,49 @@ export function MyPage() {
 
       {me && (
         <section className="rounded-2xl border border-slate-200 bg-white p-6 shadow-sm">
-          <div className="flex items-center gap-4">
-            <div className="h-16 w-16 overflow-hidden rounded-full border border-slate-200 bg-slate-100">
-              {me.profileImageUrl ? (
-                <img
-                  src={`${import.meta.env.VITE_API_BASE_URL}${me.profileImageUrl}`}
-                  alt="프로필 이미지"
-                  className="h-full w-full object-cover"
-                />
-              ) : (
-                <div className="flex h-full w-full items-center justify-center text-xs text-slate-400">
-                  없음
-                </div>
-              )}
-            </div>
-
-            <div>
-              <div className="text-2xl font-bold tracking-tight text-slate-900">
-                {me.nickname}
-              </div>
-              <div className="mt-1 text-sm text-slate-500">{me.email}</div>
-            </div>
+          <div className="text-2xl font-bold tracking-tight text-slate-900">
+            {me.nickname}
           </div>
+
+          <div className="mt-2 text-sm text-slate-500">{me.email}</div>
 
           <div className="mt-4 space-y-2 text-sm text-slate-700">
-            <div>
-              <span className="font-semibold">이름</span>
-              <span className="ml-2">{me.name}</span>
-            </div>
-
-            {me.phone && (
-              <div>
-                <span className="font-semibold">전화번호</span>
-                <span className="ml-2">{me.phone}</span>
-              </div>
-            )}
-
-            <div>
-              <span className="font-semibold">상태</span>
-              <span className="ml-2">{me.status}</span>
-            </div>
+          <div>
+            <span className="font-semibold">이름</span>
+            <span className="ml-2">{me.name}</span>
           </div>
-
+          {me.phone && (
+            <div>
+              <span className="font-semibold">전화번호</span>
+              <span className="ml-2">{me.phone}</span>
+            </div>
+          )}
+          <div>
+            <span className="font-semibold">상태</span>
+            <span className="ml-2">{me.status}</span>
+          </div>
+          </div>
           <div className="mt-5">
-            <div className="mb-2 text-xs font-semibold text-slate-500">
-              한 줄 소개
-            </div>
-
-            {me.bio ? (
-              <div className="rounded-xl border border-slate-200 bg-gradient-to-br from-slate-50 to-white px-4 py-3 text-sm leading-6 text-slate-700 shadow-sm">
-                {me.bio}
-              </div>
-            ) : (
-              <div className="rounded-xl border border-dashed border-slate-200 bg-slate-50 px-4 py-3 text-sm text-slate-400">
-                아직 소개가 없습니다.
-              </div>
-            )}
+          <div className="mb-2 text-xs font-semibold text-slate-500">
+            한 줄 소개
           </div>
 
-          {(me.links ?? []).length > 0 && (
+          {me.bio ? (
+            <div className="rounded-xl border border-slate-200 bg-gradient-to-br from-slate-50 to-white px-4 py-3 text-sm leading-6 text-slate-700 shadow-sm">
+              {me.bio}
+            </div>
+          ) : (
+            <div className="rounded-xl border border-dashed border-slate-200 bg-slate-50 px-4 py-3 text-sm text-slate-400">
+              아직 소개가 없습니다.
+            </div>
+          )}
+        </div>
+          {(me?.links ?? []).length > 0 && (
             <div className="mt-5 border-t border-slate-200 pt-5">
               <div className="text-sm font-semibold text-slate-900">프로필 링크</div>
 
               <div className="mt-3 grid gap-3">
-                {(me.links ?? [])
+                {(me?.links ?? [])
                   .slice()
                   .sort((a, b) => (a.displayOrder ?? 0) - (b.displayOrder ?? 0))
                   .map((link, index) => (
@@ -339,7 +318,6 @@ export function MyPage() {
             >
               내 글 보기
             </button>
-
             <button
               type="button"
               onClick={() => nav("/mystudies")}
@@ -358,7 +336,6 @@ export function MyPage() {
           </div>
         </div>
       </section>
-
       <section className="grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
         <StatCard label="내 상태" value={me?.status ?? "-"} />
         <StatCard label="내 글" value={`${myPostsCount}개`} />
@@ -413,6 +390,8 @@ export function MyPage() {
           )}
         </div>
       </section>
+
+      
     </div>
   )
 }

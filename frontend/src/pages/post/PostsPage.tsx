@@ -3,7 +3,12 @@ import { listPosts, type PostResponse } from "../../api/posts"
 import { Link, useSearchParams } from "react-router-dom"
 import { tokenStore } from "../../auth/token"
 import { getMeId } from "../../api/members"
-import { ChevronLeft, ChevronRight, Search } from "lucide-react"
+import {
+  ChevronLeft,
+  ChevronRight,
+  Image as ImageIcon,
+  Search,
+} from "lucide-react"
 
 type PageInfo = {
   totalPages: number
@@ -284,7 +289,9 @@ export function PostsPage() {
               <span className="text-sm text-slate-500">정렬</span>
               <select
                 value={sort}
-                onChange={(e) => setQuery({ sort: e.target.value as any, page: 0 })}
+                onChange={(e) =>
+                  setQuery({ sort: e.target.value as "id,desc" | "id,asc", page: 0 })
+                }
                 className="rounded-2xl border border-slate-300 bg-white px-4 py-2 text-sm text-slate-700 outline-none transition focus:border-slate-400"
               >
                 <option value="id,desc">최신순</option>
@@ -313,49 +320,65 @@ export function PostsPage() {
             {emptyText}
           </div>
         ) : (
-          items.map((p) => (
-            <Link
-              key={p.id}
-              to={`/posts/${p.id}`}
-              className="block rounded-[24px] border border-slate-200 bg-white px-5 py-4 shadow-sm transition hover:-translate-y-1 hover:shadow-md"
-            >
-              <div className="space-y-4">
-                <div className="flex flex-wrap items-center gap-2">
-                  <StatusBadge solved={p.solved} />
+          items.map((p) => {
+            const imageCount = p.attachments?.length ?? 0
+            const hasImage = imageCount > 0
 
-                  {p.type === "STUDY" && (
-                    <span className="inline-flex rounded-full bg-blue-50 px-2.5 py-1 text-xs font-medium text-blue-700">
-                      스터디 글
-                    </span>
-                  )}
+            return (
+              <Link
+                key={p.id}
+                to={`/posts/${p.id}`}
+                className="block rounded-[24px] border border-slate-200 bg-white shadow-sm transition hover:-translate-y-1 hover:shadow-md"
+              >
+                <div className="px-5 py-4">
+                  <div className="space-y-4">
+                    <div className="flex flex-wrap items-center gap-2">
+                      <StatusBadge solved={p.solved} />
 
-                  {meId != null && p.authorId === meId && (
-                    <span className="inline-flex rounded-full bg-slate-100 px-2.5 py-1 text-xs font-medium text-slate-600">
-                      내 글
-                    </span>
-                  )}
-                </div>
-
-                <div className="space-y-2">
-                  <h2 className="break-words text-xl font-bold leading-8 tracking-tight text-slate-900">
-                    {p.title}
-                  </h2>
-
-                  <div className="flex flex-wrap items-center gap-3 text-sm text-slate-500">
-                    <span className="font-medium text-slate-700">{p.authorNickname}</span>
-                    {p.createdAt && (
-                      <>
-                        <span className="text-slate-300">•</span>
-                        <span>
-                          {new Date(p.createdAt).toLocaleDateString("ko-KR")}
+                      {p.type === "STUDY" && (
+                        <span className="inline-flex rounded-full bg-blue-50 px-2.5 py-1 text-xs font-medium text-blue-700">
+                          스터디 글
                         </span>
-                      </>
-                    )}
+                      )}
+
+                      {meId != null && p.authorId === meId && (
+                        <span className="inline-flex rounded-full bg-slate-100 px-2.5 py-1 text-xs font-medium text-slate-600">
+                          내 글
+                        </span>
+                      )}
+
+                      {hasImage && (
+                        <span className="inline-flex items-center gap-1 rounded-full bg-amber-50 px-2.5 py-1 text-xs font-medium text-amber-700">
+                          <ImageIcon className="h-3.5 w-3.5" />
+                          이미지 {imageCount}
+                        </span>
+                      )}
+                    </div>
+
+                    <div className="space-y-2">
+                      <h2 className="break-words text-xl font-bold leading-8 tracking-tight text-slate-900">
+                        {p.title}
+                      </h2>
+
+                      <div className="flex flex-wrap items-center gap-3 text-sm text-slate-500">
+                        <span className="font-medium text-slate-700">
+                          {p.authorNickname}
+                        </span>
+                        {p.createdAt && (
+                          <>
+                            <span className="text-slate-300">•</span>
+                            <span>
+                              {new Date(p.createdAt).toLocaleDateString("ko-KR")}
+                            </span>
+                          </>
+                        )}
+                      </div>
+                    </div>
                   </div>
                 </div>
-              </div>
-            </Link>
-          ))
+              </Link>
+            )
+          })
         )}
       </section>
 

@@ -4,8 +4,8 @@ import type { ApiResponse } from "./type"
 
 export type LoginRequest = { email: string, password: string}
 export type LoginResponse = { accessToken: string, refreshToken: string}
-export type SignupRequest = { email: string, password: string, confirmPassword: string, name: string, nickname: string}
-export type SignupResponse = { id: number, email: string, name: string, nickname: string}
+export type SignupRequest = { email: string, password: string, confirmPassword: string, name: string, nickname: string, phone?: string, bio?: string}
+export type SignupResponse = { id: number, email: string, name: string, nickname: string, profileImageUrl?: string}
 
 
 export async function login(req: LoginRequest) {
@@ -22,13 +22,31 @@ export async function logout() {
     }
 }
 
-export async function signup(req: SignupRequest) {
-    const {data} = await http.post<ApiResponse<SignupResponse>>("/api/members/signup", req)
-    if (!data.success || !data.data) {
-        throw new Error(data?.error?.message ?? "Signup failed")
-    }
-    return data.data
-    
+export async function signup(
+  req: SignupRequest,
+  profileImage?: File | null
+) {
+  const formData = new FormData()
+
+  formData.append(
+    "request",
+    new Blob([JSON.stringify(req)], { type: "application/json" })
+  )
+
+  if (profileImage) {
+    formData.append("profileImage", profileImage)
+  }
+
+  const { data } = await http.post<ApiResponse<SignupResponse>>(
+    "/api/members/signup",
+    formData
+  )
+
+  if (!data.success || !data.data) {
+    throw new Error(data?.error?.message ?? "Signup failed")
+  }
+
+  return data.data
 }
 
 

@@ -22,7 +22,7 @@ public class PostFileServiceImpl implements PostFileService{
             "image/jpg",
             "image/webp"
     );
-    private final String uploadDir = "C:/WJ/devmate/uploads";
+    private final String baseDir  = "C:/WJ/devmate/uploads";
 
     private void validateFile(MultipartFile file) {
         String contentType = file.getContentType();
@@ -44,17 +44,20 @@ public class PostFileServiceImpl implements PostFileService{
     }
 
     @Override
-    public List<StoredFileInfo> saveFiles(List<MultipartFile> files) {
+    public List<StoredFileInfo> saveFiles(List<MultipartFile> files, String subDIr) {
+
         if (files == null || files.isEmpty()) {
             return List.of();
         }
 
-        List<StoredFileInfo> result = new ArrayList<>();
+        String uploadDir = baseDir + "/" + subDIr;
 
         File dir = new File(uploadDir);
         if (!dir.exists() && !dir.mkdirs()) {
             throw new BusinessException(ErrorCode.FILE_UPLOAD_FAILED);
         }
+
+        List<StoredFileInfo> result = new ArrayList<>();
 
         for (MultipartFile file : files) {
             if (file == null || file.isEmpty()) {
@@ -66,6 +69,7 @@ public class PostFileServiceImpl implements PostFileService{
             String originalName = file.getOriginalFilename();
             String ext = extractExtension(originalName);
             String storedName = UUID.randomUUID() + ext;
+
             File dest = new File(dir, storedName);
 
             try {
@@ -77,7 +81,7 @@ public class PostFileServiceImpl implements PostFileService{
             result.add(new StoredFileInfo(
                     originalName,
                     storedName,
-                    "/uploads/" + storedName,
+                    "/uploads/" + subDIr + "/" +storedName,
                     file.getContentType(),
                     file.getSize()
             ));
@@ -87,12 +91,13 @@ public class PostFileServiceImpl implements PostFileService{
     }
 
     @Override
-    public void deleteFiles(List<String> storedFileNames) {
+    public void deleteFiles(List<String> storedFileNames, String subDIr) {
+
         if (storedFileNames == null || storedFileNames.isEmpty()) {
             return;
         }
 
-        File dir = new File(uploadDir);
+        File dir = new File(baseDir + "/" + subDIr + "/");
 
         for (String storedFileName : storedFileNames) {
             if (storedFileNames == null || storedFileName.isBlank()) {

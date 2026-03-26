@@ -8,7 +8,9 @@ import com.devs.devmate.member.service.MemberService;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
+import org.springframework.http.MediaType;
 import org.springframework.web.bind.annotation.*;
+import org.springframework.web.multipart.MultipartFile;
 
 @RestController
 @RequiredArgsConstructor
@@ -23,16 +25,22 @@ public class MemberController {
         return ApiResponse.ok(memberService.getMe(memberId));
     }
 
-    @PostMapping("/signup")
+    @PostMapping(value = "/signup", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
     @ResponseStatus(HttpStatus.CREATED)
-    public ApiResponse<MemberSignupResponse> signup(@RequestBody @Valid MemberSignUpRequest request){
-        return ApiResponse.ok(memberService.signup(request));
+    public ApiResponse<MemberSignupResponse> signup(
+            @RequestPart("request") @Valid MemberSignUpRequest request,
+            @RequestPart(value = "profileImage", required = false) MultipartFile profileImage)
+    {
+        return ApiResponse.ok(memberService.signup(request, profileImage));
     }
 
-    @PatchMapping("/me")
-    public ApiResponse<MeResponse> updateProfile(@RequestBody @Valid MemberUpdateRequest request) {
+    @PatchMapping(value = "/me", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
+    public ApiResponse<MeResponse> updateProfile(
+            @RequestPart("request") @Valid MemberUpdateRequest request,
+            @RequestPart(value = "profileImage", required = false) MultipartFile profileImage)
+    {
         Long memberId = SecurityUtil.currentMemberId();
-        return ApiResponse.ok(memberService.updateProfile(memberId, request));
+        return ApiResponse.ok(memberService.updateProfile(memberId, request, profileImage));
     }
 
     @PatchMapping("/me/password")

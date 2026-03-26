@@ -7,7 +7,7 @@ import java.util.List;
 
 public interface PostFileService {
 
-    List<StoredFileInfo> saveFiles(List<MultipartFile> files);
+    List<StoredFileInfo> saveFiles(List<MultipartFile> files, String subDir);
 
-    void deleteFiles(List<String> storedFileNames);
+    void deleteFiles(List<String> storedFileNames, String subDir);
 }

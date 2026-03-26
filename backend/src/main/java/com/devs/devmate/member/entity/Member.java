@@ -37,6 +37,9 @@ public class Member extends BaseEntity {
     @Column(length = 30)
     private String bio;
 
+    @Column(length = 500)
+    private String profileImageUrl;
+
     @Enumerated(EnumType.STRING)
     @Column(nullable = false)
     @Builder.Default
@@ -71,6 +74,10 @@ public class Member extends BaseEntity {
 
     public void addProfileLink(ProfileLink profileLink) {
         this.profileLinks.add(profileLink);
+    }
+
+    public void updateProfileImage(String profileImageUrl) {
+        this.profileImageUrl = profileImageUrl;
     }
 
 }

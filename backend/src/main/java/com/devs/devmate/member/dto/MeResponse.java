@@ -15,6 +15,7 @@ public class MeResponse {
     private String nickname;
     private String phone;
     private String bio;
-    MemberStatus status;
+    private String profileImageUrl;
+    private MemberStatus status;
     private List<ProfileLinkResponse> links;
 }

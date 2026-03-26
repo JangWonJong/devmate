@@ -16,6 +16,7 @@ public class MemberSignupResponse {
     private  String nickname;
     private  String phone;
     private  String bio;
+    private String profileImageUrl;
     private Role role;
 
 }

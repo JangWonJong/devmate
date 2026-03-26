@@ -20,7 +20,6 @@ type ProfileSnapshot = {
   nickname: string
   phone: string
   bio: string
-  profileImageUrl: string
   links: ProfileLinkForm[]
 }
 
@@ -84,10 +83,6 @@ export function AccountSettingsPage() {
   const [bio, setBio] = useState("")
   const [links, setLinks] = useState<ProfileLinkForm[]>([])
 
-  const [profileImageFile, setProfileImageFile] = useState<File | null>(null)
-  const [profilePreview, setProfilePreview] = useState<string | null>(null)
-  const [removeProfileImage, setRemoveProfileImage] = useState(false)
-
   const [currentPassword, setCurrentPassword] = useState("")
   const [newPassword, setNewPassword] = useState("")
   const [confirmPassword, setConfirmPassword] = useState("")
@@ -114,16 +109,12 @@ export function AccountSettingsPage() {
         setPhone(data.phone ?? "")
         setBio(data.bio ?? "")
         setLinks(mappedLinks)
-        setRemoveProfileImage(false)
-        setProfileImageFile(null)
-        setProfilePreview(null)
 
         setOriginalProfile({
           name: data.name ?? "",
           nickname: data.nickname ?? "",
           phone: data.phone ?? "",
           bio: data.bio ?? "",
-          profileImageUrl: data.profileImageUrl ?? "",
           links: mappedLinks,
         })
       } catch (e) {
@@ -136,14 +127,6 @@ export function AccountSettingsPage() {
     fetchMe()
   }, [])
 
-  useEffect(() => {
-    return () => {
-      if (profilePreview) {
-        URL.revokeObjectURL(profilePreview)
-      }
-    }
-  }, [profilePreview])
-
   const isProfileDirty = useMemo(() => {
     if (!originalProfile) return false
 
@@ -152,11 +135,6 @@ export function AccountSettingsPage() {
       nickname: normalizeText(nickname),
       phone: normalizeText(phone),
       bio: normalizeText(bio),
-      profileImageUrl: removeProfileImage
-        ? ""
-        : profileImageFile
-        ? "__NEW_FILE__"
-        : normalizeText(me?.profileImageUrl),
       links: normalizeLinks(links),
     }
 
@@ -165,54 +143,11 @@ export function AccountSettingsPage() {
       nickname: normalizeText(originalProfile.nickname),
       phone: normalizeText(originalProfile.phone),
       bio: normalizeText(originalProfile.bio),
-      profileImageUrl: normalizeText(originalProfile.profileImageUrl),
       links: normalizeLinks(originalProfile.links),
     }
 
     return JSON.stringify(current) !== JSON.stringify(original)
-  }, [
-    originalProfile,
-    name,
-    nickname,
-    phone,
-    bio,
-    links,
-    profileImageFile,
-    removeProfileImage,
-    me?.profileImageUrl,
-  ])
-
-  const onChangeProfileImage = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const file = e.target.files?.[0] ?? null
-
-    setProfileImageFile(file)
-    setRemoveProfileImage(false)
-    setProfileErr(null)
-    setProfileSuccess(null)
-
-    if (profilePreview) {
-      URL.revokeObjectURL(profilePreview)
-    }
-
-    if (file) {
-      setProfilePreview(URL.createObjectURL(file))
-    } else {
-      setProfilePreview(null)
-    }
-  }
-
-  const onRemoveProfileImage = () => {
-    setProfileImageFile(null)
-
-    if (profilePreview) {
-      URL.revokeObjectURL(profilePreview)
-    }
-
-    setProfilePreview(null)
-    setRemoveProfileImage(true)
-    setProfileErr(null)
-    setProfileSuccess(null)
-  }
+  }, [originalProfile, name, nickname, phone, bio, links])
 
   const onUpdateProfile = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault()
@@ -227,24 +162,20 @@ export function AccountSettingsPage() {
     }
 
     try {
-      const updated = await updateProfile(
-        {
-          name: name.trim(),
-          nickname: nickname.trim(),
-          phone: phone.trim() || undefined,
-          bio: bio.trim() || undefined,
-          links: links
-            .map((link, index) => ({
-              type: link.type,
-              label: link.label.trim(),
-              url: link.url.trim(),
-              displayOrder: index,
-            }))
-            .filter((link) => link.label && link.url),
-          removeProfileImage,
-        },
-        profileImageFile
-      )
+      const updated = await updateProfile({
+        name: name.trim(),
+        nickname: nickname.trim(),
+        phone: phone.trim() || undefined,
+        bio: bio.trim() || undefined,
+        links: links
+          .map((link, index) => ({
+            type: link.type,
+            label: link.label.trim(),
+            url: link.url.trim(),
+            displayOrder: index,
+          }))
+          .filter((link) => link.label && link.url),
+      })
 
       const mappedLinks = (updated.links ?? []).map((link, index) => ({
         type: link.type,
@@ -265,16 +196,8 @@ export function AccountSettingsPage() {
         nickname: updated.nickname ?? "",
         phone: updated.phone ?? "",
         bio: updated.bio ?? "",
-        profileImageUrl: updated.profileImageUrl ?? "",
         links: mappedLinks,
       })
-
-      setProfileImageFile(null)
-      if (profilePreview) {
-        URL.revokeObjectURL(profilePreview)
-      }
-      setProfilePreview(null)
-      setRemoveProfileImage(false)
 
       setProfileSuccess("프로필이 저장되었습니다.")
     } catch (e) {
@@ -441,51 +364,6 @@ export function AccountSettingsPage() {
             저장되지 않은 변경사항이 있어요.
           </div>
         )}
-
-        <div className="space-y-3">
-          <h3 className="text-sm font-semibold text-slate-900">프로필 사진</h3>
-
-          <div className="flex items-center gap-4">
-            <div className="h-20 w-20 overflow-hidden rounded-full border border-slate-200 bg-slate-100">
-              {profilePreview ? (
-                <img
-                  src={profilePreview}
-                  alt="프로필 미리보기"
-                  className="h-full w-full object-cover"
-                />
-              ) : me?.profileImageUrl && !removeProfileImage ? (
-                <img
-                  src={`${import.meta.env.VITE_API_BASE_URL}${me.profileImageUrl}`}
-                  alt="프로필 이미지"
-                  className="h-full w-full object-cover"
-                />
-              ) : (
-                <div className="flex h-full w-full items-center justify-center text-xs text-slate-400">
-                  없음
-                </div>
-              )}
-            </div>
-
-            <div className="flex flex-col gap-2">
-              <input
-                type="file"
-                accept="image/png,image/jpeg,image/jpg,image/webp"
-                onChange={onChangeProfileImage}
-                className="block text-sm text-slate-600 file:mr-4 file:rounded-lg file:border-0 file:bg-slate-900 file:px-4 file:py-2 file:text-sm file:font-medium file:text-white hover:file:bg-slate-800"
-              />
-
-              {(profilePreview || (me?.profileImageUrl && !removeProfileImage)) && (
-                <button
-                  type="button"
-                  onClick={onRemoveProfileImage}
-                  className="w-fit rounded-lg border border-red-200 bg-red-50 px-3 py-2 text-xs font-medium text-red-600 transition hover:bg-red-100"
-                >
-                  이미지 삭제
-                </button>
-              )}
-            </div>
-          </div>
-        </div>
 
         <input
           className={inputClassName}

@@ -30,5 +30,7 @@ public class MemberUpdateRequest {
     @Valid
     private List<ProfileLinkRequest> links;
 
+    private Boolean removeProfileImage;
+
 }
 

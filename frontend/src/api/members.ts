@@ -21,6 +21,7 @@ export type MeResponse = {
     nickname: string
     phone: string | null
     bio: string | null
+    profileImageUrl?: string
     status: "ACTIVE" | "DELETED"
     links: ProfileLinkResponse[]
 }
@@ -45,6 +46,7 @@ export type UpdateProfileRequest = {
   phone?: string
   bio?: string
   links: ProfileLinkRequest[]
+  removeProfileImage?: boolean
 }
 
 export type ChangePasswordRequest = {
@@ -69,13 +71,33 @@ export async function getMeId() {
     return me.id
 }
 
-export async function updateProfile(req: UpdateProfileRequest) {
-  const { data } = await http.patch<ApiResponse<MeResponse>>("/api/members/me", req)
-  if (!data.success || !data.data) {
-    throw new Error(data.error?.message ?? "회원정보 수정 실패")
+export async function updateProfile(
+  req: UpdateProfileRequest,
+  profileImage?: File | null
+) {
+  const formData = new FormData()
+
+  formData.append(
+    "request",
+    new Blob([JSON.stringify(req)], { type: "application/json" })
+  )
+
+  if (profileImage) {
+    formData.append("profileImage", profileImage)
   }
+
+  const { data } = await http.patch<ApiResponse<MeResponse>>(
+    "/api/members/me",
+    formData
+  )
+
+  if (!data.success || !data.data) {
+    throw new Error(data.error?.message ?? "Update profile failed")
+  }
+
   return data.data
 }
+
 
 export async function changePassword(req: ChangePasswordRequest) {
   const { data } = await http.patch<ApiResponse<null>>("/api/members/me/password", req)
