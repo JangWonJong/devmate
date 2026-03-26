@@ -37,6 +37,7 @@ out/
 .vscode/
 
 # Backend (Gradle / Spring)
+uploads/*
 backend/.gradle/
 backend/build/
 backend/uploads/
