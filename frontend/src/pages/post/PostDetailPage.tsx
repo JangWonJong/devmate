@@ -412,7 +412,7 @@ export function PostDetailPage() {
       setDeletingPost(true)
       setActionErr(null)
       await deletePost(id)
-      nav("/", { replace: true })
+      nav("/posts", { replace: true })
     } catch (e: any) {
       setActionErr(apiErrorMessage(e, "삭제 실패"))
       setDeletingPost(false)

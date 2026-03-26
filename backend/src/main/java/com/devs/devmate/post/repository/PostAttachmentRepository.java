@@ -8,4 +8,6 @@ import java.util.List;
 public interface PostAttachmentRepository extends JpaRepository<PostAttachment, Long> {
 
     List<PostAttachment> findByPostIdOrderByDisplayOrderAsc(Long postId);
+
+    List<PostAttachment> findAllByIdIn(List<Long> ids);
 }

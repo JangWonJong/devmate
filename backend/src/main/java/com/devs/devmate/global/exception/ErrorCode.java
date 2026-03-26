@@ -33,7 +33,7 @@ public enum ErrorCode {
     FILE_UPLOAD_FAILED(HttpStatus.INTERNAL_SERVER_ERROR, "POST_500_1", "파일 업로드에 실패했습니다."),
     INVALID_FILE_TYPE(HttpStatus.BAD_REQUEST, "POST_400_1", "지원하지 않는 파일 형식입니다."),
     FILE_SIZE_EXCEEDED(HttpStatus.BAD_REQUEST, "POST_400_2", "파일 용량이 너무 큽니다."),
-
+    FILE_DELETE_FAILED(HttpStatus.INTERNAL_SERVER_ERROR, "POST_500_2", "파일 삭제에 실패했습니다."),
     // ROOM
     ROOM_NOT_FOUND(HttpStatus.NOT_FOUND, "ROOM_404", "스터디룸을 찾을 수 없습니다."),
 

@@ -21,6 +21,7 @@ export type PostUpdateRequest = {
     title: string
     content: string
     solved: boolean
+    removedFileIds: number[]
 }
 
 export type PostAttachmentResponse = {

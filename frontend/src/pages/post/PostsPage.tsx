@@ -308,56 +308,56 @@ export function PostsPage() {
       )}
 
       <section className="space-y-5">
-  {!loading && items.length === 0 ? (
-    <div className="rounded-[28px] border border-slate-200 bg-white px-6 py-10 text-center text-slate-500 shadow-sm">
-      {emptyText}
-    </div>
-  ) : (
-    items.map((p) => (
-      <Link
-        key={p.id}
-        to={`/posts/${p.id}`}
-        className="block rounded-[24px] border border-slate-200 bg-white px-5 py-4 shadow-sm transition hover:-translate-y-1 hover:shadow-md"
-      >
-        <div className="space-y-4">
-          <div className="flex flex-wrap items-center gap-2">
-            <StatusBadge solved={p.solved} />
-
-            {p.type === "STUDY" && (
-              <span className="inline-flex rounded-full bg-blue-50 px-2.5 py-1 text-xs font-medium text-blue-700">
-                스터디 글
-              </span>
-            )}
-
-            {meId != null && p.authorId === meId && (
-              <span className="inline-flex rounded-full bg-slate-100 px-2.5 py-1 text-xs font-medium text-slate-600">
-                내 글
-              </span>
-            )}
+        {!loading && items.length === 0 ? (
+          <div className="rounded-[28px] border border-slate-200 bg-white px-6 py-10 text-center text-slate-500 shadow-sm">
+            {emptyText}
           </div>
+        ) : (
+          items.map((p) => (
+            <Link
+              key={p.id}
+              to={`/posts/${p.id}`}
+              className="block rounded-[24px] border border-slate-200 bg-white px-5 py-4 shadow-sm transition hover:-translate-y-1 hover:shadow-md"
+            >
+              <div className="space-y-4">
+                <div className="flex flex-wrap items-center gap-2">
+                  <StatusBadge solved={p.solved} />
 
-          <div className="space-y-2">
-            <h2 className="break-words text-xl font-bold leading-8 tracking-tight text-slate-900">
-              {p.title}
-            </h2>
+                  {p.type === "STUDY" && (
+                    <span className="inline-flex rounded-full bg-blue-50 px-2.5 py-1 text-xs font-medium text-blue-700">
+                      스터디 글
+                    </span>
+                  )}
 
-            <div className="flex flex-wrap items-center gap-3 text-sm text-slate-500">
-              <span className="font-medium text-slate-700">{p.authorNickname}</span>
-              {p.createdAt && (
-                <>
-                  <span className="text-slate-300">•</span>
-                  <span>
-                    {new Date(p.createdAt).toLocaleDateString("ko-KR")}
-                  </span>
-                </>
-              )}
-            </div>
-          </div>
-        </div>
-      </Link>
-    ))
-  )}
-</section>
+                  {meId != null && p.authorId === meId && (
+                    <span className="inline-flex rounded-full bg-slate-100 px-2.5 py-1 text-xs font-medium text-slate-600">
+                      내 글
+                    </span>
+                  )}
+                </div>
+
+                <div className="space-y-2">
+                  <h2 className="break-words text-xl font-bold leading-8 tracking-tight text-slate-900">
+                    {p.title}
+                  </h2>
+
+                  <div className="flex flex-wrap items-center gap-3 text-sm text-slate-500">
+                    <span className="font-medium text-slate-700">{p.authorNickname}</span>
+                    {p.createdAt && (
+                      <>
+                        <span className="text-slate-300">•</span>
+                        <span>
+                          {new Date(p.createdAt).toLocaleDateString("ko-KR")}
+                        </span>
+                      </>
+                    )}
+                  </div>
+                </div>
+              </div>
+            </Link>
+          ))
+        )}
+      </section>
 
       {pageInfo && pageInfo.totalPages > 1 && (
         <section className="flex flex-col gap-4 rounded-[28px] border border-slate-200 bg-white p-5 shadow-sm md:flex-row md:items-center md:justify-between">

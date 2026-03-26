@@ -85,4 +85,24 @@ public class PostFileServiceImpl implements PostFileService{
 
         return result;
     }
+
+    @Override
+    public void deleteFiles(List<String> storedFileNames) {
+        if (storedFileNames == null || storedFileNames.isEmpty()) {
+            return;
+        }
+
+        File dir = new File(uploadDir);
+
+        for (String storedFileName : storedFileNames) {
+            if (storedFileNames == null || storedFileName.isBlank()) {
+                continue;
+            }
+
+            File file = new File(dir, storedFileName);
+            if (file.exists() && !file.delete()) {
+                throw new BusinessException(ErrorCode.FILE_DELETE_FAILED);
+            }
+        }
+    }
 }

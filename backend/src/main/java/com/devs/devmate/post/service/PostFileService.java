@@ -8,4 +8,6 @@ import java.util.List;
 public interface PostFileService {
 
     List<StoredFileInfo> saveFiles(List<MultipartFile> files);
+
+    void deleteFiles(List<String> storedFileNames);
 }

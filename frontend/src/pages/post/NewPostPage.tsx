@@ -1,9 +1,35 @@
-import { useState } from "react"
+import { useRef, useState } from "react"
 import { useNavigate } from "react-router-dom"
 import { createPost } from "../../api/posts"
 
+function validateFiles(files: File[]) {
+  const allowedTypes = [
+    "image/png",
+    "image/jpeg",
+    "image/jpg",
+    "image/webp",
+  ]
+
+  if (files.length > 5) {
+    return "이미지는 최대 5장까지 업로드할 수 있어요."
+  }
+
+  for (const file of files) {
+    if (!allowedTypes.includes(file.type)) {
+      return "PNG, JPG, JPEG, WEBP 파일만 업로드할 수 있어요."
+    }
+
+    if (file.size > 5 * 1024 * 1024) {
+      return "파일은 최대 5MB까지 업로드할 수 있어요."
+    }
+  }
+
+  return null
+}
+
 export function NewPostPage() {
   const nav = useNavigate()
+  const fileInputRef = useRef<HTMLInputElement | null>(null)
 
   const [title, setTitle] = useState("")
   const [content, setContent] = useState("")
@@ -11,6 +37,25 @@ export function NewPostPage() {
   const [loading, setLoading] = useState(false)
   const [type, setType] = useState<"QUESTION" | "STUDY">("QUESTION")
   const [files, setFiles] = useState<File[]>([])
+
+  const addFiles = (selected: File[]) => {
+    setFiles((prev) => {
+      const merged = [...prev, ...selected]
+
+      const unique = merged.filter(
+        (file, index, self) =>
+          index ===
+          self.findIndex(
+            (f) =>
+              f.name === file.name &&
+              f.size === file.size &&
+              f.lastModified === file.lastModified
+          )
+      )
+
+      return unique.slice(0, 5)
+    })
+  }
 
   const onSubmit = async () => {
     setErr(null)
@@ -20,6 +65,9 @@ export function NewPostPage() {
 
     if (!t) return setErr("제목을 입력해 주세요.")
     if (!c) return setErr("내용을 입력해 주세요.")
+
+    const fileError = validateFiles(files)
+    if (fileError) return setErr(fileError)
 
     try {
       setLoading(true)
@@ -110,49 +158,82 @@ export function NewPostPage() {
               className="min-h-[280px] w-full resize-y rounded-2xl border border-slate-300 bg-white px-4 py-4 text-sm leading-7 text-slate-900 outline-none transition placeholder:text-slate-400 focus:border-slate-400"
             />
           </div>
-          <div className="space-y-2">
-            <label className="text-sm font-semibold text-slate-700">
-              이미지 첨부
-            </label>
+
+          <div className="space-y-3">
+            <div className="flex items-center justify-between gap-3">
+              <label className="text-sm font-semibold text-slate-700">
+                이미지 첨부
+              </label>
+              <button
+                type="button"
+                onClick={() => fileInputRef.current?.click()}
+                className="rounded-xl border border-slate-300 bg-white px-4 py-2 text-sm font-medium text-slate-700 transition hover:bg-slate-50"
+              >
+                이미지 추가
+              </button>
+            </div>
+
             <input
+              ref={fileInputRef}
               type="file"
               multiple
               accept="image/png,image/jpeg,image/jpg,image/webp"
               onChange={(e) => {
-                setFiles(Array.from(e.target.files ?? []))
+                const selected = Array.from(e.target.files ?? [])
+                addFiles(selected)
+                e.currentTarget.value = ""
               }}
-              className="block w-full rounded-2xl border border-slate-300 px-4 py-3 text-sm"
+              className="hidden"
             />
-            <p className="text-xs text-slate-500">
-              이미지 파일만 업로드 가능 (최대 5MB)
-            </p>
+
+            <div
+              onClick={() => fileInputRef.current?.click()}
+              onDragOver={(e) => e.preventDefault()}
+              onDrop={(e) => {
+                e.preventDefault()
+                const dropped = Array.from(e.dataTransfer.files ?? [])
+                addFiles(dropped)
+              }}
+              className="cursor-pointer rounded-2xl border border-dashed border-slate-300 bg-slate-50 px-4 py-6 text-center transition hover:border-slate-400 hover:bg-slate-100"
+            >
+              <div className="text-sm font-medium text-slate-700">
+                이미지를 여기로 드래그하거나 클릭해서 추가하세요
+              </div>
+              <p className="mt-2 text-xs text-slate-500">
+                한 번에 여러 장 선택하거나, 여러 번 나눠서 추가할 수 있어요. 최대 5장, 각 5MB까지 업로드 가능해요.
+              </p>
+            </div>
           </div>
+
           {files.length > 0 && (
             <div className="rounded-xl border border-slate-200 bg-slate-50 p-4">
-              <div className="mb-2 text-sm font-semibold text-slate-900">
-                첨부 파일
+              <div className="mb-3 text-sm font-semibold text-slate-900">
+                첨부 파일 ({files.length}/5)
               </div>
 
-              {files.map((file, index) => (
-                <div
-                  key={index}
-                  className="flex items-center justify-between text-sm"
-                >
-                  <span>{file.name}</span>
-
-                  <button
-                    type="button"
-                    onClick={() =>
-                      setFiles((prev) => prev.filter((_, i) => i !== index))
-                    }
-                    className="text-red-500"
+              <div className="space-y-2">
+                {files.map((file, index) => (
+                  <div
+                    key={`${file.name}-${file.lastModified}-${index}`}
+                    className="flex items-center justify-between rounded-lg bg-white px-3 py-2 text-sm"
                   >
-                    제거
-                  </button>
-                </div>
-              ))}
+                    <span className="truncate text-slate-700">{file.name}</span>
+
+                    <button
+                      type="button"
+                      onClick={() =>
+                        setFiles((prev) => prev.filter((_, i) => i !== index))
+                      }
+                      className="ml-3 text-red-500"
+                    >
+                      제거
+                    </button>
+                  </div>
+                ))}
+              </div>
             </div>
           )}
+
           {err && (
             <div className="rounded-2xl border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-700">
               {err}

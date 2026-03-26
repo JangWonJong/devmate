@@ -11,6 +11,7 @@ import com.devs.devmate.post.dto.PostUpdateRequest;
 import com.devs.devmate.post.dto.StoredFileInfo;
 import com.devs.devmate.post.entity.Post;
 import com.devs.devmate.post.entity.PostAttachment;
+import com.devs.devmate.post.repository.PostAttachmentRepository;
 import com.devs.devmate.post.repository.PostRepository;
 import com.devs.devmate.reservation.repository.ReservationRepository;
 import com.devs.devmate.study.repository.StudyMemberRepository;
@@ -37,6 +38,8 @@ public class PostServiceImpl implements PostService{
     private final CommentRepository commentRepository;
     private final ReservationRepository reservationRepository;
     private final PostFileService postFileService;
+    private final PostAttachmentRepository postAttachmentRepository;
+
 
     private String normalize(String keyword) {
         if (keyword == null) return null;
@@ -45,7 +48,7 @@ public class PostServiceImpl implements PostService{
     }
 
     private void addAttachments(Post post, List<StoredFileInfo> storedFiles) {
-        int order = 0;
+        int order = post.getAttachments().size();
 
         for (StoredFileInfo file : storedFiles) {
             post.addAttachment(
@@ -60,6 +63,13 @@ public class PostServiceImpl implements PostService{
                             .build()
             );
         }
+    }
+
+    private List<String> getStoredFilenames(Post post) {
+
+        return post.getAttachments().stream()
+                .map(PostAttachment::getStoredFileName)
+                .toList();
     }
 
 
@@ -77,7 +87,10 @@ public class PostServiceImpl implements PostService{
 
         List<StoredFileInfo> storedFiles = postFileService.saveFiles(files);
 
-        addAttachments(post, storedFiles);
+        if (storedFiles != null && !storedFiles.isEmpty()) {
+
+            addAttachments(post, storedFiles);
+        }
 
         return postRepository.save(post).getId();
     }
@@ -137,12 +150,31 @@ public class PostServiceImpl implements PostService{
 
         post.update(request.getTitle(), request.getContent(), request.isSolved());
 
-        post.getAttachments().clear();
+        if (request.getRemovedFileIds() != null && !request.getRemovedFileIds().isEmpty()) {
 
-        List<StoredFileInfo> storedFiles = postFileService.saveFiles(files);
+            List<PostAttachment> attachmentsToRemove =
+                    postAttachmentRepository.findAllByIdIn(request.getRemovedFileIds());
 
-        addAttachments(post, storedFiles);
+            List<PostAttachment> ownedAttachments = attachmentsToRemove.stream()
+                    .filter(attachment -> attachment.getPost().getId().equals(post.getId()))
+                    .toList();
 
+            List<String> storedFileName = ownedAttachments.stream()
+                    .map(PostAttachment::getStoredFileName)
+                    .toList();
+
+            postFileService.deleteFiles(storedFileName);
+
+            post.getAttachments().removeIf(attachment ->
+                    request.getRemovedFileIds().contains(attachment.getId()));
+        }
+
+        if (files != null && !files.isEmpty()) {
+
+            List<StoredFileInfo> storedFiles = postFileService.saveFiles(files);
+
+            addAttachments(post, storedFiles);
+        }
 
     }
 
@@ -151,9 +183,14 @@ public class PostServiceImpl implements PostService{
 
         Post post = postRepository.findById(postId)
                 .orElseThrow(()-> new BusinessException(ErrorCode.POST_NOT_FOUND));
+
         if (!post.getMember().getId().equals(memberId)){
             throw new BusinessException(ErrorCode.FORBIDDEN_POST);
         }
+
+        List<String> storedFileNames = getStoredFilenames(post);
+
+        postFileService.deleteFiles(storedFileNames);
 
         if (post.getType() == Post.PostType.STUDY) {
             studyRepository.findByPostId(postId).ifPresent(study -> {
