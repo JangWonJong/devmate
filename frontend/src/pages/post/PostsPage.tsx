@@ -332,29 +332,40 @@ export function PostsPage() {
               >
                 <div className="px-5 py-4">
                   <div className="space-y-4">
-                    <div className="flex flex-wrap items-center gap-2">
-                      <StatusBadge solved={p.solved} />
+                    <div className="flex items-start justify-between">
+                      <div className="flex flex-wrap items-center gap-2">
+                        <StatusBadge solved={p.solved} />
 
-                      {p.type === "STUDY" && (
-                        <span className="inline-flex rounded-full bg-blue-50 px-2.5 py-1 text-xs font-medium text-blue-700">
-                          스터디 글
-                        </span>
-                      )}
+                        {p.type === "STUDY" && (
+                          <span className="inline-flex rounded-full bg-blue-50 px-2.5 py-1 text-xs font-medium text-blue-700">
+                            스터디 글
+                          </span>
+                        )}
 
-                      {meId != null && p.authorId === meId && (
-                        <span className="inline-flex rounded-full bg-slate-100 px-2.5 py-1 text-xs font-medium text-slate-600">
-                          내 글
-                        </span>
-                      )}
+                        {meId != null && p.authorId === meId && (
+                          <span className="inline-flex rounded-full bg-slate-100 px-2.5 py-1 text-xs font-medium text-slate-600">
+                            내 글
+                          </span>
+                        )}
 
-                      {hasImage && (
-                        <span className="inline-flex items-center gap-1 rounded-full bg-amber-50 px-2.5 py-1 text-xs font-medium text-amber-700">
-                          <ImageIcon className="h-3.5 w-3.5" />
-                          이미지 {imageCount}
-                        </span>
-                      )}
+                        {hasImage && (
+                          <span className="inline-flex items-center gap-1 rounded-full bg-amber-50 px-2.5 py-1 text-xs font-medium text-amber-700">
+                            <ImageIcon className="h-3.5 w-3.5" />
+                            이미지 {imageCount}
+                          </span>
+                        )}
+                      </div>
+
+                      <div className={`flex items-center gap-1 rounded-full px-2.5 py-1 text-xs font-medium
+                        ${p.likeCount > 0
+                          ? "border-red-100 bg-red-50 text-red-600"
+                          : "border-slate-200 bg-slate-100 text-slate-400"
+                        }`}>
+                        <span>❤️</span>
+                        <span>{p.likeCount ?? 0}</span>
+                      </div>
                     </div>
-
+                    
                     <div className="space-y-2">
                       <h2 className="break-words text-xl font-bold leading-8 tracking-tight text-slate-900">
                         {p.title}

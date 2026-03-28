@@ -19,8 +19,9 @@ public class CommentResponse {
     private LocalDateTime createdAt;
     private boolean adopted;
     private long likeCount;
+    private boolean likedByMe;
 
-    public static CommentResponse from(Comment comment, long likeCount) {
+    public static CommentResponse from(Comment comment, long likeCount, boolean likedByMe) {
         String authorNickname = comment.getMember().isDeleted()
                 ? "탈퇴한 회원"
                 : comment.getMember().getNickname();
@@ -32,6 +33,7 @@ public class CommentResponse {
                 .createdAt(comment.getCreatedAt())
                 .adopted(comment.isAdopted())
                 .likeCount(likeCount)
+                .likedByMe(likedByMe)
                 .build();
     }
 

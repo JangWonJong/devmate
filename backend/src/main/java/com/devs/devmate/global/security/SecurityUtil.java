@@ -22,4 +22,20 @@ public class SecurityUtil {
         throw new BusinessException(ErrorCode.AUTH_FAILED);
     }
 
+    public static Long currentMemberIdOrNull() {
+        Authentication auth = SecurityContextHolder.getContext().getAuthentication();
+
+        if (auth == null || !auth.isAuthenticated()) {
+            return null;
+        }
+
+        Object principal = auth.getPrincipal();
+
+        if (principal instanceof JwtPrincipal p) {
+            return p.memberId();
+        }
+
+        return null;
+    }
+
 }

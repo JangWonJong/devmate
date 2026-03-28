@@ -10,6 +10,7 @@ export type CommentResponse = {
     createdAt: string
     adopted: boolean
     likeCount: number
+    likedByMe: boolean
 }
 
 export type CommentCreateRequest = {

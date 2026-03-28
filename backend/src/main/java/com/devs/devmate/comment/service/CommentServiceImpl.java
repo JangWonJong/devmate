@@ -18,7 +18,10 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.util.Collections;
 import java.util.List;
+import java.util.Set;
+import java.util.stream.Collectors;
 
 @Service
 @RequiredArgsConstructor
@@ -48,7 +51,6 @@ public class CommentServiceImpl implements CommentService{
         Comment savedComment = commentRepository.save(comment);
 
         notificationService.createCommentCreated(
-                // 알림 받는 사람/ 댓글 작성자/ 클릭 이동용 targetUrl 생성
                 post.getMember(),
                 member,
                 post.getId()
@@ -59,14 +61,31 @@ public class CommentServiceImpl implements CommentService{
 
     @Override
     @Transactional(readOnly = true)
-    public List<CommentResponse> list(Long postId) {
+    public List<CommentResponse> list(Long postId, Long memberId) {
         postRepository.findById(postId)
                 .orElseThrow(() -> new BusinessException(ErrorCode.POST_NOT_FOUND));
 
-        return commentRepository.findByPostIdOrderByIdAsc(postId).stream()
+        List<Comment> comments = commentRepository.findByPostIdOrderByIdAsc(postId);
+
+        List<Long> commentIds = comments.stream()
+                .map(Comment::getId)
+                .toList();
+
+        Set<Long> likedCommentIds;
+        if (memberId != null && !commentIds.isEmpty()) {
+            likedCommentIds = commentLikeRepository.findAllByCommentIdInAndMemberId(commentIds, memberId)
+                    .stream()
+                    .map(commentLike -> commentLike.getComment().getId())
+                    .collect(Collectors.toSet());
+        } else {
+            likedCommentIds = Collections.emptySet();
+        }
+
+        return comments.stream()
                 .map(comment -> CommentResponse.from(
                         comment,
-                        commentLikeRepository.countByCommentId(comment.getId())
+                        commentLikeRepository.countByCommentId(comment.getId()),
+                        likedCommentIds.contains(comment.getId())
                 ))
                 .toList();
     }

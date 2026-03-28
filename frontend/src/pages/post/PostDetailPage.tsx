@@ -1,6 +1,14 @@
 import { useEffect, useRef, useState } from "react"
 import { useNavigate, useParams } from "react-router-dom"
-import { deletePost, getPost, solvePost, getPostLikeStatus, likePost, unlikePost, type PostResponse } from "../../api/posts"
+import {
+  deletePost,
+  getPost,
+  solvePost,
+  getPostLikeStatus,
+  likePost,
+  unlikePost,
+  type PostResponse,
+} from "../../api/posts"
 import { tokenStore } from "../../auth/token"
 import { getMeId } from "../../api/members"
 import {
@@ -9,9 +17,9 @@ import {
   deleteComment,
   updateComment,
   type CommentResponse,
-  adoptComment, getCommentLikeStatus,
+  adoptComment,
   unlikeComment,
-  likeComment
+  likeComment,
 } from "../../api/comments"
 import {
   getStudyByPostId,
@@ -72,7 +80,6 @@ export function PostDetailPage() {
   const [commentLikeCountMap, setCommentLikeCountMap] = useState<Record<number, number>>({})
   const [commentLikeLoadingMap, setCommentLikeLoadingMap] = useState<Record<number, boolean>>({})
 
-
   const handledNotFoundRef = useRef(false)
 
   useEffect(() => {
@@ -130,49 +137,26 @@ export function PostDetailPage() {
   useEffect(() => {
     ;(async () => {
       if (!id) return
-      
+
       try {
-      setCommentErr(null)
+        setCommentErr(null)
 
-      const res = await listComments(id)
-      setComments(res)
+        const res = await listComments(id)
+        setComments(res)
 
-      setCommentLikeCountMap(
-        Object.fromEntries(res.map((c) => [c.id, c.likeCount ?? 0]))
-      )
+        setCommentLikedMap(
+          Object.fromEntries(res.map((c) => [c.id, c.likedByMe ?? false]))
+        )
 
-      if (!loggedIn) {
-        setCommentLikedMap({})
-        return
+        setCommentLikeCountMap(
+          Object.fromEntries(res.map((c) => [c.id, c.likeCount ?? 0]))
+        )
+      } catch (e: any) {
+        const status = e?.response?.status
+        if (status === 404) return
+        setCommentErr(apiErrorMessage(e, "댓글 조회 실패"))
       }
-
-      const results = await Promise.allSettled(
-        res.map((c) => getCommentLikeStatus(c.id))
-      )
-
-      const likedMap: Record<number, boolean> = {}
-      const countMap: Record<number, number> = {}
-
-      results.forEach((result, index) => {
-        const commentId = res[index].id
-
-        if (result.status === "fulfilled") {
-          likedMap[commentId] = result.value.likedByMe
-          countMap[commentId] = result.value.likeCount
-        } else {
-          likedMap[commentId] = false
-          countMap[commentId] = res[index].likeCount ?? 0
-        }
-      })
-
-      setCommentLikedMap(likedMap)
-      setCommentLikeCountMap(countMap)
-    } catch (e: any) {
-      const status = e?.response?.status
-      if (status === 404) return
-      setCommentErr(apiErrorMessage(e, "댓글 조회 실패"))
-    }
-  })()
+    })()
   }, [id, loggedIn])
 
   useEffect(() => {
@@ -404,6 +388,12 @@ export function PostDetailPage() {
 
       const res = await listComments(id)
       setComments(res)
+      setCommentLikedMap(
+        Object.fromEntries(res.map((c) => [c.id, c.likedByMe ?? false]))
+      )
+      setCommentLikeCountMap(
+        Object.fromEntries(res.map((c) => [c.id, c.likeCount ?? 0]))
+      )
     } catch (e: any) {
       setCommentErr(apiErrorMessage(e, "댓글 작성 실패"))
     }
@@ -417,6 +407,21 @@ export function PostDetailPage() {
       setCommentErr(null)
       await deleteComment(commentId)
       setComments((prev) => prev.filter((c) => c.id !== commentId))
+      setCommentLikedMap((prev) => {
+        const next = { ...prev }
+        delete next[commentId]
+        return next
+      })
+      setCommentLikeCountMap((prev) => {
+        const next = { ...prev }
+        delete next[commentId]
+        return next
+      })
+      setCommentLikeLoadingMap((prev) => {
+        const next = { ...prev }
+        delete next[commentId]
+        return next
+      })
 
       if (editingCommentId === commentId) {
         setEditingCommentId(null)
@@ -491,6 +496,12 @@ export function PostDetailPage() {
 
       const res = await listComments(id!)
       setComments(res)
+      setCommentLikedMap(
+        Object.fromEntries(res.map((c) => [c.id, c.likedByMe ?? false]))
+      )
+      setCommentLikeCountMap(
+        Object.fromEntries(res.map((c) => [c.id, c.likeCount ?? 0]))
+      )
 
       const updatedPost = await getPost(id!)
       setPost(updatedPost)
@@ -516,30 +527,6 @@ export function PostDetailPage() {
     } finally {
       setStudyLoading(false)
     }
-  }
-
-  if (loading) {
-    return (
-      <div className="rounded-2xl border border-slate-200 bg-white px-4 py-3 text-sm text-slate-500 shadow-sm">
-        게시글 불러오는 중...
-      </div>
-    )
-  }
-
-  if (loadErr) {
-    return (
-      <div className="rounded-2xl border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-700">
-        {loadErr}
-      </div>
-    )
-  }
-
-  if (!post) {
-    return (
-      <div className="rounded-2xl border border-slate-200 bg-white px-4 py-3 text-sm text-slate-500 shadow-sm">
-        게시글이 없어요.
-      </div>
-    )
   }
 
   const onToggleLike = async () => {
@@ -614,6 +601,30 @@ export function PostDetailPage() {
         [commentId]: false,
       }))
     }
+  }
+
+  if (loading) {
+    return (
+      <div className="rounded-2xl border border-slate-200 bg-white px-4 py-3 text-sm text-slate-500 shadow-sm">
+        게시글 불러오는 중...
+      </div>
+    )
+  }
+
+  if (loadErr) {
+    return (
+      <div className="rounded-2xl border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-700">
+        {loadErr}
+      </div>
+    )
+  }
+
+  if (!post) {
+    return (
+      <div className="rounded-2xl border border-slate-200 bg-white px-4 py-3 text-sm text-slate-500 shadow-sm">
+        게시글이 없어요.
+      </div>
+    )
   }
 
   const isMine = meId != null && post.authorId === meId

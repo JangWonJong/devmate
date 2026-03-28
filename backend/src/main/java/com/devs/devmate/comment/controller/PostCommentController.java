@@ -29,6 +29,7 @@ public class PostCommentController {
 
     @GetMapping
     public ApiResponse<List<CommentResponse>> list(@PathVariable Long postId) {
-        return ApiResponse.ok(commentService.list(postId));
+        Long memberId = SecurityUtil.currentMemberIdOrNull();
+        return ApiResponse.ok(commentService.list(postId, memberId));
     }
 }

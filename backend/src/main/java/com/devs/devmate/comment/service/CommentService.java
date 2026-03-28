@@ -11,7 +11,7 @@ public interface CommentService {
 
     Long create(Long memberId, Long postId, CommentCreateRequest request);
 
-    List<CommentResponse> list(Long postId);
+    List<CommentResponse> list(Long postId, Long memberId);
 
     void delete(Long memberId, Long commentId);
 

@@ -309,14 +309,14 @@ export default function PostDetailHeader({
         <button
           onClick={onToggleLike}
           disabled={likeLoading}
-          className={`inline-flex items-center gap-2 rounded-2xl border px-4 py-2 text-sm font-semibold transition
-          ${
-            likedByMe
-              ? "border-red-200 bg-red-50 text-red-600"
-              : "border-slate-200 bg-white text-slate-700"
-          }
-          hover:scale-105 active:scale-95 disabled:cursor-not-allowed disabled:opacity-50`}
-      >
+          className={`flex items-center gap-1 rounded-xl px-3 py-1 text-sm transition
+            ${
+              likedByMe
+                ? "bg-red-100 text-red-600"
+                : "bg-slate-100 text-slate-600"
+            }
+            hover:scale-105 active:scale-95`}
+        >
           {likedByMe ? "❤️" : "🤍"} {likeCount}
         </button>
 
