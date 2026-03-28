@@ -9,7 +9,9 @@ import {
   deleteComment,
   updateComment,
   type CommentResponse,
-  adoptComment,
+  adoptComment, getCommentLikeStatus,
+  unlikeComment,
+  likeComment
 } from "../../api/comments"
 import {
   getStudyByPostId,
@@ -65,6 +67,10 @@ export function PostDetailPage() {
   const [likedByMe, setLikedByMe] = useState(false)
   const [likeCount, setLikeCount] = useState(0)
   const [likeLoading, setLikeLoading] = useState(false)
+
+  const [commentLikedMap, setCommentLikedMap] = useState<Record<number, boolean>>({})
+  const [commentLikeCountMap, setCommentLikeCountMap] = useState<Record<number, number>>({})
+  const [commentLikeLoadingMap, setCommentLikeLoadingMap] = useState<Record<number, boolean>>({})
 
 
   const handledNotFoundRef = useRef(false)
@@ -124,17 +130,50 @@ export function PostDetailPage() {
   useEffect(() => {
     ;(async () => {
       if (!id) return
+      
       try {
-        setCommentErr(null)
-        const res = await listComments(id)
-        setComments(res)
-      } catch (e: any) {
-        const status = e?.response?.status
-        if (status === 404) return
-        setCommentErr(apiErrorMessage(e, "댓글 조회 실패"))
+      setCommentErr(null)
+
+      const res = await listComments(id)
+      setComments(res)
+
+      setCommentLikeCountMap(
+        Object.fromEntries(res.map((c) => [c.id, c.likeCount ?? 0]))
+      )
+
+      if (!loggedIn) {
+        setCommentLikedMap({})
+        return
       }
-    })()
-  }, [id])
+
+      const results = await Promise.allSettled(
+        res.map((c) => getCommentLikeStatus(c.id))
+      )
+
+      const likedMap: Record<number, boolean> = {}
+      const countMap: Record<number, number> = {}
+
+      results.forEach((result, index) => {
+        const commentId = res[index].id
+
+        if (result.status === "fulfilled") {
+          likedMap[commentId] = result.value.likedByMe
+          countMap[commentId] = result.value.likeCount
+        } else {
+          likedMap[commentId] = false
+          countMap[commentId] = res[index].likeCount ?? 0
+        }
+      })
+
+      setCommentLikedMap(likedMap)
+      setCommentLikeCountMap(countMap)
+    } catch (e: any) {
+      const status = e?.response?.status
+      if (status === 404) return
+      setCommentErr(apiErrorMessage(e, "댓글 조회 실패"))
+    }
+  })()
+  }, [id, loggedIn])
 
   useEffect(() => {
     if (!post) return
@@ -504,31 +543,78 @@ export function PostDetailPage() {
   }
 
   const onToggleLike = async () => {
-  if (!id || likeLoading) return
+    if (!id || likeLoading) return
 
-  if (!loggedIn) {
-    alert("로그인이 필요합니다.")
-    return
-  }
-
-  try {
-    setLikeLoading(true)
-
-    if (likedByMe) {
-      await unlikePost(id)
-      setLikedByMe(false)
-      setLikeCount((prev) => Math.max(0, prev - 1))
-    } else {
-      await likePost(id)
-      setLikedByMe(true)
-      setLikeCount((prev) => prev + 1)
+    if (!loggedIn) {
+      alert("로그인이 필요합니다.")
+      return
     }
-  } catch (e: any) {
-    setActionErr(apiErrorMessage(e, "좋아요 처리 실패"))
-  } finally {
-    setLikeLoading(false)
+
+    try {
+      setLikeLoading(true)
+
+      if (likedByMe) {
+        await unlikePost(id)
+        setLikedByMe(false)
+        setLikeCount((prev) => Math.max(0, prev - 1))
+      } else {
+        await likePost(id)
+        setLikedByMe(true)
+        setLikeCount((prev) => prev + 1)
+      }
+    } catch (e: any) {
+      setActionErr(apiErrorMessage(e, "좋아요 처리 실패"))
+    } finally {
+      setLikeLoading(false)
+    }
   }
-}
+
+  const onToggleCommentLike = async (commentId: number) => {
+    if (!loggedIn) {
+      alert("로그인이 필요합니다.")
+      return
+    }
+
+    if (commentLikeLoadingMap[commentId]) return
+
+    try {
+      setCommentLikeLoadingMap((prev) => ({
+        ...prev,
+        [commentId]: true,
+      }))
+
+      const liked = commentLikedMap[commentId] ?? false
+
+      if (liked) {
+        await unlikeComment(commentId)
+        setCommentLikedMap((prev) => ({
+          ...prev,
+          [commentId]: false,
+        }))
+        setCommentLikeCountMap((prev) => ({
+          ...prev,
+          [commentId]: Math.max(0, (prev[commentId] ?? 1) - 1),
+        }))
+      } else {
+        await likeComment(commentId)
+        setCommentLikedMap((prev) => ({
+          ...prev,
+          [commentId]: true,
+        }))
+        setCommentLikeCountMap((prev) => ({
+          ...prev,
+          [commentId]: (prev[commentId] ?? 0) + 1,
+        }))
+      }
+    } catch (e: any) {
+      setCommentErr(apiErrorMessage(e, "댓글 좋아요 실패"))
+    } finally {
+      setCommentLikeLoadingMap((prev) => ({
+        ...prev,
+        [commentId]: false,
+      }))
+    }
+  }
 
   const isMine = meId != null && post.authorId === meId
   const canSolve = isMine && !post.solved
@@ -587,6 +673,10 @@ export function PostDetailPage() {
         onDeleteComment={onDeleteComment}
         onUpdateComment={onUpdateComment}
         onAdoptComment={onAdoptComment}
+        commentLikedMap={commentLikedMap}
+        commentLikeCountMap={commentLikeCountMap}
+        commentLikeLoadingMap={commentLikeLoadingMap}
+        onToggleCommentLike={onToggleCommentLike}
       />
     </div>
   )

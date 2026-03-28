@@ -6,5 +6,7 @@ public enum NotificationType {
     STUDY_NOTICE_UPDATED,
     STUDY_JOINED,
     STUDY_RESERVATION_CREATED,
-    STUDY_LEAVE
+    STUDY_LEAVE,
+    POST_LIKED,
+    COMMENT_LIKED
 }

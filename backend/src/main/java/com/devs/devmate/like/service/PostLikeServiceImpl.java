@@ -7,6 +7,7 @@ import com.devs.devmate.like.entity.PostLike;
 import com.devs.devmate.like.repository.PostLikeRepository;
 import com.devs.devmate.member.entity.Member;
 import com.devs.devmate.member.repository.MemberRepository;
+import com.devs.devmate.notification.service.NotificationService;
 import com.devs.devmate.post.entity.Post;
 import com.devs.devmate.post.repository.PostRepository;
 import lombok.RequiredArgsConstructor;
@@ -22,6 +23,7 @@ public class PostLikeServiceImpl implements PostLikeService{
     private final PostLikeRepository postLikeRepository;
     private final PostRepository postRepository;
     private final MemberRepository memberRepository;
+    private final NotificationService notificationService;
 
     @Override
     @Transactional
@@ -41,6 +43,16 @@ public class PostLikeServiceImpl implements PostLikeService{
                         .post(post)
                         .member(member)
                         .build());
+
+        Long receiverId = post.getMember().getId();
+        if (!receiverId.equals(memberId)) {
+            notificationService.createPostLiked(
+                    receiverId,
+                    memberId,
+                    post.getId(),
+                    post.getTitle()
+            );
+        }
     }
 
     @Override

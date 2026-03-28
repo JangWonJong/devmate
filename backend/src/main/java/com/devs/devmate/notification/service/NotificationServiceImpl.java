@@ -3,13 +3,12 @@ package com.devs.devmate.notification.service;
 import com.devs.devmate.global.exception.BusinessException;
 import com.devs.devmate.global.exception.ErrorCode;
 import com.devs.devmate.member.entity.Member;
+import com.devs.devmate.member.repository.MemberRepository;
 import com.devs.devmate.notification.dto.NotificationResponse;
 import com.devs.devmate.notification.dto.NotificationUnreadCountResponse;
 import com.devs.devmate.notification.entity.Notification;
 import com.devs.devmate.notification.entity.NotificationType;
 import com.devs.devmate.notification.repository.NotificationRepository;
-import com.devs.devmate.post.entity.Post;
-import com.devs.devmate.post.repository.PostRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
@@ -24,7 +23,7 @@ import java.util.List;
 public class NotificationServiceImpl implements NotificationService{
 
     private final NotificationRepository notificationRepository;
-    private final PostRepository postRepository;
+    private final MemberRepository memberRepository;
 
     @Override
     @Transactional(readOnly = true)
@@ -149,5 +148,51 @@ public class NotificationServiceImpl implements NotificationService{
                         .content(actor.getNickname() + "님이 [" + postTitle + "] 스터디에서 탈퇴했어요.")
                         .targetUrl("/posts/" + postId)
                         .build());
+    }
+
+    @Override
+    public void createPostLiked(Long receiverId, Long actorId, Long postId, String postTitle) {
+        Member receiver = memberRepository.findById(receiverId)
+                .orElseThrow(() -> new BusinessException(ErrorCode.MEMBER_NOT_FOUND));
+        Member actor = memberRepository.findById(actorId)
+                .orElseThrow(() -> new BusinessException(ErrorCode.MEMBER_NOT_FOUND));
+
+        String content = actor.getNickname() + "님이\"" + postTitle + "\" 게시글을 좋아요했습니다.";
+
+        notificationRepository.save(
+                Notification.builder()
+                        .receiver(receiver)
+                        .actor(actor)
+                        .type(NotificationType.POST_LIKED)
+                        .content(content)
+                        .targetUrl("/posts/" + postId)
+                        .build()
+        );
+    }
+
+    @Override
+    public void createCommentLiked(Long receiverId, Long actorId, Long postId, String commentContent) {
+        Member receiver = memberRepository.findById(receiverId)
+                .orElseThrow(() -> new BusinessException(ErrorCode.MEMBER_NOT_FOUND));
+        Member actor = memberRepository.findById(actorId)
+                .orElseThrow(() -> new BusinessException(ErrorCode.MEMBER_NOT_FOUND));
+
+        String preview = commentContent;
+        if (preview != null && preview.length() >20 ) {
+            preview = preview.substring(0, 20) + "...";
+        }
+
+        String content = actor.getNickname() + "님이 회원님의 댓글에 좋아요를 눌렀습니다.";
+        //String content = actor.getNickname() + "님이 회원님의 댓글(\"" + preview + "\")을 좋아요했습니다.";
+
+        notificationRepository.save(
+                Notification.builder()
+                        .receiver(receiver)
+                        .actor(actor)
+                        .type(NotificationType.COMMENT_LIKED)
+                        .content(content)
+                        .targetUrl("/posts/" + postId)
+                        .build()
+        );
     }
 }

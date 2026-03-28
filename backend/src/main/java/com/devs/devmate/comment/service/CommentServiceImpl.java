@@ -8,6 +8,7 @@ import com.devs.devmate.comment.entity.CommentUpdateRequest;
 import com.devs.devmate.comment.repository.CommentRepository;
 import com.devs.devmate.global.exception.BusinessException;
 import com.devs.devmate.global.exception.ErrorCode;
+import com.devs.devmate.like.repository.CommentLikeRepository;
 import com.devs.devmate.member.entity.Member;
 import com.devs.devmate.member.repository.MemberRepository;
 import com.devs.devmate.notification.service.NotificationService;
@@ -28,6 +29,7 @@ public class CommentServiceImpl implements CommentService{
     private final MemberRepository memberRepository;
     private final PostRepository postRepository;
     private final NotificationService notificationService;
+    private final CommentLikeRepository commentLikeRepository;
 
     @Override
     public Long create(Long memberId, Long postId, CommentCreateRequest request) {
@@ -62,7 +64,10 @@ public class CommentServiceImpl implements CommentService{
                 .orElseThrow(() -> new BusinessException(ErrorCode.POST_NOT_FOUND));
 
         return commentRepository.findByPostIdOrderByIdAsc(postId).stream()
-                .map(CommentResponse::from)
+                .map(comment -> CommentResponse.from(
+                        comment,
+                        commentLikeRepository.countByCommentId(comment.getId())
+                ))
                 .toList();
     }
 

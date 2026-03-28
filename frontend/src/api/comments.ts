@@ -9,6 +9,7 @@ export type CommentResponse = {
     content: string
     createdAt: string
     adopted: boolean
+    likeCount: number
 }
 
 export type CommentCreateRequest = {
@@ -22,6 +23,11 @@ export type MyCommentResponse = {
     content: string
     createdAt: string
     adopted: boolean
+}
+
+export type CommentLikeStatusResponse = {
+  likedByMe: boolean
+  likeCount: number
 }
 
 export async function listComments(postId: string | number) {
@@ -87,4 +93,30 @@ export async function listMyComments() {
     } 
 
     return data.data
+}
+
+export async function likeComment(commentId: number | string) {
+  const { data } = await http.post<ApiResponse<null>>(`/api/comments/${commentId}/likes`)
+  if (!data.success) {
+    throw new Error(data.error?.message ?? "댓글 좋아요 처리 실패")
+  }
+}
+
+export async function unlikeComment(commentId: number | string) {
+  const { data } = await http.delete<ApiResponse<null>>(`/api/comments/${commentId}/likes`)
+  if (!data.success) {
+    throw new Error(data.error?.message ?? "댓글 좋아요 취소 실패")
+  }
+}
+
+export async function getCommentLikeStatus(commentId: number | string) {
+  const { data } = await http.get<ApiResponse<CommentLikeStatusResponse>>(
+    `/api/comments/${commentId}/likes/me`
+  )
+
+  if (!data.success || !data.data) {
+    throw new Error(data.error?.message ?? "댓글 좋아요 상태 조회 실패")
+  }
+
+  return data.data
 }

@@ -58,6 +58,10 @@ type CommentSectionProps = {
   onDeleteComment: (commentId: number) => void
   onUpdateComment: (commentId: number) => void
   onAdoptComment: (commentId: number) => void
+  commentLikedMap: Record<number, boolean>
+  commentLikeCountMap: Record<number, number>
+  commentLikeLoadingMap: Record<number, boolean>
+  onToggleCommentLike: (commentId: number) => void
 }
 
 export default function CommentSection({
@@ -76,6 +80,10 @@ export default function CommentSection({
   onDeleteComment,
   onUpdateComment,
   onAdoptComment,
+  commentLikedMap,
+  commentLikeCountMap,
+  commentLikeLoadingMap,
+  onToggleCommentLike,
 }: CommentSectionProps) {
   const sortedComments = [...comments].sort((a, b) => {
     if (a.adopted === b.adopted) return 0
@@ -187,7 +195,6 @@ export default function CommentSection({
                       onChange={(e) => setEditingContent(e.target.value)}
                       className="h-12 w-full rounded-2xl border border-slate-300 bg-white px-4 text-sm text-slate-900 outline-none transition focus:border-slate-400"
                     />
-
                     <div className="flex flex-wrap gap-2">
                       <ActionButton onClick={() => onUpdateComment(c.id)} variant="primary">
                         저장
@@ -203,9 +210,28 @@ export default function CommentSection({
                     </div>
                   </div>
                 ) : (
-                  <div className="mt-4 whitespace-pre-wrap text-sm leading-7 text-slate-700">
-                    {c.content}
-                  </div>
+                  <>
+                    <div className="mt-4 whitespace-pre-wrap text-sm leading-7 text-slate-700">
+                      {c.content}
+                    </div>
+
+                    <div className="mt-3 flex items-center gap-2">
+                      <button
+                        type="button"
+                        onClick={() => onToggleCommentLike(c.id)}
+                        disabled={commentLikeLoadingMap[c.id]}
+                        className={`inline-flex items-center gap-1 rounded-xl border px-3 py-1 text-xs font-medium transition
+                          ${
+                            commentLikedMap[c.id]
+                              ? "border-red-200 bg-red-50 text-red-600"
+                              : "border-slate-200 bg-white text-slate-600"
+                          }`}
+                      >
+                        <span>{commentLikedMap[c.id] ? "❤️" : "🤍"}</span>
+                        <span>{commentLikeCountMap[c.id] ?? 0}</span>
+                      </button>
+                    </div>
+                  </>
                 )}
               </div>
             )

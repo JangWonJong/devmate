@@ -9,6 +9,8 @@ export type NotificationType =
     | "STUDY_JOINED"
     | "STUDY_RESERVATION_CREATED"
     | "STUDY_LEAVE"
+    | "POST_LIKED"
+    | "COMMENT_LIKED"
 
 
 export const getNotificationLabel = (type: NotificationResponse["type"]) => {
@@ -25,6 +27,10 @@ export const getNotificationLabel = (type: NotificationResponse["type"]) => {
         return "예약"
       case "STUDY_LEAVE":
         return "탈퇴"
+      case "POST_LIKED":
+        return "좋아요"
+      case "COMMENT_LIKED":
+        return "댓글 좋아요"
       default:
         return "알림"
     }
@@ -62,6 +68,16 @@ export const getNotificationLabelStyle = (type: NotificationResponse["type"]) =>
            background: "#f5f3ff",
            color: "#7c3aed",
         }
+      case "POST_LIKED":
+      return {
+        background: "#fef2f2",
+        color: "#dc2626",
+      }
+      case "COMMENT_LIKED":
+      return {
+        background: "#fff1f2",
+        color: "#e11d48",
+      }
       default:
         return {
           background: "#f3f4f6",
