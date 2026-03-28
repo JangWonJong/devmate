@@ -12,9 +12,10 @@ export type PostResponse = {
     authorId: number
     authorNickname: string
     type: "QUESTION" | "STUDY"
+    attachments: PostAttachmentResponse[]
+    likeCount: number
     createdAt: string
     updatedAt: string
-    attachments: PostAttachmentResponse[]
 }
 
 export type PostUpdateRequest = {
@@ -31,6 +32,11 @@ export type PostAttachmentResponse = {
   contentType: string
   fileSize: number
   displayOrder: number
+}
+
+export type PostLikeStatusResponse = {
+  likedByMe: boolean
+  likeCount: number
 }
 
 export async function createPost(
@@ -123,9 +129,34 @@ export async function updatePost(
   }
 }
 
-
 export async function solvePost(id: string) {
     const {data} = await http.patch<ApiResponse<void>>(`/api/posts/${id}/solve`)
     if (!data.success) throw new Error(data.error?.message ?? "Solved failed")
     
+}
+
+export async function likePost(postId: number | string) {
+    const {data} = await http.post<ApiResponse<null>>(`/api/posts/${postId}/likes`)
+    if (!data.success) {
+    throw new Error(data.error?.message ?? "좋아요 처리에 실패했습니다.")
+    }
+}
+
+export async function unlikePost(postId: number | string) {
+    const {data} = await http.delete<ApiResponse<null>>(`/api/posts/${postId}/likes`)
+    if (!data.success) {
+      throw new Error(data.error?.message ?? "좋아요 취소에 실패했습니다.")
+    }
+}
+
+export async function getPostLikeStatus(postId: number | string) {
+  const {data} = await http.get<ApiResponse<PostLikeStatusResponse>>(
+    `/api/posts/${postId}/likes/me`
+  )
+
+  if (!data.success || !data.data) {
+    throw new Error(data.error?.message ?? "좋아요 상태 조회에 실패했습니다.")
+  }
+
+  return data.data
 }

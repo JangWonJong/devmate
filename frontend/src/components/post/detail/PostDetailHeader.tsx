@@ -170,6 +170,10 @@ type PostDetailHeaderProps = {
   actionErr: string | null
   onSolve: () => void
   onDeletePost: () => void
+  likedByMe: boolean
+  likeCount: number
+  likeLoading: boolean
+  onToggleLike: () => void
 }
 
 export default function PostDetailHeader({
@@ -180,6 +184,10 @@ export default function PostDetailHeader({
   actionErr,
   onSolve,
   onDeletePost,
+  likedByMe,
+  likeCount,
+  likeLoading,
+  onToggleLike,
 }: PostDetailHeaderProps) {
   const nav = useNavigate()
   const isStudyPost = post.type === "STUDY"
@@ -295,7 +303,25 @@ export default function PostDetailHeader({
           </div>
         )}
 
-        <div className="mt-6 flex flex-wrap items-center justify-end gap-3 border-t border-slate-100 pt-6">
+        <div className="mt-6 flex flex-wrap items-center justify-between gap-3 border-t border-slate-100 pt-6">
+
+        {/* ⭐ 좋아요 (왼쪽) */}
+        <button
+          onClick={onToggleLike}
+          disabled={likeLoading}
+          className={`inline-flex items-center gap-2 rounded-2xl border px-4 py-2 text-sm font-semibold transition
+          ${
+            likedByMe
+              ? "border-red-200 bg-red-50 text-red-600"
+              : "border-slate-200 bg-white text-slate-700"
+          }
+          hover:scale-105 active:scale-95 disabled:cursor-not-allowed disabled:opacity-50`}
+      >
+          {likedByMe ? "❤️" : "🤍"} {likeCount}
+        </button>
+
+        {/* 오른쪽 버튼들 */}
+        <div className="flex gap-3">
           {isMine && canSolve && (
             <ActionButton
               onClick={onSolve}
@@ -316,6 +342,7 @@ export default function PostDetailHeader({
             </ActionButton>
           )}
         </div>
+      </div>
       </section>
 
       {selectedImageIndex != null && (

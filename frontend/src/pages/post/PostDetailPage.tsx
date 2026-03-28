@@ -1,6 +1,6 @@
 import { useEffect, useRef, useState } from "react"
 import { useNavigate, useParams } from "react-router-dom"
-import { deletePost, getPost, solvePost, type PostResponse } from "../../api/posts"
+import { deletePost, getPost, solvePost, getPostLikeStatus, likePost, unlikePost, type PostResponse } from "../../api/posts"
 import { tokenStore } from "../../auth/token"
 import { getMeId } from "../../api/members"
 import {
@@ -61,6 +61,11 @@ export function PostDetailPage() {
 
   const [studyReservations, setStudyReservations] = useState<ReservationResponse[]>([])
   const [reservationsLoading, setReservationsLoading] = useState(false)
+
+  const [likedByMe, setLikedByMe] = useState(false)
+  const [likeCount, setLikeCount] = useState(0)
+  const [likeLoading, setLikeLoading] = useState(false)
+
 
   const handledNotFoundRef = useRef(false)
 
@@ -185,6 +190,25 @@ export function PostDetailPage() {
       cancelled = true
     }
   }, [post])
+
+  useEffect(() => {
+    ;(async () => {
+      if (!id || !loggedIn) {
+        setLikedByMe(false)
+        setLikeCount(post?.likeCount ?? 0)
+        return
+      }
+
+      try {
+        const res = await getPostLikeStatus(id)
+        setLikedByMe(res.likedByMe)
+        setLikeCount(res.likeCount)
+      } catch {
+        setLikedByMe(false)
+        setLikeCount(post?.likeCount ?? 0)
+      }
+    })()
+  }, [id, loggedIn, post?.likeCount])
 
   const refreshStudySection = async (postId: number) => {
     const s = await getStudyByPostId(postId)
@@ -479,6 +503,33 @@ export function PostDetailPage() {
     )
   }
 
+  const onToggleLike = async () => {
+  if (!id || likeLoading) return
+
+  if (!loggedIn) {
+    alert("로그인이 필요합니다.")
+    return
+  }
+
+  try {
+    setLikeLoading(true)
+
+    if (likedByMe) {
+      await unlikePost(id)
+      setLikedByMe(false)
+      setLikeCount((prev) => Math.max(0, prev - 1))
+    } else {
+      await likePost(id)
+      setLikedByMe(true)
+      setLikeCount((prev) => prev + 1)
+    }
+  } catch (e: any) {
+    setActionErr(apiErrorMessage(e, "좋아요 처리 실패"))
+  } finally {
+    setLikeLoading(false)
+  }
+}
+
   const isMine = meId != null && post.authorId === meId
   const canSolve = isMine && !post.solved
   const isStudyPost = post.type === "STUDY"
@@ -493,6 +544,10 @@ export function PostDetailPage() {
         actionErr={actionErr}
         onSolve={onSolve}
         onDeletePost={onDeletePost}
+        likedByMe={likedByMe}
+        likeCount={likeCount}
+        likeLoading={likeLoading}
+        onToggleLike={onToggleLike}
       />
 
       {isStudyPost && (
