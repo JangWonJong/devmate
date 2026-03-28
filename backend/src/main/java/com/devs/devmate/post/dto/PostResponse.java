@@ -21,10 +21,11 @@ public class PostResponse {
     private String authorNickname;
     private String type;
     private List<PostAttachmentResponse> attachments;
+    private long likeCount;
     private LocalDateTime createdAt;
     private LocalDateTime updatedAt;
 
-    public static PostResponse from(Post post){
+    public static PostResponse from(Post post, long likeCount){
         String authorNickname = post.getMember().isDeleted()
                 ? "탈퇴한 회원"
                 : post.getMember().getNickname();
@@ -48,9 +49,10 @@ public class PostResponse {
                 .authorId(post.getMember().getId())
                 .authorNickname(authorNickname)
                 .type(post.getType().name())
+                .attachments(attachments)
+                .likeCount(likeCount)
                 .createdAt(post.getCreatedAt())
                 .updatedAt(post.getUpdatedAt())
-                .attachments(attachments)
                 .build();
     }
 

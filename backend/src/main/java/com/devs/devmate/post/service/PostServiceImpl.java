@@ -3,6 +3,7 @@ package com.devs.devmate.post.service;
 import com.devs.devmate.comment.repository.CommentRepository;
 import com.devs.devmate.global.exception.BusinessException;
 import com.devs.devmate.global.exception.ErrorCode;
+import com.devs.devmate.like.repository.PostLikeRepository;
 import com.devs.devmate.member.entity.Member;
 import com.devs.devmate.member.repository.MemberRepository;
 import com.devs.devmate.post.dto.PostCreateRequest;
@@ -39,7 +40,7 @@ public class PostServiceImpl implements PostService{
     private final ReservationRepository reservationRepository;
     private final PostFileService postFileService;
     private final PostAttachmentRepository postAttachmentRepository;
-
+    private final PostLikeRepository postLikeRepository;
 
     private String normalize(String keyword) {
         if (keyword == null) return null;
@@ -72,6 +73,10 @@ public class PostServiceImpl implements PostService{
                 .toList();
     }
 
+    private Long countPost(Post post) {
+        return postLikeRepository.countByPostId(post.getId());
+    }
+
 
     @Override
     public Long create(Long memberId, PostCreateRequest request, List<MultipartFile> files) {
@@ -100,15 +105,15 @@ public class PostServiceImpl implements PostService{
     public Page<PostResponse> list( String keyword, Boolean solved, Pageable pageable) {
         String k = normalize(keyword);
         if (k == null && solved == null) {
-            return postRepository.findAll(pageable).map(PostResponse::from);
+            return postRepository.findAll(pageable).map(post -> PostResponse.from(post, countPost(post)));
         }
         if (k != null && solved == null) {
-            return postRepository.searchAll(k, pageable).map(PostResponse::from);
+            return postRepository.searchAll(k, pageable).map(post -> PostResponse.from(post, countPost(post)));
         }
         if (k == null) {
-            return postRepository.findBySolved(solved, pageable).map(PostResponse::from);
+            return postRepository.findBySolved(solved, pageable).map(post -> PostResponse.from(post, countPost(post)));
         }
-        return postRepository.searchAllWithSolved(k, solved, pageable).map(PostResponse::from);
+        return postRepository.searchAllWithSolved(k, solved, pageable).map(post -> PostResponse.from(post, countPost(post)));
     }
 
     @Override
@@ -117,15 +122,15 @@ public class PostServiceImpl implements PostService{
         String k = normalize(keyword);
 
         if (k == null && solved == null) {
-            return postRepository.findByMemberId(memberId, pageable).map(PostResponse::from);
+            return postRepository.findByMemberId(memberId, pageable).map(post -> PostResponse.from(post, countPost(post)));
         }
         if (k != null && solved == null) {
-            return postRepository.searchMine(memberId, k, pageable).map(PostResponse::from);
+            return postRepository.searchMine(memberId, k, pageable).map(post -> PostResponse.from(post, countPost(post)));
         }
         if (k == null) { // solved != null
-            return postRepository.findByMemberIdAndSolved(memberId, solved, pageable).map(PostResponse::from);
+            return postRepository.findByMemberIdAndSolved(memberId, solved, pageable).map(post -> PostResponse.from(post, countPost(post)));
         }
-        return postRepository.searchMineWithSolved(memberId, k, solved, pageable).map(PostResponse::from);
+        return postRepository.searchMineWithSolved(memberId, k, solved, pageable).map(post -> PostResponse.from(post, countPost(post)));
     }
 
     @Override
@@ -135,7 +140,7 @@ public class PostServiceImpl implements PostService{
         Post post = postRepository.findById(postId)
                 .orElseThrow(()-> new BusinessException(ErrorCode.POST_NOT_FOUND));
 
-        return PostResponse.from(post);
+        return PostResponse.from(post, countPost(post));
     }
 
     @Override

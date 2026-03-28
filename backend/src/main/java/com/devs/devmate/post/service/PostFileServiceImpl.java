@@ -44,13 +44,13 @@ public class PostFileServiceImpl implements PostFileService{
     }
 
     @Override
-    public List<StoredFileInfo> saveFiles(List<MultipartFile> files, String subDIr) {
+    public List<StoredFileInfo> saveFiles(List<MultipartFile> files, String subDir) {
 
         if (files == null || files.isEmpty()) {
             return List.of();
         }
 
-        String uploadDir = baseDir + "/" + subDIr;
+        String uploadDir = baseDir + "/" + subDir;
 
         File dir = new File(uploadDir);
         if (!dir.exists() && !dir.mkdirs()) {
@@ -81,7 +81,7 @@ public class PostFileServiceImpl implements PostFileService{
             result.add(new StoredFileInfo(
                     originalName,
                     storedName,
-                    "/uploads/" + subDIr + "/" +storedName,
+                    "/uploads/" + subDir + "/" +storedName,
                     file.getContentType(),
                     file.getSize()
             ));
@@ -91,13 +91,13 @@ public class PostFileServiceImpl implements PostFileService{
     }
 
     @Override
-    public void deleteFiles(List<String> storedFileNames, String subDIr) {
+    public void deleteFiles(List<String> storedFileNames, String subDir) {
 
         if (storedFileNames == null || storedFileNames.isEmpty()) {
             return;
         }
 
-        File dir = new File(baseDir + "/" + subDIr + "/");
+        File dir = new File(baseDir + "/" + subDir + "/");
 
         for (String storedFileName : storedFileNames) {
             if (storedFileNames == null || storedFileName.isBlank()) {
