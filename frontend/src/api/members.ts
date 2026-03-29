@@ -24,6 +24,7 @@ export type MeResponse = {
     profileImageUrl?: string
     status: "ACTIVE" | "DELETED"
     links: ProfileLinkResponse[]
+    receivedLikeCount: number
 }
 
 export type ProfileLinkRequest = {
@@ -57,6 +58,17 @@ export type ChangePasswordRequest = {
 
 export type WithdrawRequest = {
   password: string
+}
+
+export type MemberProfileResponse = {
+    id: number
+    email: string
+    nickname: string
+    bio: string | null
+    profileImageUrl?: string
+    status: "ACTIVE" | "DELETED"
+    links: ProfileLinkResponse[]
+    receivedLikeCount: number
 }
 
 export async function getMe() {
@@ -113,4 +125,16 @@ export async function withdrawMember(req: WithdrawRequest) {
   if (!data.success) {
     throw new Error(data.error?.message ?? "회원탈퇴 실패")
   }
+}
+
+export async function getMemberProfile(memberId: number | string) {
+  const { data } = await http.get<ApiResponse<MemberProfileResponse>>(
+    `/api/members/${memberId}`
+  )
+
+  if (!data.success || !data.data) {
+    throw new Error(data.error?.message ?? "프로필 조회 실패")
+  }
+
+  return data.data
 }

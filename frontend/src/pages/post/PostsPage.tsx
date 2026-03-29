@@ -21,7 +21,7 @@ type Query = {
   solved?: boolean
   page?: number
   size?: number
-  sort?: "id,desc" | "id,asc"
+  sort?: "id,desc" | "id,asc" | "likes,desc"
 }
 
 function toInt(v: string | null, def: number) {
@@ -38,8 +38,9 @@ function toScope(v: string | null): "all" | "mine" {
   return v === "mine" ? "mine" : "all"
 }
 
-function toSort(v: string | null) {
+function toSort(v: string | null): "id,desc" | "id,asc" | "likes,desc" {
   if (v === "id,asc") return "id,asc"
+  if (v === "likes,desc") return "likes,desc"
   return "id,desc"
 }
 
@@ -290,12 +291,16 @@ export function PostsPage() {
               <select
                 value={sort}
                 onChange={(e) =>
-                  setQuery({ sort: e.target.value as "id,desc" | "id,asc", page: 0 })
+                  setQuery({
+                    sort: e.target.value as "id,desc" | "id,asc" | "likes,desc",
+                    page: 0,
+                  })
                 }
                 className="rounded-2xl border border-slate-300 bg-white px-4 py-2 text-sm text-slate-700 outline-none transition focus:border-slate-400"
               >
                 <option value="id,desc">최신순</option>
                 <option value="id,asc">오래된순</option>
+                <option value="likes,desc">인기순</option>
               </select>
             </div>
           </div>
@@ -372,9 +377,11 @@ export function PostsPage() {
                       </h2>
 
                       <div className="flex flex-wrap items-center gap-3 text-sm text-slate-500">
-                        <span className="font-medium text-slate-700">
+                        <Link to={`/members/${p.authorId}`}
+                          onClick={(e) => e.stopPropagation()}
+                          className="font-medium text-slate-700 hover:underline" >
                           {p.authorNickname}
-                        </span>
+                        </Link>
                         {p.createdAt && (
                           <>
                             <span className="text-slate-300">•</span>

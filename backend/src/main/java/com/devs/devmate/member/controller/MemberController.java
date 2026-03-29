@@ -56,4 +56,9 @@ public class MemberController {
         memberService.withdraw(memberId, request);
         return ApiResponse.ok();
     }
+
+    @GetMapping("/{memberId}")
+    public ApiResponse<MemberProfileResponse> getProfile(@PathVariable Long memberId) {
+        return ApiResponse.ok(memberService.getProfile(memberId));
+    }
 }

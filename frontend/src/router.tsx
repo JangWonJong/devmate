@@ -14,6 +14,7 @@ import { MyStudiesPage } from "./pages/study/MyStudiesPage"
 import { StudyReservationPage } from "./pages/reservation/StudyReservationPage"
 import { MyPage } from "./pages/member/MyPage"
 import { AccountSettingsPage } from "./pages/member/AccountSettingsPage"
+import { MemberProfilePage } from "./pages/member/MemberProfilePage";
 
 
 export const router = createBrowserRouter([
@@ -28,6 +29,7 @@ export const router = createBrowserRouter([
             { path: "/posts", element: <PostsPage /> },
 
             { path: "/posts/:id", element: <PostDetailPage /> },
+            { path: "/members/:memberId", element: <MemberProfilePage /> },
 
             { path: "/posts/new", element: <RequireAuth><NewPostPage /></RequireAuth> },
             { path: "/posts/:id/edit", element: <RequireAuth><EditPostPage /></RequireAuth> },

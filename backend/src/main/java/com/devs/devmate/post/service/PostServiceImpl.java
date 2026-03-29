@@ -19,6 +19,7 @@ import com.devs.devmate.study.repository.StudyMemberRepository;
 import com.devs.devmate.study.repository.StudyRepository;
 import lombok.*;
 import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -77,6 +78,14 @@ public class PostServiceImpl implements PostService{
         return postLikeRepository.countByPostId(post.getId());
     }
 
+    private boolean isLikeSort(Pageable pageable) {
+        return pageable.getSort().stream()
+                .anyMatch(order -> order.getProperty().equals("likes"));
+    }
+
+    private Pageable withoutSort(Pageable pageable) {
+        return PageRequest.of(pageable.getPageNumber(), pageable.getPageSize());
+    }
 
     @Override
     public Long create(Long memberId, PostCreateRequest request, List<MultipartFile> files) {
@@ -104,6 +113,11 @@ public class PostServiceImpl implements PostService{
     @Transactional(readOnly = true)
     public Page<PostResponse> list( String keyword, Boolean solved, Pageable pageable) {
         String k = normalize(keyword);
+
+        if (isLikeSort(pageable) && k == null && solved == null) {
+            return postRepository.findAllOrderByLikeCountDesc(withoutSort(pageable))
+                    .map(post -> PostResponse.from(post, countPost(post)));
+        }
         if (k == null && solved == null) {
             return postRepository.findAll(pageable).map(post -> PostResponse.from(post, countPost(post)));
         }
@@ -113,6 +127,7 @@ public class PostServiceImpl implements PostService{
         if (k == null) {
             return postRepository.findBySolved(solved, pageable).map(post -> PostResponse.from(post, countPost(post)));
         }
+
         return postRepository.searchAllWithSolved(k, solved, pageable).map(post -> PostResponse.from(post, countPost(post)));
     }
 
@@ -120,6 +135,11 @@ public class PostServiceImpl implements PostService{
     @Transactional(readOnly = true)
     public Page<PostResponse> listMine(Long memberId, String keyword, Boolean solved, Pageable pageable) {
         String k = normalize(keyword);
+
+        if (isLikeSort(pageable) && k == null && solved == null) {
+            return postRepository.findMineOrderByLikeCountDesc(memberId, withoutSort(pageable))
+                    .map(post -> PostResponse.from(post, countPost(post)));
+        }
 
         if (k == null && solved == null) {
             return postRepository.findByMemberId(memberId, pageable).map(post -> PostResponse.from(post, countPost(post)));
@@ -219,4 +239,14 @@ public class PostServiceImpl implements PostService{
         post.markSolved();
 
     }
+
+    @Override
+    @Transactional(readOnly = true)
+    public List<PostResponse> listLikedPosts(Long memberId) {
+        return postRepository.findLikedPostsByMemberId(memberId).stream()
+                .map(post -> PostResponse.from(post, countPost(post)))
+                .toList();
+    }
+
+
 }

@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react"
-import { useNavigate } from "react-router-dom"
+import { useNavigate, Link } from "react-router-dom"
 import type { PostResponse } from "../../../api/posts"
 
 function StatusBadge({ solved }: { solved: boolean }) {
@@ -245,9 +245,15 @@ export default function PostDetailHeader({
               {post.title}
             </h1>
 
-            <div className="flex flex-wrap items-center gap-3 text-sm text-slate-500">
-              <span>작성자 {post.authorNickname}</span>
-            </div>
+            <span className="text-sm text-slate-500">
+              작성자{" "}
+              <Link
+                to={`/members/${post.authorId}`}
+                className="font-medium text-slate-700 hover:underline"
+              >
+                {post.authorNickname}
+              </Link>
+            </span>
           </div>
 
           <div className="flex shrink-0 flex-wrap gap-3">

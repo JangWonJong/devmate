@@ -39,6 +39,8 @@ export type PostLikeStatusResponse = {
   likeCount: number
 }
 
+export type PostSort = "id,desc" | "id,asc" | "likes,desc"
+
 export async function createPost(
   req: PostCreateRequest,
   files: File[] = []
@@ -66,7 +68,7 @@ export async function createPost(
 export async function listPosts(params?: {
     page?: number
     size?: number
-    sort?: string
+    sort?: PostSort
     mine?: boolean
     keyword?: string
     solved?: boolean
@@ -156,6 +158,16 @@ export async function getPostLikeStatus(postId: number | string) {
 
   if (!data.success || !data.data) {
     throw new Error(data.error?.message ?? "좋아요 상태 조회에 실패했습니다.")
+  }
+
+  return data.data
+}
+
+export async function listLikedPosts() {
+  const { data } = await http.get<ApiResponse<PostResponse[]>>("/api/posts/liked")
+
+  if (!data.success || !data.data) {
+    throw new Error(data.error?.message ?? "좋아요한 게시글 조회 실패")
   }
 
   return data.data

@@ -76,5 +76,10 @@ public class PostController {
         return ApiResponse.ok();
     }
 
+    @GetMapping("/liked")
+    public ApiResponse<List<PostResponse>> likedPosts() {
+        Long memberId = SecurityUtil.currentMemberId();
+        return ApiResponse.ok(postService.listLikedPosts(memberId));
+    }
 
 }

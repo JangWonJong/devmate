@@ -19,4 +19,6 @@ public interface MemberService {
 
     void withdraw(Long memberId, WithdrawRequest request);
 
+    MemberProfileResponse getProfile(Long memberId);
+
 }

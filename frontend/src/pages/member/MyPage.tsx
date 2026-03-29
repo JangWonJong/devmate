@@ -3,7 +3,7 @@ import { useNavigate } from "react-router-dom"
 import { getMe, type MeResponse } from "../../api/members"
 import { getMyStudies } from "../../api/study"
 import { listMyReservations } from "../../api/reservations"
-import { listPosts, type PostResponse } from "../../api/posts"
+import { listLikedPosts, listPosts, type PostResponse } from "../../api/posts"
 import { listMyComments, type MyCommentResponse } from "../../api/comments"
 import { apiErrorMessage } from "../../utils/error"
 
@@ -13,13 +13,22 @@ function isUpcomingReservation(date: string, endTime: string) {
   return end >= now
 }
 
-function StatCard({ label, value }: { label: string; value: string }) {
+function StatCard({
+  label,
+  value,
+  helper,
+}: {
+  label: string
+  value: string
+  helper?: string
+}) {
   return (
     <div className="rounded-2xl border border-slate-200 bg-white p-5 shadow-sm">
       <div className="text-sm font-medium text-slate-500">{label}</div>
       <div className="mt-3 text-3xl font-bold tracking-tight text-slate-900">
         {value}
       </div>
+      {helper && <div className="mt-2 text-xs text-slate-400">{helper}</div>}
     </div>
   )
 }
@@ -154,6 +163,8 @@ export function MyPage() {
   const [myPosts, setMyPosts] = useState<PostResponse[]>([])
   const [myPostsCount, setMyPostsCount] = useState(0)
   const [myComments, setMyComments] = useState<MyCommentResponse[]>([])
+  const [likedPosts, setLikedPosts] = useState<PostResponse[]>([])
+  const [imageOpen, setImageOpen] = useState(false)
 
   const [loading, setLoading] = useState(true)
   const [err, setErr] = useState<string | null>(null)
@@ -163,14 +174,21 @@ export function MyPage() {
       try {
         setErr(null)
 
-        const [meData, myStudies, myReservationsPage, myPostsPage, myCommentsData] =
-          await Promise.all([
-            getMe(),
-            getMyStudies(),
-            listMyReservations({ page: 0, size: 100, sort: "date,desc" }),
-            listPosts({ mine: true, page: 0, size: 5, sort: "id,desc" }),
-            listMyComments(),
-          ])
+        const [
+          meData,
+          myStudies,
+          myReservationsPage,
+          myPostsPage,
+          myCommentsData,
+          likedPostsData,
+        ] = await Promise.all([
+          getMe(),
+          getMyStudies(),
+          listMyReservations({ page: 0, size: 100, sort: "date,desc" }),
+          listPosts({ mine: true, page: 0, size: 5, sort: "id,desc" }),
+          listMyComments(),
+          listLikedPosts(),
+        ])
 
         setMe(meData)
         setMyStudiesCount(myStudies.length)
@@ -183,6 +201,7 @@ export function MyPage() {
         setMyPosts(myPostsPage.content)
         setMyPostsCount(myPostsPage.totalElements)
         setMyComments(myCommentsData.slice(0, 5))
+        setLikedPosts(likedPostsData.slice(0, 5))
       } catch (e) {
         setErr(apiErrorMessage(e, "마이페이지 조회 실패"))
       } finally {
@@ -234,7 +253,15 @@ export function MyPage() {
       {me && (
         <section className="rounded-2xl border border-slate-200 bg-white p-6 shadow-sm">
           <div className="flex items-center gap-4">
-            <div className="h-16 w-16 overflow-hidden rounded-full border border-slate-200 bg-slate-100">
+            <button
+              type="button"
+              onClick={() => {
+                if (me.profileImageUrl) setImageOpen(true)
+              }}
+              className={`h-28 w-28 overflow-hidden rounded-full border border-slate-200 bg-slate-100 transition ${
+                me.profileImageUrl ? "cursor-pointer hover:opacity-90" : "cursor-default"
+              }`}
+            >
               {me.profileImageUrl ? (
                 <img
                   src={`${import.meta.env.VITE_API_BASE_URL}${me.profileImageUrl}`}
@@ -246,7 +273,7 @@ export function MyPage() {
                   없음
                 </div>
               )}
-            </div>
+            </button>
 
             <div>
               <div className="text-2xl font-bold tracking-tight text-slate-900">
@@ -359,9 +386,14 @@ export function MyPage() {
         </div>
       </section>
 
-      <section className="grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
+      <section className="grid gap-4 sm:grid-cols-2 xl:grid-cols-5">
         <StatCard label="내 상태" value={me?.status ?? "-"} />
         <StatCard label="내 글" value={`${myPostsCount}개`} />
+        <StatCard
+          label="받은 좋아요"
+          value={`${me?.receivedLikeCount ?? 0}개`}
+          helper="게시글/댓글 합산"
+        />
         <StatCard label="참여 중 스터디" value={`${myStudiesCount}개`} />
         <StatCard label="예정 예약" value={`${upcomingReservationsCount}건`} />
       </section>
@@ -394,6 +426,28 @@ export function MyPage() {
 
       <section className="rounded-2xl border border-slate-200 bg-white p-6 shadow-sm">
         <div className="space-y-4">
+          <SectionHeader title="좋아요한 게시글" />
+
+          {likedPosts.length === 0 ? (
+            <div className="rounded-xl border border-slate-200 bg-slate-50 px-4 py-4 text-sm text-slate-500">
+              좋아요한 게시글이 아직 없어요.
+            </div>
+          ) : (
+            <div className="space-y-3">
+              {likedPosts.map((post) => (
+                <PostItem
+                  key={post.id}
+                  post={post}
+                  onClick={() => nav(`/posts/${post.id}`)}
+                />
+              ))}
+            </div>
+          )}
+        </div>
+      </section>
+
+      <section className="rounded-2xl border border-slate-200 bg-white p-6 shadow-sm">
+        <div className="space-y-4">
           <SectionHeader title="내가 쓴 댓글" />
 
           {myComments.length === 0 ? (
@@ -413,6 +467,34 @@ export function MyPage() {
           )}
         </div>
       </section>
+
+      {imageOpen && me?.profileImageUrl && (
+        <div
+          className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 px-4"
+          onClick={() => setImageOpen(false)}
+        >
+          <div
+            className="relative w-full max-w-md"
+            onClick={(e) => e.stopPropagation()}
+          >
+            <button
+              type="button"
+              onClick={() => setImageOpen(false)}
+              className="absolute right-0 top-[-44px] rounded-xl bg-white/10 px-4 py-2 text-sm font-medium text-white backdrop-blur transition hover:bg-white/20"
+            >
+              닫기
+            </button>
+
+            <div className="overflow-hidden rounded-3xl bg-white shadow-2xl">
+              <img
+                src={`${import.meta.env.VITE_API_BASE_URL}${me.profileImageUrl}`}
+                alt="프로필 이미지 확대"
+                className="max-h-[70vh] w-full object-contain"
+              />
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   )
 }

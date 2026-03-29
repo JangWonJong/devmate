@@ -1,3 +1,5 @@
+import { Link } from "react-router-dom"
+
 type CommentItem = {
   id: number
   memberId: number
@@ -149,7 +151,9 @@ export default function CommentSection({
               >
                 <div className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
                   <div className="flex flex-wrap items-center gap-2 text-sm text-slate-500">
-                    <span className="font-medium text-slate-700">{c.authorNickname}</span>
+                    <Link to={`/members/${c.memberId}`} className="font-medium text-slate-700 hover:underline">
+                        {c.authorNickname}
+                    </Link>
 
                     {c.adopted && (
                       <span className="inline-flex rounded-full bg-emerald-600 px-2.5 py-1 text-xs font-medium text-white">

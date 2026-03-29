@@ -18,6 +18,6 @@ public interface PostService {
     void update(Long memberId, Long postId, PostUpdateRequest request, List<MultipartFile> files);
     void delete(Long memberId, Long postId);
     void solve(Long memberId, Long postId);
-
+    List<PostResponse> listLikedPosts(Long memberId);
 
 }
