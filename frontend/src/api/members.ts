@@ -69,6 +69,12 @@ export type MemberProfileResponse = {
     status: "ACTIVE" | "DELETED"
     links: ProfileLinkResponse[]
     receivedLikeCount: number
+    profileLikeCount: number
+}
+
+export type MemberLikeStatusResponse = {
+  likedByMe: boolean
+  likeCount: number
 }
 
 export async function getMe() {
@@ -138,3 +144,30 @@ export async function getMemberProfile(memberId: number | string) {
 
   return data.data
 }
+                
+export async function likeMemberProfile(memberId: number | string) {
+  const { data } = await http.post<ApiResponse<null>>(`/api/members/${memberId}/likes`)
+  if (!data.success) {
+    throw new Error(data.error?.message ?? "프로필 좋아요 실패")
+  }
+}
+
+export async function unlikeMemberProfile(memberId: number | string) {
+  const { data } = await http.delete<ApiResponse<null>>(`/api/members/${memberId}/likes`)
+  if (!data.success) {
+    throw new Error(data.error?.message ?? "프로필 좋아요 취소 실패")
+  }
+}
+
+export async function getMemberLikeStatus(memberId: number | string) {
+  const { data } = await http.get<ApiResponse<MemberLikeStatusResponse>>(
+    `/api/members/${memberId}/likes/me`
+  )
+
+  if (!data.success || !data.data) {
+    throw new Error(data.error?.message ?? "프로필 좋아요 상태 조회 실패")
+  }
+
+  return data.data
+}
+

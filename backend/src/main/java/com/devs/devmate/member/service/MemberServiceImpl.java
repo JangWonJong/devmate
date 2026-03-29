@@ -5,6 +5,7 @@ import com.devs.devmate.auth.repository.RefreshTokenRepository;
 import com.devs.devmate.global.exception.BusinessException;
 import com.devs.devmate.global.exception.ErrorCode;
 import com.devs.devmate.like.repository.CommentLikeRepository;
+import com.devs.devmate.like.repository.MemberLikeRepository;
 import com.devs.devmate.like.repository.PostLikeRepository;
 import com.devs.devmate.member.dto.*;
 import com.devs.devmate.member.entity.Member;
@@ -42,6 +43,7 @@ public class MemberServiceImpl implements MemberService{
     private final PostFileService postFileService;
     private final PostLikeRepository postLikeRepository;
     private final CommentLikeRepository commentLikeRepository;
+    private final MemberLikeRepository memberLikeRepository;
 
     private Member findActiveMember(Long memberId) {
         Member member = memberRepository.findById(memberId)
@@ -339,7 +341,8 @@ public class MemberServiceImpl implements MemberService{
                 member.getProfileImageUrl(),
                 member.getStatus(),
                 toProfileLinkResponses(member),
-                receivedLikeCount(memberId)
+                receivedLikeCount(memberId),
+                memberLikeRepository.countByTargetMemberId(memberId)
         );
     }
 

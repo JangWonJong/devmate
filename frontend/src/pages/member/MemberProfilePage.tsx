@@ -1,6 +1,14 @@
 import { useEffect, useState } from "react"
 import { useNavigate, useParams } from "react-router-dom"
-import { getMemberProfile, type MemberProfileResponse } from "../../api/members"
+import {
+  getMemberProfile,
+  getMeId,
+  getMemberLikeStatus,
+  likeMemberProfile,
+  unlikeMemberProfile,
+  type MemberProfileResponse,
+} from "../../api/members"
+import { tokenStore } from "../../auth/token"
 import { apiErrorMessage } from "../../utils/error"
 
 export function MemberProfilePage() {
@@ -12,6 +20,35 @@ export function MemberProfilePage() {
   const [imageOpen, setImageOpen] = useState(false)
   const [err, setErr] = useState<string | null>(null)
 
+  const [loggedIn, setLoggedIn] = useState(tokenStore.isLoggedIn())
+  const [meId, setMeId] = useState<number | null>(null)
+
+  const [likedByMe, setLikedByMe] = useState(false)
+  const [profileLikeCount, setProfileLikeCount] = useState(0)
+  const [likeLoading, setLikeLoading] = useState(false)
+
+  useEffect(() => {
+    const sync = () => setLoggedIn(tokenStore.isLoggedIn())
+    sync()
+    return tokenStore.subscribe(sync)
+  }, [])
+
+  useEffect(() => {
+    ;(async () => {
+      if (!loggedIn) {
+        setMeId(null)
+        return
+      }
+
+      try {
+        const id = await getMeId()
+        setMeId(id)
+      } catch {
+        setMeId(null)
+      }
+    })()
+  }, [loggedIn])
+
   useEffect(() => {
     ;(async () => {
       if (!memberId) return
@@ -22,6 +59,7 @@ export function MemberProfilePage() {
 
         const data = await getMemberProfile(memberId)
         setProfile(data)
+        setProfileLikeCount(data.profileLikeCount ?? 0)
       } catch (e) {
         setErr(apiErrorMessage(e, "프로필 조회 실패"))
       } finally {
@@ -29,6 +67,52 @@ export function MemberProfilePage() {
       }
     })()
   }, [memberId])
+
+  useEffect(() => {
+    ;(async () => {
+      if (!memberId || !loggedIn) {
+        setLikedByMe(false)
+        return
+      }
+
+      try {
+        const res = await getMemberLikeStatus(memberId)
+        setLikedByMe(res.likedByMe)
+        setProfileLikeCount(res.likeCount)
+      } catch {
+        setLikedByMe(false)
+      }
+    })()
+  }, [memberId, loggedIn])
+
+  const onToggleProfileLike = async () => {
+    if (!memberId || likeLoading) return
+
+    if (!loggedIn) {
+      alert("로그인이 필요합니다.")
+      return
+    }
+
+    if (meId != null && Number(memberId) === meId) return
+
+    try {
+      setLikeLoading(true)
+
+      if (likedByMe) {
+        await unlikeMemberProfile(memberId)
+        setLikedByMe(false)
+        setProfileLikeCount((prev) => Math.max(0, prev - 1))
+      } else {
+        await likeMemberProfile(memberId)
+        setLikedByMe(true)
+        setProfileLikeCount((prev) => prev + 1)
+      }
+    } catch (e) {
+      setErr(apiErrorMessage(e, "프로필 좋아요 실패"))
+    } finally {
+      setLikeLoading(false)
+    }
+  }
 
   if (loading) {
     return (
@@ -65,11 +149,17 @@ export function MemberProfilePage() {
       <div className="mx-auto max-w-4xl space-y-6 px-4 py-10">
         <section className="rounded-2xl border border-slate-200 bg-white p-6 shadow-sm">
           <div className="flex items-start justify-between gap-4">
-            <div className="flex items-center gap-5">
+            <div className="flex items-center gap-4">
               <button
                 type="button"
-                onClick={() => setImageOpen(true)}
-                className="h-28 w-28 overflow-hidden rounded-full border border-slate-200 bg-slate-100 transition hover:opacity-90"
+                onClick={() => {
+                  if (profile.profileImageUrl) setImageOpen(true)
+                }}
+                className={`h-24 w-24 overflow-hidden rounded-full border border-slate-200 bg-slate-100 transition ${
+                  profile.profileImageUrl
+                    ? "cursor-pointer hover:opacity-90"
+                    : "cursor-default"
+                }`}
               >
                 {profile.profileImageUrl ? (
                   <img
@@ -85,29 +175,41 @@ export function MemberProfilePage() {
               </button>
 
               <div>
-                <div className="text-3xl font-bold tracking-tight text-slate-900">
+                <div className="text-2xl font-bold tracking-tight text-slate-900">
                   {profile.nickname}
                 </div>
                 <div className="mt-1 text-sm text-slate-500">{profile.status}</div>
               </div>
             </div>
 
-            <button
-              type="button"
-              onClick={() => nav(-1)}
-              className="rounded-xl border border-slate-300 bg-white px-4 py-2 text-sm font-medium text-slate-700 transition hover:bg-slate-50"
-            >
-              뒤로 가기
-            </button>
+            <div className="flex items-center gap-2">
+              {meId == null || profile.id !== meId ? (
+                <button
+                  type="button"
+                  onClick={onToggleProfileLike}
+                  disabled={likeLoading}
+                  className={`inline-flex items-center gap-1 rounded-xl px-3 py-2 text-sm font-medium transition ${
+                    likedByMe
+                      ? "bg-red-100 text-red-600"
+                      : "bg-slate-100 text-slate-600"
+                  }`}
+                >
+                  <span>{likedByMe ? "❤️" : "🤍"}</span>
+                  <span>{profileLikeCount}</span>
+                </button>
+              ) : null}
+
+              <button
+                type="button"
+                onClick={() => nav(-1)}
+                className="rounded-xl border border-slate-300 bg-white px-4 py-2 text-sm font-medium text-slate-700 transition hover:bg-slate-50"
+              >
+                뒤로 가기
+              </button>
+            </div>
           </div>
 
           <div className="mt-6 grid gap-4 sm:grid-cols-2">
-            <div className="rounded-2xl border border-slate-200 bg-slate-50 p-5">
-              <div className="text-sm font-medium text-slate-500">프로필 상태</div>
-              <div className="mt-3 text-3xl font-bold tracking-tight text-slate-900">
-                {profile.status}
-              </div>
-            </div>
             <div className="rounded-2xl border border-slate-200 bg-slate-50 p-5">
               <div className="text-sm font-medium text-slate-500">받은 좋아요</div>
               <div className="mt-3 text-3xl font-bold tracking-tight text-slate-900">
@@ -116,7 +218,12 @@ export function MemberProfilePage() {
               <div className="mt-2 text-xs text-slate-400">게시글/댓글 합산</div>
             </div>
 
-            
+            <div className="rounded-2xl border border-slate-200 bg-slate-50 p-5">
+              <div className="text-sm font-medium text-slate-500">프로필 좋아요</div>
+              <div className="mt-3 text-3xl font-bold tracking-tight text-slate-900">
+                {profileLikeCount}개
+              </div>
+            </div>
           </div>
 
           <div className="mt-6">

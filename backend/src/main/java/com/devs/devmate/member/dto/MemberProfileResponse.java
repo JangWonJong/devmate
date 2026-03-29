@@ -18,5 +18,6 @@ public class MemberProfileResponse {
     private MemberStatus status;
     private List<ProfileLinkResponse> links;
     private long receivedLikeCount;
+    private long profileLikeCount;
 
 }

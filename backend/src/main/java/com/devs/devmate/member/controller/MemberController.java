@@ -3,6 +3,8 @@ package com.devs.devmate.member.controller;
 
 import com.devs.devmate.global.common.ApiResponse;
 import com.devs.devmate.global.security.SecurityUtil;
+import com.devs.devmate.like.dto.MemberLikeStatusResponse;
+import com.devs.devmate.like.service.MemberLikeService;
 import com.devs.devmate.member.dto.*;
 import com.devs.devmate.member.service.MemberService;
 import jakarta.validation.Valid;
@@ -18,6 +20,7 @@ import org.springframework.web.multipart.MultipartFile;
 public class MemberController {
 
     private final MemberService memberService;
+    private final MemberLikeService memberLikeService;
 
     @GetMapping("/me")
     public ApiResponse<MeResponse> me(){
@@ -61,4 +64,25 @@ public class MemberController {
     public ApiResponse<MemberProfileResponse> getProfile(@PathVariable Long memberId) {
         return ApiResponse.ok(memberService.getProfile(memberId));
     }
+
+    @PostMapping("/{memberId}/likes")
+    public ApiResponse<Void> likeProfile(@PathVariable Long memberId) {
+        Long actorMemberId = SecurityUtil.currentMemberId();
+        memberLikeService.like(actorMemberId, memberId);
+        return ApiResponse.ok();
+    }
+
+    @DeleteMapping("/{memberId}/likes")
+    public ApiResponse<Void> unlikeProfile(@PathVariable Long memberId) {
+        Long actorMemberId = SecurityUtil.currentMemberId();
+        memberLikeService.unlike(actorMemberId, memberId);
+        return ApiResponse.ok();
+    }
+
+    @GetMapping("/{memberId}/likes/me")
+    public ApiResponse<MemberLikeStatusResponse> getProfileLikeStatus(@PathVariable Long memberId) {
+        Long actorMemberId = SecurityUtil.currentMemberId();
+        return ApiResponse.ok(memberLikeService.getStatus(actorMemberId, memberId));
+    }
+
 }
