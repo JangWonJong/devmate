@@ -25,6 +25,8 @@ export type MeResponse = {
     status: "ACTIVE" | "DELETED"
     links: ProfileLinkResponse[]
     receivedLikeCount: number
+    profileLikeCount: number
+    popularityScore: number
 }
 
 export type ProfileLinkRequest = {
@@ -75,6 +77,17 @@ export type MemberProfileResponse = {
 export type MemberLikeStatusResponse = {
   likedByMe: boolean
   likeCount: number
+}
+
+export type PopularMemberResponse = {
+  id: number
+  nickname: string
+  bio: string | null
+  profileImageUrl?: string
+  status: "ACTIVE" | "DELETED"
+  receivedLikeCount: number
+  profileLikeCount: number
+  popularityScore: number
 }
 
 export async function getMe() {
@@ -166,6 +179,19 @@ export async function getMemberLikeStatus(memberId: number | string) {
 
   if (!data.success || !data.data) {
     throw new Error(data.error?.message ?? "프로필 좋아요 상태 조회 실패")
+  }
+
+  return data.data
+}
+
+export async function getPopularMembers(limit = 5) {
+  const { data } = await http.get<ApiResponse<PopularMemberResponse[]>>(
+    "/api/members/popular",
+    { params: { limit } }
+  )
+
+  if (!data.success || !data.data) {
+    throw new Error(data.error?.message ?? "인기 멤버 조회 실패")
   }
 
   return data.data

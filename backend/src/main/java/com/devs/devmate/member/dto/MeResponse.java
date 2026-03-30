@@ -19,4 +19,6 @@ public class MeResponse {
     private MemberStatus status;
     private List<ProfileLinkResponse> links;
     private long receivedLikeCount;
+    private long profileLikeCount;
+    private long popularityScore;
 }

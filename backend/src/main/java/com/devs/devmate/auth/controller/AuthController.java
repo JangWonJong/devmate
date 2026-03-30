@@ -20,7 +20,6 @@ public class AuthController {
 
     @PostMapping("/login")
     public ApiResponse<LoginResponse> login(@RequestBody @Valid LoginRequest request){
-        System.out.println("###login called###");
         return ApiResponse.ok(authService.login(request));
     }
 

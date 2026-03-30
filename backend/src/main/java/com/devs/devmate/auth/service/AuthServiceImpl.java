@@ -45,8 +45,13 @@ public class AuthServiceImpl implements AuthService{
     @Override
     public LoginResponse login(LoginRequest request) {
         String email = request.getEmail().trim().toLowerCase();
+
         Member member = memberRepository.findByEmailAndStatus(email, MemberStatus.ACTIVE)
-                .orElseThrow(() -> new BusinessException(ErrorCode.DELETED_MEMBER));
+                .orElseThrow(() -> new BusinessException(ErrorCode.MEMBER_NOT_EXISTS));
+        if (member.getStatus() == MemberStatus.DELETED) {
+            throw new BusinessException(ErrorCode.DELETED_MEMBER);
+        }
+
         if (!passwordEncoder.matches(request.getPassword(), member.getPassword())){
             throw new BusinessException(ErrorCode.AUTH_FAILED);
         }

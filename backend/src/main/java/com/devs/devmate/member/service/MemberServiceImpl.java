@@ -9,6 +9,7 @@ import com.devs.devmate.like.repository.MemberLikeRepository;
 import com.devs.devmate.like.repository.PostLikeRepository;
 import com.devs.devmate.member.dto.*;
 import com.devs.devmate.member.entity.Member;
+import com.devs.devmate.member.entity.MemberStatus;
 import com.devs.devmate.member.entity.ProfileLink;
 import com.devs.devmate.member.entity.ProfileLinkType;
 import com.devs.devmate.member.repository.MemberRepository;
@@ -148,6 +149,9 @@ public class MemberServiceImpl implements MemberService{
     @Transactional(readOnly = true)
     public MeResponse getMe(Long memberId) {
         Member member = findActiveMember(memberId);
+        long receivedLikeCount = receivedLikeCount(memberId);
+        long profileLikeCount = memberLikeRepository.countByTargetMemberId(memberId);
+
         return new MeResponse(
                 member.getId(),
                 member.getEmail(),
@@ -158,7 +162,9 @@ public class MemberServiceImpl implements MemberService{
                 member.getProfileImageUrl(),
                 member.getStatus(),
                 toProfileLinkResponses(member),
-                receivedLikeCount(memberId)
+                receivedLikeCount,
+                profileLikeCount,
+                receivedLikeCount + profileLikeCount
                 );
     }
 
@@ -211,6 +217,9 @@ public class MemberServiceImpl implements MemberService{
             }
         }
 
+        long receivedLikeCount = receivedLikeCount(memberId);
+        long profileLikeCount = memberLikeRepository.countByTargetMemberId(memberId);
+
         return new MeResponse(
                 member.getId(),
                 member.getEmail(),
@@ -221,7 +230,9 @@ public class MemberServiceImpl implements MemberService{
                 member.getProfileImageUrl(),
                 member.getStatus(),
                 toProfileLinkResponses(member),
-                receivedLikeCount(memberId)
+                receivedLikeCount,
+                profileLikeCount,
+                receivedLikeCount + profileLikeCount
         );
     }
 
@@ -344,6 +355,33 @@ public class MemberServiceImpl implements MemberService{
                 receivedLikeCount(memberId),
                 memberLikeRepository.countByTargetMemberId(memberId)
         );
+    }
+
+    @Override
+    public List<PopularMemberResponse> getPopularMembers(int limit) {
+        int normalizedLimit = Math.max(1, Math.min(limit, 10));
+
+        return memberRepository.findAllByStatus(MemberStatus.ACTIVE).stream()
+                .map(member -> {
+                    long receivedLikeCount = receivedLikeCount(member.getId());
+                    long profileLikeCount = memberLikeRepository.countByTargetMemberId(member.getId());
+                    long popularityScore = receivedLikeCount + profileLikeCount;
+
+                    return  new PopularMemberResponse(
+                            member.getId(),
+                            member.getNickname(),
+                            member.getBio(),
+                            member.getProfileImageUrl(),
+                            member.getStatus(),
+                            receivedLikeCount,
+                            profileLikeCount,
+                            popularityScore
+                    );
+                })
+                .sorted(Comparator.comparingLong(PopularMemberResponse::popularityScore).reversed()
+                        .thenComparing(PopularMemberResponse::id))
+                .limit(normalizedLimit)
+                .toList();
     }
 
 }

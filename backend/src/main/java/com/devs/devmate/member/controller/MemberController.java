@@ -14,6 +14,8 @@ import org.springframework.http.MediaType;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
 
+import java.util.List;
+
 @RestController
 @RequiredArgsConstructor
 @RequestMapping("/api/members")
@@ -84,5 +86,14 @@ public class MemberController {
         Long actorMemberId = SecurityUtil.currentMemberId();
         return ApiResponse.ok(memberLikeService.getStatus(actorMemberId, memberId));
     }
+
+
+    @GetMapping("/popular")
+    public ApiResponse<List<PopularMemberResponse>> getPopularMember(
+            @RequestParam(defaultValue = "5") int limit
+    ) {
+        return ApiResponse.ok(memberService.getPopularMembers(limit));
+    }
+
 
 }

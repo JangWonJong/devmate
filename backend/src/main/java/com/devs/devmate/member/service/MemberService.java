@@ -21,4 +21,6 @@ public interface MemberService {
 
     MemberProfileResponse getProfile(Long memberId);
 
+    List<PopularMemberResponse> getPopularMembers(int limit);
+
 }
