@@ -6,6 +6,8 @@ import { listMyReservations } from "../../api/reservations"
 import { listLikedPosts, listPosts, type PostResponse } from "../../api/posts"
 import { listMyComments, type MyCommentResponse } from "../../api/comments"
 import { apiErrorMessage } from "../../utils/error"
+import { imageUrl } from "../../utils/image"
+
 
 function isUpcomingReservation(date: string, endTime: string) {
   const now = new Date()
@@ -264,7 +266,7 @@ export function MyPage() {
             >
               {me.profileImageUrl ? (
                 <img
-                  src={`${import.meta.env.VITE_API_BASE_URL}${me.profileImageUrl}`}
+                  src={imageUrl(me.profileImageUrl)}
                   alt="프로필 이미지"
                   className="h-full w-full object-cover"
                 />
@@ -487,7 +489,7 @@ export function MyPage() {
 
             <div className="overflow-hidden rounded-3xl bg-white shadow-2xl">
               <img
-                src={`${import.meta.env.VITE_API_BASE_URL}${me.profileImageUrl}`}
+                src={imageUrl(me.profileImageUrl)}
                 alt="프로필 이미지 확대"
                 className="max-h-[70vh] w-full object-contain"
               />

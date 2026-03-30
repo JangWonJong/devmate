@@ -10,6 +10,7 @@ import {
 } from "../../api/members"
 import { tokenStore } from "../../auth/token"
 import { apiErrorMessage } from "../../utils/error"
+import { imageUrl } from "../../utils/image"
 
 export function MemberProfilePage() {
   const { memberId } = useParams()
@@ -163,7 +164,7 @@ export function MemberProfilePage() {
               >
                 {profile.profileImageUrl ? (
                   <img
-                    src={`${import.meta.env.VITE_API_BASE_URL}${profile.profileImageUrl}`}
+                    src={imageUrl(profile.profileImageUrl)}
                     alt="프로필 이미지"
                     className="h-full w-full object-cover"
                   />
@@ -291,7 +292,7 @@ export function MemberProfilePage() {
 
             <div className="overflow-hidden rounded-3xl bg-white shadow-2xl">
               <img
-                src={`${import.meta.env.VITE_API_BASE_URL}${profile.profileImageUrl}`}
+                src={imageUrl(profile.profileImageUrl)}
                 alt="프로필 이미지 확대"
                 className="max-h-[70vh] w-full object-contain"
               />
