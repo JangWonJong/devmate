@@ -259,7 +259,12 @@ export default function ReservationCreateSection({
             type="button"
             disabled={busy}
             onClick={onCreate}
-            className="rounded-2xl bg-indigo-600 px-5 py-3 text-sm font-semibold text-white transition hover:bg-indigo-500 disabled:cursor-not-allowed disabled:opacity-50"
+            className="
+                  rounded-2xl px-4 py-2.5 text-sm font-semibold transition
+                  bg-indigo-50 text-indigo-600
+                  hover:bg-indigo-100
+                  disabled:opacity-50
+                "
           >
             예약하기
           </button>

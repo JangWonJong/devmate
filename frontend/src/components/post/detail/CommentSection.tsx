@@ -1,4 +1,5 @@
 import { Link } from "react-router-dom"
+import { actionButtonClass } from "../../../utils/button"
 
 type CommentItem = {
   id: number
@@ -164,29 +165,32 @@ export default function CommentSection({
 
                   <div className="flex flex-wrap gap-2">
                     {isMine && !c.adopted && (
-                      <ActionButton
+                      <button
                         onClick={() => onAdoptComment(c.id)}
-                        variant="success"
-                        className="shadow-sm px-5"
-                        >
+                        className={actionButtonClass("success")}
+                      >
                         채택
-                        </ActionButton>
+                      </button>
                     )}
 
                     {isMyComment && (
                       <>
-                        <ActionButton
+                        <button
                           onClick={() => {
                             setEditingCommentId(c.id)
                             setEditingContent(c.content)
                           }}
+                          className={actionButtonClass("default")}
                         >
                           수정
-                        </ActionButton>
+                        </button>
 
-                        <ActionButton onClick={() => onDeleteComment(c.id)} variant="danger">
+                        <button
+                          onClick={() => onDeleteComment(c.id)}
+                          className={actionButtonClass("danger")}
+                        >
                           삭제
-                        </ActionButton>
+                        </button>
                       </>
                     )}
                   </div>
@@ -200,17 +204,22 @@ export default function CommentSection({
                       className="h-12 w-full rounded-2xl border border-slate-300 bg-white px-4 text-sm text-slate-900 outline-none transition focus:border-slate-400"
                     />
                     <div className="flex flex-wrap gap-2">
-                      <ActionButton onClick={() => onUpdateComment(c.id)} variant="primary">
+                      <button
+                        onClick={() => onUpdateComment(c.id)}
+                        className={actionButtonClass("default")}
+                      >
                         저장
-                      </ActionButton>
-                      <ActionButton
+                      </button>
+
+                      <button
                         onClick={() => {
                           setEditingCommentId(null)
                           setEditingContent("")
                         }}
+                        className={actionButtonClass("subtle")}
                       >
                         취소
-                      </ActionButton>
+                      </button>
                     </div>
                   </div>
                 ) : (

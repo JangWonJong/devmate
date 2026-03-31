@@ -1,6 +1,8 @@
 import { useEffect, useState } from "react"
 import { useNavigate, Link } from "react-router-dom"
 import type { PostResponse } from "../../../api/posts"
+import { actionButtonClass } from "../../../utils/button"
+
 
 function StatusBadge({ solved }: { solved: boolean }) {
   return (
@@ -13,42 +15,6 @@ function StatusBadge({ solved }: { solved: boolean }) {
     >
       {solved ? "고민 해결됨" : "고민 해결 전"}
     </span>
-  )
-}
-
-function ActionButton({
-  children,
-  onClick,
-  disabled,
-  variant = "secondary",
-  type = "button",
-}: {
-  children: React.ReactNode
-  onClick?: () => void
-  disabled?: boolean
-  variant?: "primary" | "secondary" | "danger" | "success" | "edit"
-  type?: "button" | "submit"
-}) {
-  const className =
-    variant === "primary"
-      ? "bg-slate-900 text-white hover:bg-slate-800"
-      : variant === "danger"
-      ? "bg-red-500 text-white hover:bg-red-700"
-      : variant === "success"
-      ? "bg-emerald-500 text-white hover:bg-emerald-500"
-      : variant === "edit"
-      ? "bg-indigo-500 text-white hover:bg-indigo-500"
-      : "border border-slate-300 bg-slate-100 text-slate-700 hover:bg-slate-200"
-
-  return (
-    <button
-      type={type}
-      disabled={disabled}
-      onClick={onClick}
-      className={`rounded-2xl px-4 py-2.5 text-sm font-semibold transition disabled:cursor-not-allowed disabled:opacity-50 ${className}`}
-    >
-      {children}
-    </button>
   )
 }
 
@@ -257,18 +223,31 @@ export default function PostDetailHeader({
           </div>
 
           <div className="flex shrink-0 flex-wrap gap-3">
-            <ActionButton onClick={() => nav("/posts")}>
+            <button
+              onClick={() => nav("/posts")}
+              className="
+                  rounded-2xl px-4 py-2.5 text-sm font-semibold transition
+                  bg-indigo-50 text-gray-600
+                  hover:bg-indigo-100
+                  disabled:opacity-50
+                "
+            >
               전체 목록으로
-            </ActionButton>
+            </button>
 
             {isMine && (
-              <ActionButton
+              <button
                 onClick={() => nav(`/posts/${post.id}/edit`)}
                 disabled={busy}
-                variant="edit"
+                className="
+                  rounded-2xl px-4 py-2.5 text-sm font-semibold transition
+                  bg-indigo-50 text-indigo-600
+                  hover:bg-indigo-100
+                  disabled:opacity-50
+                "
               >
                 게시글 수정
-              </ActionButton>
+              </button>
             )}
           </div>
         </div>
@@ -329,23 +308,23 @@ export default function PostDetailHeader({
         {/* 오른쪽 버튼들 */}
         <div className="flex gap-3">
           {isMine && canSolve && (
-            <ActionButton
+            <button
               onClick={onSolve}
               disabled={busy}
-              variant="success"
+              className={actionButtonClass("success", busy)}
             >
               해결 완료
-            </ActionButton>
+            </button>
           )}
 
           {isMine && (
-            <ActionButton
+            <button
               onClick={onDeletePost}
               disabled={busy}
-              variant="danger"
+              className={actionButtonClass("danger", busy)}
             >
               삭제
-            </ActionButton>
+            </button>
           )}
         </div>
       </div>

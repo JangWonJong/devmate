@@ -44,6 +44,7 @@ import PostDetailHeader from "../../components/post/detail/PostDetailHeader"
 import StudyInfoSection from "../../components/study/detail/StudyInfoSection"
 import CommentSection from "../../components/post/detail/CommentSection"
 
+
 export function PostDetailPage() {
   const nav = useNavigate()
   const { id } = useParams()

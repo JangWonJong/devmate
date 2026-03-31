@@ -1,6 +1,8 @@
 import { useNavigate } from "react-router-dom"
 import type { StudyMemberResponse, StudyResponse } from "../../../api/study"
 import type { ReservationResponse } from "../../../api/reservations"
+import { actionButtonClass } from "../../../utils/button"
+
 
 function studyStatusLabel(status: string) {
   switch (status) {
@@ -275,21 +277,42 @@ export default function StudyInfoSection({
             )}
 
             {canJoin && (
-              <ActionButton variant="success" onClick={onJoinStudy}>
+              <button
+                onClick={onJoinStudy}
+                className={actionButtonClass("success")}
+              >
                 참가하기
-              </ActionButton>
+              </button>
             )}
-
-            {canLeave && <ActionButton onClick={onLeaveStudy}>탈퇴하기</ActionButton>}
-
-            {canClose && <ActionButton onClick={onCloseStudy}>모집 마감</ActionButton>}
+            {canLeave && <button
+              onClick={onLeaveStudy}
+              className={actionButtonClass("danger")}
+            >
+              탈퇴하기
+            </button>}
+            {canClose && <button
+              onClick={onCloseStudy}
+              className={actionButtonClass("subtle")}
+            >
+              모집 마감
+            </button>}
 
             {canUpdateNotice && (
-              <ActionButton onClick={onUpdateNotice}>공지 수정</ActionButton>
+              <button
+                onClick={onUpdateNotice}
+                className={actionButtonClass("default")}
+              >
+                공지 수정
+              </button>
             )}
 
             {canUpdateCapacity && (
-              <ActionButton onClick={onUpdateCapacity}>정원 수정</ActionButton>
+              <button
+                onClick={onUpdateCapacity}
+                className={actionButtonClass("default")}
+              >
+                정원 수정
+              </button>
             )}
           </div>
         ) : (
