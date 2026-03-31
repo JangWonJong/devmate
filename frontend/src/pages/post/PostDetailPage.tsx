@@ -82,6 +82,22 @@ export function PostDetailPage() {
 
   const handledNotFoundRef = useRef(false)
 
+  const applyComments = (res: CommentResponse[]) => {
+    setComments(res)
+    setCommentLikedMap(
+      Object.fromEntries(res.map((c) => [c.id, c.likedByMe ?? false]))
+    )
+    setCommentLikeCountMap(
+      Object.fromEntries(res.map((c) => [c.id, c.likeCount ?? 0]))
+    )
+  }
+
+  const refreshComments = async () => {
+    if (!id) return
+    const res = await listComments(id)
+    applyComments(res)
+  }
+
   useEffect(() => {
     const sync = () => setLoggedIn(tokenStore.isLoggedIn())
     sync()
@@ -99,8 +115,8 @@ export function PostDetailPage() {
         return
       }
       try {
-        const id = await getMeId()
-        setMeId(id)
+        const memberId = await getMeId()
+        setMeId(memberId)
       } catch {
         setMeId(null)
       }
@@ -140,17 +156,8 @@ export function PostDetailPage() {
 
       try {
         setCommentErr(null)
-
         const res = await listComments(id)
-        setComments(res)
-
-        setCommentLikedMap(
-          Object.fromEntries(res.map((c) => [c.id, c.likedByMe ?? false]))
-        )
-
-        setCommentLikeCountMap(
-          Object.fromEntries(res.map((c) => [c.id, c.likeCount ?? 0]))
-        )
+        applyComments(res)
       } catch (e: any) {
         const status = e?.response?.status
         if (status === 404) return
@@ -231,7 +238,7 @@ export function PostDetailPage() {
         setLikeCount(post?.likeCount ?? 0)
       }
     })()
-  }, [id, loggedIn, post?.likeCount])
+  }, [id, loggedIn])
 
   const refreshStudySection = async (postId: number) => {
     const s = await getStudyByPostId(postId)
@@ -385,15 +392,7 @@ export function PostDetailPage() {
       setCommentErr(null)
       await createComment(id, { content: commentInput.trim() })
       setCommentInput("")
-
-      const res = await listComments(id)
-      setComments(res)
-      setCommentLikedMap(
-        Object.fromEntries(res.map((c) => [c.id, c.likedByMe ?? false]))
-      )
-      setCommentLikeCountMap(
-        Object.fromEntries(res.map((c) => [c.id, c.likeCount ?? 0]))
-      )
+      await refreshComments()
     } catch (e: any) {
       setCommentErr(apiErrorMessage(e, "댓글 작성 실패"))
     }
@@ -434,7 +433,10 @@ export function PostDetailPage() {
 
   const onUpdateComment = async (commentId: number) => {
     const content = editingContent.trim()
-    if (!content) return setCommentErr("댓글 내용을 입력하세요")
+    if (!content) {
+      setCommentErr("댓글 내용을 입력하세요")
+      return
+    }
 
     try {
       setCommentErr(null)
@@ -493,15 +495,7 @@ export function PostDetailPage() {
     try {
       setCommentErr(null)
       await adoptComment(commentId)
-
-      const res = await listComments(id!)
-      setComments(res)
-      setCommentLikedMap(
-        Object.fromEntries(res.map((c) => [c.id, c.likedByMe ?? false]))
-      )
-      setCommentLikeCountMap(
-        Object.fromEntries(res.map((c) => [c.id, c.likeCount ?? 0]))
-      )
+      await refreshComments()
 
       const updatedPost = await getPost(id!)
       setPost(updatedPost)
@@ -538,6 +532,7 @@ export function PostDetailPage() {
     }
 
     try {
+      setActionErr(null)
       setLikeLoading(true)
 
       if (likedByMe) {
@@ -565,6 +560,7 @@ export function PostDetailPage() {
     if (commentLikeLoadingMap[commentId]) return
 
     try {
+      setCommentErr(null)
       setCommentLikeLoadingMap((prev) => ({
         ...prev,
         [commentId]: true,

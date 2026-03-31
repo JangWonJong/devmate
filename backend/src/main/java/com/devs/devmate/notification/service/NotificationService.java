@@ -6,6 +6,8 @@ import com.devs.devmate.notification.dto.NotificationUnreadCountResponse;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 
+import java.time.LocalDateTime;
+
 public interface NotificationService {
 
     Page<NotificationResponse> list(Long memberId, Pageable pageable);
@@ -33,5 +35,6 @@ public interface NotificationService {
     void createCommentLiked(Long receiverId, Long actorId, Long postId, String commentContent);
 
     void createMemberLiked(Long receiverId, Long actorId, Long targetMemberId);
+
 }
 

@@ -255,6 +255,27 @@ export function AppLayout() {
     return () => document.removeEventListener("mousedown", onClickOutside)
   }, [notificationOpen])
 
+  useEffect(() => {
+    if (!loggedIn) return
+
+    const interval = setInterval(() => {
+      loadUnreadCount()
+    }, 15000) 
+
+    return () => clearInterval(interval)
+  }, [loggedIn, loadUnreadCount])
+
+  useEffect(() => {
+    if (!loggedIn) return
+
+    const handleFocus = () => {
+      void loadUnreadCount()
+    }
+
+    window.addEventListener("focus", handleFocus)
+    return () => window.removeEventListener("focus", handleFocus)
+  }, [loggedIn, loadUnreadCount])
+
   return (
     <div className="min-h-screen bg-white text-slate-900">
       <AppHeader

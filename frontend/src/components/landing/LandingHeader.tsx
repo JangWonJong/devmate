@@ -52,12 +52,6 @@ export default function LandingHeader({
           >
             예약
           </Link>
-          <Link
-            to="/notifications"
-            className="text-sm font-medium text-slate-600 transition hover:text-slate-900"
-          >
-            알림
-          </Link>
         </nav>
 
         <div className="flex items-center gap-3">

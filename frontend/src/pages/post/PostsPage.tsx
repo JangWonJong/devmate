@@ -499,7 +499,7 @@ export function PostsPage() {
         </div>
 
         <aside className="space-y-4 xl:sticky xl:top-24 xl:self-start">
-          {popularMembers.length > 0 && (
+          {popularMembers.filter(m => m.popularityScore > 0).length > 0 &&(
             <section className="rounded-[24px] border border-slate-300 bg-white p-4 shadow-md ring-1 ring-slate-100">
               <div className="mb-3 flex items-center justify-between">
                 <h2 className="text-sm font-semibold text-slate-800">
@@ -509,7 +509,9 @@ export function PostsPage() {
               </div>
 
               <div className="space-y-2">
-                {popularMembers.map((member, idx) => (
+                {popularMembers
+                      .filter(m => m.popularityScore > 0)
+                      .map((member, idx) => (
                   <Link 
                     key={member.id}
                     to={`/members/${member.id}`}

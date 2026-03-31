@@ -133,20 +133,20 @@ export default function AppHeader({
               </button>
 
               {notificationOpen && (
-                <div className="absolute right-0 top-[calc(100%+10px)] z-[1000] w-[380px] overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-xl">
+                <div className="absolute left-0 top-[calc(100%+10px)] z-[1000] w-[360px] overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-xl">
                   <div className="flex items-center justify-between border-b border-slate-100 bg-slate-50 px-4 py-3">
                     <strong className="text-sm text-slate-900">알림</strong>
                     <button
-                      type="button"
+                       type="button"
                       onClick={() => void onReadAllNotifications()}
                       disabled={!hasUnreadNotifications}
-                      className={`text-xs font-semibold ${
+                      className={`rounded-xl border px-3 py-1.5 text-xs font-medium transition ${
                         hasUnreadNotifications
-                          ? "text-blue-600 hover:underline"
-                          : "cursor-default text-slate-400"
+                          ? "border-slate-300 text-slate-600 hover:bg-slate-50"
+                          : "cursor-default border-slate-200 text-slate-400"
                       }`}
                     >
-                      모두 읽음 처리
+                      전체 읽음
                     </button>
                   </div>
 

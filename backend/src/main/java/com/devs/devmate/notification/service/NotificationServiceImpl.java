@@ -15,6 +15,7 @@ import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.time.LocalDateTime;
 import java.util.List;
 
 @Service
@@ -182,7 +183,7 @@ public class NotificationServiceImpl implements NotificationService{
             preview = preview.substring(0, 20) + "...";
         }
 
-        String content = actor.getNickname() + "님이 회원님의 댓글에 좋아요를 눌렀습니다.";
+        String content = actor.getNickname() + "님이 회원님의 댓글에 좋아요를 했습니다.";
         //String content = actor.getNickname() + "님이 회원님의 댓글(\"" + preview + "\")을 좋아요했습니다.";
 
         notificationRepository.save(
@@ -220,4 +221,5 @@ public class NotificationServiceImpl implements NotificationService{
                         .build()
         );
     }
+
 }
