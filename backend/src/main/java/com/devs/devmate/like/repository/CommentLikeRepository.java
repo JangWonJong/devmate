@@ -24,4 +24,8 @@ public interface CommentLikeRepository extends JpaRepository<CommentLike, Long> 
             where cl.comment.member.id = :memberId
     """)
     long countReceivedCommentLikes(@Param("memberId") Long memberId);
+
+    void deleteAllByCommentId(Long commentId);
+
+    void deleteAllByCommentIdIn(List<Long> commentIds);
 }

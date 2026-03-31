@@ -7,6 +7,7 @@ import com.devs.devmate.like.entity.MemberLike;
 import com.devs.devmate.like.repository.MemberLikeRepository;
 import com.devs.devmate.member.entity.Member;
 import com.devs.devmate.member.repository.MemberRepository;
+import com.devs.devmate.notification.service.NotificationService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -18,6 +19,8 @@ public class MemberLikeServiceImpl implements MemberLikeService{
 
     private final MemberLikeRepository memberLikeRepository;
     private final MemberRepository memberRepository;
+    private final NotificationService notificationService;
+
 
     @Override
     @Transactional
@@ -48,6 +51,10 @@ public class MemberLikeServiceImpl implements MemberLikeService{
                         .targetMember(target)
                         .actorMember(actor)
                         .build()
+        );
+
+        notificationService.createMemberLiked(
+                targetMemberId, actorMemberId, targetMemberId
         );
 
     }

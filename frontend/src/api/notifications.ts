@@ -11,30 +11,32 @@ export type NotificationType =
     | "STUDY_LEAVE"
     | "POST_LIKED"
     | "COMMENT_LIKED"
-
+    | "MEMBER_LIKED"
 
 export const getNotificationLabel = (type: NotificationResponse["type"]) => {
-    switch (type) {
-      case "COMMENT_CREATED":
-        return "댓글"
-      case "COMMENT_ACCEPTED":
-        return "채택"
-      case "STUDY_NOTICE_UPDATED":
-        return "공지"
-      case "STUDY_JOINED":
-        return "참가"
-      case "STUDY_RESERVATION_CREATED":
-        return "예약"
-      case "STUDY_LEAVE":
-        return "탈퇴"
-      case "POST_LIKED":
-        return "좋아요"
-      case "COMMENT_LIKED":
-        return "댓글 좋아요"
-      default:
-        return "알림"
-    }
+  switch (type) {
+    case "COMMENT_CREATED":
+      return "💬 댓글"
+    case "COMMENT_ACCEPTED":
+      return "✅ 채택"
+    case "STUDY_NOTICE_UPDATED":
+      return "📢 공지"
+    case "STUDY_JOINED":
+      return "🤝 참가"
+    case "STUDY_RESERVATION_CREATED":
+      return "📅 예약"
+    case "STUDY_LEAVE":
+      return "🚪 탈퇴"
+    case "POST_LIKED":
+      return "❤️ 게시글 좋아요"
+    case "COMMENT_LIKED":
+      return "🧡 댓글 좋아요"
+    case "MEMBER_LIKED":
+      return "💖 프로필 좋아요"
+    default:
+      return "🔔 알림"
   }
+}
 
 export const getNotificationLabelStyle = (type: NotificationResponse["type"]) => {
     switch (type) {
@@ -75,8 +77,13 @@ export const getNotificationLabelStyle = (type: NotificationResponse["type"]) =>
       }
       case "COMMENT_LIKED":
       return {
-        background: "#fff1f2",
-        color: "#e11d48",
+        background: "#fff7ed",
+        color: "#c2410c",
+      }
+      case "MEMBER_LIKED":
+      return {
+        background: "#fce7f3",
+        color: "#be185d",
       }
       default:
         return {
@@ -113,7 +120,7 @@ export async function listNotifications(page = 0, size = 10) {
         throw new Error(data.error?.message ?? "알림 목록 조회 실패")
     }
 
-    return data. data
+    return data.data
     
 }
 
@@ -127,7 +134,7 @@ export async function getUnreadNotificationCount() {
         throw new Error(data.error?.message ?? "안읽은 알림 수 조회 실패")
     }
 
-    return data. data
+    return data.data
     
 }
 
@@ -140,7 +147,7 @@ export async function readNotification(notificationId: number | string) {
         throw new Error(data.error?.message ?? "알림 읽음 처리 실패")
     }
 
-    return data. data
+    return data.data
     
 }
 
@@ -153,7 +160,7 @@ export async function readAllNotifications() {
         throw new Error(data.error?.message ?? "전체 알림 읽음 처리 실패")
     }
 
-    return data. data
+    return data.data
     
 }
 

@@ -157,7 +157,7 @@ public class NotificationServiceImpl implements NotificationService{
         Member actor = memberRepository.findById(actorId)
                 .orElseThrow(() -> new BusinessException(ErrorCode.MEMBER_NOT_FOUND));
 
-        String content = actor.getNickname() + "님이\"" + postTitle + "\" 게시글을 좋아요했습니다.";
+        String content = actor.getNickname() + "님이 [" + postTitle + "] 게시글을 좋아요했습니다.";
 
         notificationRepository.save(
                 Notification.builder()
@@ -192,6 +192,31 @@ public class NotificationServiceImpl implements NotificationService{
                         .type(NotificationType.COMMENT_LIKED)
                         .content(content)
                         .targetUrl("/posts/" + postId)
+                        .build()
+        );
+    }
+
+    @Override
+    public void createMemberLiked(Long receiverId, Long actorId, Long targetMemberId) {
+        Member receiver = memberRepository.findById(receiverId)
+                .orElseThrow(() -> new BusinessException(ErrorCode.MEMBER_NOT_FOUND));
+
+        Member actor = memberRepository.findById(actorId)
+                .orElseThrow(() -> new BusinessException(ErrorCode.MEMBER_NOT_FOUND));
+
+        if (receiverId.equals(actorId)) {
+            return;
+        }
+
+        String content = actor.getNickname() + "님이 회원님의 프로필을 좋아요했습니다.";
+
+        notificationRepository.save(
+                Notification.builder()
+                        .receiver(receiver)
+                        .actor(actor)
+                        .type(NotificationType.MEMBER_LIKED)
+                        .content(content)
+                        .targetUrl("/members/" + targetMemberId)
                         .build()
         );
     }

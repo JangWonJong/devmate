@@ -3,6 +3,7 @@ package com.devs.devmate.post.service;
 import com.devs.devmate.comment.repository.CommentRepository;
 import com.devs.devmate.global.exception.BusinessException;
 import com.devs.devmate.global.exception.ErrorCode;
+import com.devs.devmate.like.repository.CommentLikeRepository;
 import com.devs.devmate.like.repository.PostLikeRepository;
 import com.devs.devmate.member.entity.Member;
 import com.devs.devmate.member.repository.MemberRepository;
@@ -42,6 +43,7 @@ public class PostServiceImpl implements PostService{
     private final PostFileService postFileService;
     private final PostAttachmentRepository postAttachmentRepository;
     private final PostLikeRepository postLikeRepository;
+    private final CommentLikeRepository commentLikeRepository;
 
     private String normalize(String keyword) {
         if (keyword == null) return null;
@@ -225,6 +227,12 @@ public class PostServiceImpl implements PostService{
             });
         }
 
+        List<Long> commentIds = commentRepository.findIdsByPostId(postId);
+        if (!commentIds.isEmpty()) {
+            commentLikeRepository.deleteAllByCommentIdIn(commentIds);
+        }
+
+        postLikeRepository.deleteAllByPostId(postId);
         commentRepository.deleteAllByPostId(postId);
         postRepository.delete(post);
     }

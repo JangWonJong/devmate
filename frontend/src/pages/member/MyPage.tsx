@@ -7,13 +7,7 @@ import { listLikedPosts, listPosts, type PostResponse } from "../../api/posts"
 import { listMyComments, type MyCommentResponse } from "../../api/comments"
 import { apiErrorMessage } from "../../utils/error"
 import { imageUrl } from "../../utils/image"
-
-
-function isUpcomingReservation(date: string, endTime: string) {
-  const now = new Date()
-  const end = new Date(`${date}T${endTime}`)
-  return end >= now
-}
+import { isUpcomingReservation, formatDate, countRecentActivities } from "../../components/member/mypage"
 
 function StatCard({
   label,
@@ -110,7 +104,7 @@ function PostItem({
       <div className="text-base font-semibold text-slate-900">{post.title}</div>
 
       <div className="mt-2 text-sm text-slate-500">
-        {new Date(post.createdAt).toLocaleDateString("ko-KR")}
+        {formatDate(post.createdAt)}
       </div>
     </button>
   )
@@ -150,11 +144,12 @@ function CommentItem({
       </div>
 
       <div className="mt-3 text-sm text-slate-500">
-        {new Date(comment.createdAt).toLocaleDateString("ko-KR")}
+        {formatDate(comment.createdAt)}
       </div>
     </button>
   )
 }
+
 
 export function MyPage() {
   const nav = useNavigate()
@@ -170,6 +165,10 @@ export function MyPage() {
 
   const [loading, setLoading] = useState(true)
   const [err, setErr] = useState<string | null>(null)
+  
+  const recentPostCount = countRecentActivities(myPosts, 3)
+  const recentCommentCount = countRecentActivities(myComments, 3)
+  const recentLikeCount = countRecentActivities(likedPosts, 3)
 
   useEffect(() => {
     const fetchData = async () => {
@@ -187,7 +186,7 @@ export function MyPage() {
           getMe(),
           getMyStudies(),
           listMyReservations({ page: 0, size: 100, sort: "date,desc" }),
-          listPosts({ mine: true, page: 0, size: 5, sort: "id,desc" }),
+          listPosts({ mine: true, page: 0, size: 10, sort: "id,desc" }),
           listMyComments(),
           listLikedPosts(),
         ])
@@ -202,8 +201,8 @@ export function MyPage() {
         setUpcomingReservationsCount(upcomingCount)
         setMyPosts(myPostsPage.content)
         setMyPostsCount(myPostsPage.totalElements)
-        setMyComments(myCommentsData.slice(0, 5))
-        setLikedPosts(likedPostsData.slice(0, 5))
+        setMyComments(myCommentsData.slice(0, 10))
+        setLikedPosts(likedPostsData.slice(0, 10))
       } catch (e) {
         setErr(apiErrorMessage(e, "마이페이지 조회 실패"))
       } finally {
@@ -426,11 +425,28 @@ export function MyPage() {
         </div>
       </section>
 
-      <section className="grid gap-4 sm:grid-cols-2 xl:grid-cols-5">
-        <StatCard label="내 상태" value={me?.status ?? "-"} />
-        <StatCard label="내 글" value={`${myPostsCount}개`} />
-        <StatCard label="참여 중 스터디" value={`${myStudiesCount}개`} />
-        <StatCard label="예정 예약" value={`${upcomingReservationsCount}건`} />
+      <section className="rounded-2xl border border-slate-200 bg-white p-6 shadow-sm">
+        <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
+          <StatCard label="내 상태" value={me?.status ?? "-"} />
+          <StatCard label="내 글" value={`${myPostsCount}개`} />
+          <StatCard label="참여 중 스터디" value={`${myStudiesCount}개`} />
+          <StatCard label="예정 예약" value={`${upcomingReservationsCount}건`} />
+        </div>
+
+        <div className="mt-5 flex flex-wrap items-center gap-2 border-t border-slate-200 pt-4">
+          <span className="text-sm font-semibold text-slate-900">최근 활동</span>
+          <span className="rounded-full bg-blue-50 px-3 py-1 text-sm font-medium text-blue-700">
+            작성글 {recentPostCount}건
+          </span>
+
+          <span className="rounded-full bg-emerald-50 px-3 py-1 text-sm font-medium text-emerald-700">
+            댓글 {recentCommentCount}건
+          </span>
+
+          <span className="rounded-full bg-rose-50 px-3 py-1 text-sm font-medium text-rose-700">
+            좋아요 {recentLikeCount}건
+          </span>
+        </div>
       </section>
 
       <section className="rounded-2xl border border-slate-200 bg-white p-6 shadow-sm">

@@ -31,5 +31,7 @@ public interface NotificationService {
     void createPostLiked(Long receiverId, Long actorId, Long postId, String postTitle);
 
     void createCommentLiked(Long receiverId, Long actorId, Long postId, String commentContent);
+
+    void createMemberLiked(Long receiverId, Long actorId, Long targetMemberId);
 }
 

@@ -8,5 +8,6 @@ public enum NotificationType {
     STUDY_RESERVATION_CREATED,
     STUDY_LEAVE,
     POST_LIKED,
-    COMMENT_LIKED
+    COMMENT_LIKED,
+    MEMBER_LIKED
 }

@@ -99,6 +99,7 @@ public class CommentServiceImpl implements CommentService{
             throw new BusinessException(ErrorCode.FORBIDDEN_COMMENT);
         }
 
+        commentLikeRepository.deleteAllByCommentId(commentId);
         commentRepository.delete(comment);
     }
 
