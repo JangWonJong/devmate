@@ -146,6 +146,13 @@ export function ReservationsPage() {
       const res = await getRoomAvailability(roomId, date)
       setAvailability(res)
     } catch (e: any) {
+      const status = e?.response?.status
+
+      if (status === 401 || status === 403) {
+        setAvailability(null)
+        return
+      }
+
       setAvailability(null)
       setErr(apiErrorMessage(e, "예약 가능 시간 조회 실패"))
     } finally {
@@ -184,6 +191,14 @@ export function ReservationsPage() {
           setRoomId((prev) => (prev == null ? res[0].id : prev))
         }
       } catch (e: any) {
+        const status = e?.response?.status
+
+        if (status === 401 || status === 403) {
+          setRooms([])
+          setRoomId(null)
+          return
+        }
+
         setErr(apiErrorMessage(e, "방 목록 조회 실패"))
       }
     })()
@@ -238,6 +253,13 @@ export function ReservationsPage() {
 
         await loadAll()
       } catch (e: any) {
+        const status = e?.response?.status
+
+        if (scope === "all" && (status === 401 || status === 403)) {
+          setItems([])
+          return
+        }
+
         setErr(apiErrorMessage(e, "예약 조회 실패"))
       }
     })()

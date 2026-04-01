@@ -13,8 +13,8 @@ import {
   Image as ImageIcon,
   Search,
 } from "lucide-react"
-
 import { imageUrl } from "../../utils/image"
+import { apiErrorMessage } from "../../utils/error"
 
 type PageInfo = {
   totalPages: number
@@ -146,9 +146,7 @@ export function PostsPage() {
   const [err, setErr] = useState<string | null>(null)
   const [loading, setLoading] = useState(false)
   const [qInput, setQInput] = useState(q)
-  const [popularMembers, setPopularMembers] = useState<PopularMemberResponse[]>(
-    []
-  )
+  const [popularMembers, setPopularMembers] = useState<PopularMemberResponse[]>([])
 
   useEffect(() => {
     setQInput(q)
@@ -182,7 +180,7 @@ export function PostsPage() {
         setErr(null)
 
         if (!loggedIn && scope === "mine") {
-          setQuery({ scope: "all", page: 0 })
+          setQuery({ scope: "all", page: 0 }, { replace: true })
           return
         }
 
@@ -202,10 +200,10 @@ export function PostsPage() {
         })
 
         if (res.totalPages > 0 && page > res.totalPages - 1) {
-          setQuery({ page: res.totalPages - 1 })
+          setQuery({ page: res.totalPages - 1 }, { replace: true })
         }
       } catch (e: any) {
-        setErr(e.message ?? "목록 조회 실패")
+        setErr(apiErrorMessage(e, "목록 조회 실패"))
       } finally {
         setLoading(false)
       }
@@ -213,9 +211,14 @@ export function PostsPage() {
   }, [page, size, scope, sort, q, onlySolved, loggedIn, setQuery])
 
   useEffect(() => {
-    getPopularMembers(5)
-      .then(setPopularMembers)
-      .catch(() => {})
+    ;(async () => {
+      try {
+        const members = await getPopularMembers(5)
+        setPopularMembers(members.filter((m) => m.popularityScore > 0))
+      } catch {
+        setPopularMembers([])
+      }
+    })()
   }, [])
 
   const emptyText = (() => {
@@ -229,9 +232,7 @@ export function PostsPage() {
   return (
     <div className="space-y-8">
       <section className="space-y-3">
-        <h1 className="text-4xl font-bold tracking-tight text-slate-900">
-          게시글
-        </h1>
+        <h1 className="text-4xl font-bold tracking-tight text-slate-900">게시글</h1>
         <p className="text-lg leading-8 text-slate-600">
           개발 고민을 공유하고, 해결 과정을 기록해보세요.
         </p>
@@ -280,9 +281,7 @@ export function PostsPage() {
                 <input
                   type="checkbox"
                   checked={onlySolved}
-                  onChange={(e) =>
-                    setQuery({ solved: e.target.checked, page: 0 })
-                  }
+                  onChange={(e) => setQuery({ solved: e.target.checked, page: 0 })}
                   className="h-4 w-4 rounded border-slate-300"
                 />
                 해결된 글만
@@ -406,14 +405,11 @@ export function PostsPage() {
                             >
                               {p.authorNickname}
                             </Link>
+
                             {p.createdAt && (
                               <>
                                 <span className="text-slate-300">•</span>
-                                <span>
-                                  {new Date(p.createdAt).toLocaleDateString(
-                                    "ko-KR"
-                                  )}
-                                </span>
+                                <span>{new Date(p.createdAt).toLocaleDateString("ko-KR")}</span>
                               </>
                             )}
                           </div>
@@ -440,10 +436,7 @@ export function PostsPage() {
                 </button>
 
                 {Array.from({ length: pageInfo.totalPages })
-                  .slice(
-                    Math.max(0, page - 3),
-                    Math.min(pageInfo.totalPages, page + 4)
-                  )
+                  .slice(Math.max(0, page - 3), Math.min(pageInfo.totalPages, page + 4))
                   .map((_, idx) => {
                     const start = Math.max(0, page - 3)
                     const pno = start + idx
@@ -465,9 +458,7 @@ export function PostsPage() {
 
                 <button
                   type="button"
-                  disabled={
-                    pageInfo.totalPages === 0 || page >= pageInfo.totalPages - 1
-                  }
+                  disabled={pageInfo.totalPages === 0 || page >= pageInfo.totalPages - 1}
                   onClick={() => setQuery({ page: page + 1 })}
                   className="inline-flex items-center gap-1 rounded-2xl border border-slate-300 px-4 py-2 text-sm font-medium text-slate-700 transition hover:bg-slate-50 disabled:cursor-not-allowed disabled:border-slate-200 disabled:text-slate-300"
                 >
@@ -478,15 +469,12 @@ export function PostsPage() {
 
               <div className="flex flex-wrap items-center gap-3 text-sm text-slate-500">
                 <span>
-                  {page + 1} / {pageInfo.totalPages} 페이지 · 총{" "}
-                  {pageInfo.totalElements}개
+                  {page + 1} / {pageInfo.totalPages} 페이지 · 총 {pageInfo.totalElements}개
                 </span>
 
                 <select
                   value={size}
-                  onChange={(e) =>
-                    setQuery({ size: Number(e.target.value), page: 0 })
-                  }
+                  onChange={(e) => setQuery({ size: Number(e.target.value), page: 0 })}
                   className="rounded-2xl border border-slate-300 bg-white px-3 py-2 text-sm text-slate-700 outline-none transition focus:border-slate-400"
                 >
                   <option value={5}>5개</option>
@@ -499,20 +487,16 @@ export function PostsPage() {
         </div>
 
         <aside className="space-y-4 xl:sticky xl:top-24 xl:self-start">
-          {popularMembers.filter(m => m.popularityScore > 0).length > 0 &&(
+          {popularMembers.length > 0 && (
             <section className="rounded-[24px] border border-slate-300 bg-white p-4 shadow-md ring-1 ring-slate-100">
               <div className="mb-3 flex items-center justify-between">
-                <h2 className="text-sm font-semibold text-slate-800">
-                  인기 멤버
-                </h2>
+                <h2 className="text-sm font-semibold text-slate-800">인기 멤버</h2>
                 <span className="text-[11px] text-slate-400">좋아요 기준</span>
               </div>
 
               <div className="space-y-2">
-                {popularMembers
-                      .filter(m => m.popularityScore > 0)
-                      .map((member, idx) => (
-                  <Link 
+                {popularMembers.map((member, idx) => (
+                  <Link
                     key={member.id}
                     to={`/members/${member.id}`}
                     className="flex items-center gap-3 rounded-xl border border-slate-200 px-3 py-2.5 transition hover:bg-slate-50"
@@ -544,6 +528,7 @@ export function PostsPage() {
                         {idx + 1}
                       </div>
                     </div>
+
                     <div className="min-w-0 flex-1">
                       <div className="truncate text-sm font-semibold text-slate-900">
                         {member.nickname}
