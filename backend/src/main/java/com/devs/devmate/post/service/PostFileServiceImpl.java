@@ -3,6 +3,7 @@ package com.devs.devmate.post.service;
 import com.devs.devmate.global.exception.BusinessException;
 import com.devs.devmate.global.exception.ErrorCode;
 import com.devs.devmate.post.dto.StoredFileInfo;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 import org.springframework.web.multipart.MultipartFile;
 
@@ -22,7 +23,9 @@ public class PostFileServiceImpl implements PostFileService{
             "image/jpg",
             "image/webp"
     );
-    private final String baseDir  = "C:/WJ/devmate/uploads";
+
+    @Value("${file.upload-dir}")
+    private String baseDir;
 
     private void validateFile(MultipartFile file) {
         String contentType = file.getContentType();
