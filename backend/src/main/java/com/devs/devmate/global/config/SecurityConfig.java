@@ -39,14 +39,21 @@ public class SecurityConfig {
             .authorizeHttpRequests(auth -> auth
                     .requestMatchers(HttpMethod.OPTIONS, "/**").permitAll()
                     .requestMatchers("/error","/api/members/signup", "/api/auth/**").permitAll()
+
                     .requestMatchers(HttpMethod.GET, "/api/posts/**").permitAll()
                     .requestMatchers(HttpMethod.GET, "/api/posts/*/comments").permitAll()
                     .requestMatchers("/uploads/**").permitAll()
+
                     .requestMatchers(HttpMethod.GET, "/api/studies/**").permitAll()
                     .requestMatchers(HttpMethod.GET, "/api/rooms/**").permitAll()
+
                     .requestMatchers(HttpMethod.GET, "/api/reservations/mine").authenticated()
                     .requestMatchers(HttpMethod.GET, "/api/reservations/**").permitAll()
+
+                    .requestMatchers(HttpMethod.GET, "/api/members/*/likes/me").authenticated()
                     .requestMatchers(HttpMethod.GET, "/api/members/popular").permitAll()
+                    .requestMatchers(HttpMethod.GET, "/api/members/*").permitAll()
+
                     .anyRequest().authenticated()
             )
             .addFilterBefore(new JwtAuthenticationFilter(jwtProvider),
