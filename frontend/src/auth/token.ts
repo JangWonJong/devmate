@@ -1,6 +1,6 @@
-const ACCESS_KEY = "devmate_access_token"
-const REFRESH_KEY = "devmate_refresh_token"
-const AUTH_EVENT = "auth-change"
+const ACCESS_KEY = "devmine_access_token"
+const REFRESH_KEY = "devmine_refresh_token"
+const AUTH_EVENT = "devmine-auth-change"
 
 function emitAuthChange() {
     window.dispatchEvent(new Event(AUTH_EVENT))
