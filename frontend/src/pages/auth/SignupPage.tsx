@@ -109,7 +109,7 @@ export function SignupPage() {
         <div className="mb-8 text-center">
           <h1 className="mt-2 text-3xl font-bold text-slate-900">회원가입</h1>
           <p className="mt-2 text-sm text-slate-600">
-            DevMate에 가입하고 커뮤니티, 스터디, 예약 기능을 시작해보세요.
+            DevMine에 가입하고 커뮤니티, 스터디, 예약 기능을 시작해보세요.
           </p>
           <div className="mt-2 text-center text-sm text-slate-600">
             이미 계정이 있으신가요?{" "}

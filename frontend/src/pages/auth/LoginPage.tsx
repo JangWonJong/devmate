@@ -53,7 +53,7 @@ export function LoginPage() {
         <div className="mb-8 text-center">
           <h1 className="mt-2 text-3xl font-bold text-slate-900">로그인</h1>
           <p className="mt-2 text-sm text-slate-600">
-            DevMate에 로그인하고 서비스를 이용해보세요.
+            DevMine에 로그인하고 서비스를 이용해보세요.
           </p>
           <div className="text-center text-sm text-slate-600">
           계정이 없으신가요?{" "}

@@ -145,7 +145,7 @@ export default function FeatureSection() {
       <div className="mx-auto max-w-7xl px-6 py-20">
         <div className="mb-12">
           <h2 className="mb-4 text-3xl font-bold tracking-tight text-slate-900">
-            DevMate의 핵심 기능
+            DevMine의 핵심 기능
           </h2>
           <p className="text-slate-600">
             커뮤니티, 스터디, 예약 기능이 분리되지 않고 하나의 흐름으로 연결됩니다.

@@ -13,7 +13,13 @@ export default function LandingFooter({
         <div className="flex flex-col gap-8 md:flex-row md:items-start md:justify-between">
           <div className="max-w-md">
             <div className="text-2xl font-bold tracking-tight text-slate-900">
-              DevMate
+              <Link to="/" className="flex items-center">
+                <img
+                  src="/devmine2.png"
+                  alt="DevMine"
+                  className="h-15 w-auto object-contain"
+                />
+              </Link>
             </div>
             <p className="mt-3 text-sm leading-7 text-slate-600">
               개발 고민 해결부터 스터디와 예약까지 이어가는
@@ -60,7 +66,7 @@ export default function LandingFooter({
         </div>
 
         <div className="mt-10 flex flex-col gap-2 border-t border-slate-200 pt-6 text-xs text-slate-500 md:flex-row md:items-center md:justify-between">
-          <span>© 2026 DevMate. All rights reserved.</span>
+          <span>© 2026 DevMine. All rights reserved.</span>
           <span>Built with Spring Boot & React</span>
         </div>
       </div>

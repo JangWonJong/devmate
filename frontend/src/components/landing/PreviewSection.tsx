@@ -55,7 +55,7 @@ export default function PreviewSection() {
           </h2>
           <p className="max-w-3xl text-lg leading-8 text-slate-600">
             실제 서비스 화면처럼 보이도록 게시글, 스터디, 예약, 알림 요소를 함께 배치하여
-            <br /> DevMate의 흐름을 한눈에 보여줍니다.
+            <br /> DevMine의 흐름을 한눈에 보여줍니다.
           </p>
         </div>
 

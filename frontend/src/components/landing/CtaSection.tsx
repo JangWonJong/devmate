@@ -13,8 +13,8 @@ export default function CtaSection({
       <div className="rounded-[32px] border border-slate-200 bg-slate-50 px-8 py-16 text-center shadow-sm">
         <h2 className="text-3xl font-bold tracking-tight text-slate-900 md:text-4xl">
           {isLoggedIn
-            ? "DevMate에서 지금 바로 시작해보세요"
-            : "DevMate에서 함께 해결해보세요"}
+            ? "DevMine에서 지금 바로 시작해보세요"
+            : "DevMine에서 함께 해결해보세요"}
         </h2>
 
         <p className="mx-auto mt-4 max-w-2xl text-lg leading-8 text-slate-600">

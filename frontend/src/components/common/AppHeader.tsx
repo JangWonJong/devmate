@@ -88,11 +88,12 @@ export default function AppHeader({
     <header className="sticky top-0 z-50 border-b border-slate-200 bg-white/90 backdrop-blur">
       <div className="mx-auto flex h-16 max-w-7xl items-center justify-between px-6">
         <div className="flex items-center gap-10">
-          <Link
-            to="/"
-            className="text-2xl font-bold tracking-tight text-slate-900"
-          >
-            DevMate
+          <Link to="/" className="flex items-center">
+            <img
+              src="/devmine2.png"
+              alt="DevMine"
+              className="h-15 w-auto object-contain"
+            />
           </Link>
 
           <nav className="hidden items-center gap-7 md:flex">

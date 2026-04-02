@@ -29,7 +29,7 @@ export default function FlowSection() {
           질문에서 모임까지 이어지는 흐름
         </h2>
         <p className="text-muted-foreground">
-          DevMate는 기능을 나열하는 서비스가 아니라, 학습과 협업의 흐름을 연결하는 서비스입니다.
+          DevMine는 기능을 나열하는 서비스가 아니라, 학습과 협업의 흐름을 연결하는 서비스입니다.
         </p>
       </div>
 
