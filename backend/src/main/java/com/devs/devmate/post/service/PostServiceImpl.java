@@ -18,7 +18,7 @@ import com.devs.devmate.post.repository.PostRepository;
 import com.devs.devmate.reservation.repository.ReservationRepository;
 import com.devs.devmate.study.repository.StudyMemberRepository;
 import com.devs.devmate.study.repository.StudyRepository;
-import lombok.*;
+import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
@@ -28,11 +28,10 @@ import org.springframework.web.multipart.MultipartFile;
 
 import java.util.List;
 
-
 @Service
 @RequiredArgsConstructor
 @Transactional
-public class PostServiceImpl implements PostService{
+public class PostServiceImpl implements PostService {
 
     private final PostRepository postRepository;
     private final MemberRepository memberRepository;
@@ -70,7 +69,6 @@ public class PostServiceImpl implements PostService{
     }
 
     private List<String> getStoredFilenames(Post post) {
-
         return post.getAttachments().stream()
                 .map(PostAttachment::getStoredFileName)
                 .toList();
@@ -104,7 +102,6 @@ public class PostServiceImpl implements PostService{
         List<StoredFileInfo> storedFiles = postFileService.saveFiles(files, "posts");
 
         if (storedFiles != null && !storedFiles.isEmpty()) {
-
             addAttachments(post, storedFiles);
         }
 
@@ -113,24 +110,44 @@ public class PostServiceImpl implements PostService{
 
     @Override
     @Transactional(readOnly = true)
-    public Page<PostResponse> list( String keyword, Boolean solved, Pageable pageable) {
+    public Page<PostResponse> list(String keyword, Boolean solved, Pageable pageable) {
         String k = normalize(keyword);
 
-        if (isLikeSort(pageable) && k == null && solved == null) {
-            return postRepository.findAllOrderByLikeCountDesc(withoutSort(pageable))
+        if (isLikeSort(pageable)) {
+            Pageable unsorted = withoutSort(pageable);
+
+            if (k == null && solved == null) {
+                return postRepository.findAllOrderByLikeCountDesc(unsorted)
+                        .map(post -> PostResponse.from(post, countPost(post)));
+            }
+            if (k != null && solved == null) {
+                return postRepository.searchAllOrderByLikeCountDesc(k, unsorted)
+                        .map(post -> PostResponse.from(post, countPost(post)));
+            }
+            if (k == null) {
+                return postRepository.findBySolvedOrderByLikeCountDesc(solved, unsorted)
+                        .map(post -> PostResponse.from(post, countPost(post)));
+            }
+
+            return postRepository.searchAllWithSolvedOrderByLikeCountDesc(k, solved, unsorted)
                     .map(post -> PostResponse.from(post, countPost(post)));
         }
+
         if (k == null && solved == null) {
-            return postRepository.findAll(pageable).map(post -> PostResponse.from(post, countPost(post)));
+            return postRepository.findAll(pageable)
+                    .map(post -> PostResponse.from(post, countPost(post)));
         }
         if (k != null && solved == null) {
-            return postRepository.searchAll(k, pageable).map(post -> PostResponse.from(post, countPost(post)));
+            return postRepository.searchAll(k, pageable)
+                    .map(post -> PostResponse.from(post, countPost(post)));
         }
         if (k == null) {
-            return postRepository.findBySolved(solved, pageable).map(post -> PostResponse.from(post, countPost(post)));
+            return postRepository.findBySolved(solved, pageable)
+                    .map(post -> PostResponse.from(post, countPost(post)));
         }
 
-        return postRepository.searchAllWithSolved(k, solved, pageable).map(post -> PostResponse.from(post, countPost(post)));
+        return postRepository.searchAllWithSolved(k, solved, pageable)
+                .map(post -> PostResponse.from(post, countPost(post)));
     }
 
     @Override
@@ -138,47 +155,64 @@ public class PostServiceImpl implements PostService{
     public Page<PostResponse> listMine(Long memberId, String keyword, Boolean solved, Pageable pageable) {
         String k = normalize(keyword);
 
-        if (isLikeSort(pageable) && k == null && solved == null) {
-            return postRepository.findMineOrderByLikeCountDesc(memberId, withoutSort(pageable))
+        if (isLikeSort(pageable)) {
+            Pageable unsorted = withoutSort(pageable);
+
+            if (k == null && solved == null) {
+                return postRepository.findMineOrderByLikeCountDesc(memberId, unsorted)
+                        .map(post -> PostResponse.from(post, countPost(post)));
+            }
+            if (k != null && solved == null) {
+                return postRepository.searchMineOrderByLikeCountDesc(memberId, k, unsorted)
+                        .map(post -> PostResponse.from(post, countPost(post)));
+            }
+            if (k == null) {
+                return postRepository.findMineBySolvedOrderByLikeCountDesc(memberId, solved, unsorted)
+                        .map(post -> PostResponse.from(post, countPost(post)));
+            }
+
+            return postRepository.searchMineWithSolvedOrderByLikeCountDesc(memberId, k, solved, unsorted)
                     .map(post -> PostResponse.from(post, countPost(post)));
         }
 
         if (k == null && solved == null) {
-            return postRepository.findByMemberId(memberId, pageable).map(post -> PostResponse.from(post, countPost(post)));
+            return postRepository.findByMemberId(memberId, pageable)
+                    .map(post -> PostResponse.from(post, countPost(post)));
         }
         if (k != null && solved == null) {
-            return postRepository.searchMine(memberId, k, pageable).map(post -> PostResponse.from(post, countPost(post)));
+            return postRepository.searchMine(memberId, k, pageable)
+                    .map(post -> PostResponse.from(post, countPost(post)));
         }
-        if (k == null) { // solved != null
-            return postRepository.findByMemberIdAndSolved(memberId, solved, pageable).map(post -> PostResponse.from(post, countPost(post)));
+        if (k == null) {
+            return postRepository.findByMemberIdAndSolved(memberId, solved, pageable)
+                    .map(post -> PostResponse.from(post, countPost(post)));
         }
-        return postRepository.searchMineWithSolved(memberId, k, solved, pageable).map(post -> PostResponse.from(post, countPost(post)));
+
+        return postRepository.searchMineWithSolved(memberId, k, solved, pageable)
+                .map(post -> PostResponse.from(post, countPost(post)));
     }
 
     @Override
     @Transactional(readOnly = true)
     public PostResponse get(Long postId) {
-
         Post post = postRepository.findById(postId)
-                .orElseThrow(()-> new BusinessException(ErrorCode.POST_NOT_FOUND));
+                .orElseThrow(() -> new BusinessException(ErrorCode.POST_NOT_FOUND));
 
         return PostResponse.from(post, countPost(post));
     }
 
     @Override
     public void update(Long memberId, Long postId, PostUpdateRequest request, List<MultipartFile> files) {
-
         Post post = postRepository.findById(postId)
-                .orElseThrow(()-> new BusinessException(ErrorCode.POST_NOT_FOUND));
+                .orElseThrow(() -> new BusinessException(ErrorCode.POST_NOT_FOUND));
 
-        if (!post.getMember().getId().equals(memberId)){
+        if (!post.getMember().getId().equals(memberId)) {
             throw new BusinessException(ErrorCode.FORBIDDEN_POST);
         }
 
         post.update(request.getTitle(), request.getContent(), request.isSolved());
 
         if (request.getRemovedFileIds() != null && !request.getRemovedFileIds().isEmpty()) {
-
             List<PostAttachment> attachmentsToRemove =
                     postAttachmentRepository.findAllByIdIn(request.getRemovedFileIds());
 
@@ -197,26 +231,21 @@ public class PostServiceImpl implements PostService{
         }
 
         if (files != null && !files.isEmpty()) {
-
             List<StoredFileInfo> storedFiles = postFileService.saveFiles(files, "posts");
-
             addAttachments(post, storedFiles);
         }
-
     }
 
     @Override
     public void delete(Long memberId, Long postId) {
-
         Post post = postRepository.findById(postId)
-                .orElseThrow(()-> new BusinessException(ErrorCode.POST_NOT_FOUND));
+                .orElseThrow(() -> new BusinessException(ErrorCode.POST_NOT_FOUND));
 
-        if (!post.getMember().getId().equals(memberId)){
+        if (!post.getMember().getId().equals(memberId)) {
             throw new BusinessException(ErrorCode.FORBIDDEN_POST);
         }
 
         List<String> storedFileNames = getStoredFilenames(post);
-
         postFileService.deleteFiles(storedFileNames, "posts");
 
         if (post.getType() == Post.PostType.STUDY) {
@@ -240,12 +269,13 @@ public class PostServiceImpl implements PostService{
     @Override
     public void solve(Long memberId, Long postId) {
         Post post = postRepository.findById(postId)
-                .orElseThrow(()->new BusinessException(ErrorCode.POST_NOT_FOUND));
-        if (!post.getMember().getId().equals(memberId)){
+                .orElseThrow(() -> new BusinessException(ErrorCode.POST_NOT_FOUND));
+
+        if (!post.getMember().getId().equals(memberId)) {
             throw new BusinessException(ErrorCode.FORBIDDEN_POST);
         }
-        post.markSolved();
 
+        post.markSolved();
     }
 
     @Override
@@ -255,6 +285,4 @@ public class PostServiceImpl implements PostService{
                 .map(post -> PostResponse.from(post, countPost(post)))
                 .toList();
     }
-
-
 }
