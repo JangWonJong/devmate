@@ -54,6 +54,8 @@ public class SecurityConfig {
                     .requestMatchers(HttpMethod.GET, "/api/members/popular").permitAll()
                     .requestMatchers(HttpMethod.GET, "/api/members/*").permitAll()
 
+                    .requestMatchers(HttpMethod.POST, "/api/ai/guide").permitAll()
+
                     .anyRequest().authenticated()
             )
             .addFilterBefore(new JwtAuthenticationFilter(jwtProvider),

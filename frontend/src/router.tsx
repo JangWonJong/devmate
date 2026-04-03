@@ -1,5 +1,5 @@
 import { createBrowserRouter } from "react-router-dom"
-import LandingPage from "./pages/landing/LandingPage";
+import LandingLayout from "./laytouts/LandingLayout";
 import {AppLayout} from "./laytouts/AppLayout"
 import { PostsPage } from "./pages/post/PostsPage"
 import { NewPostPage } from "./pages/post/NewPostPage"
@@ -19,7 +19,7 @@ import { MemberProfilePage } from "./pages/member/MemberProfilePage";
 
 export const router = createBrowserRouter([
     {   
-         path: "/", element: <LandingPage /> 
+         path: "/", element: <LandingLayout /> 
     },
 
         {

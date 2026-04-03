@@ -11,6 +11,8 @@ import {
   readNotification,
   type NotificationResponse,
 } from "../api/notifications"
+import SupportFloatingButton from "../components/support/SupportFloatingButton"
+import SupportPanel from "../components/support/SupportPanel"
 
 export function AppLayout() {
   const nav = useNavigate()
@@ -24,6 +26,8 @@ export function AppLayout() {
   const [notifications, setNotifications] = useState<NotificationResponse[]>([])
   const [notificationLoading, setNotificationLoading] = useState(false)
   const [unreadCount, setUnreadCount] = useState(0)
+
+  const [supportOpen, setSupportOpen] = useState(false)
 
   const notificationRef = useRef<HTMLDivElement | null>(null)
   const syncRef = useRef(false)
@@ -299,6 +303,12 @@ export function AppLayout() {
       <main className="mx-auto min-h-[calc(100vh-64px)] max-w-7xl px-6 py-10">
         <Outlet />
       </main>
+       <SupportFloatingButton
+          open={supportOpen}
+          onClick={() => setSupportOpen((prev) => !prev)}
+        />
+        <SupportPanel open={supportOpen} onClose={() => setSupportOpen(false)} />
+
     </div>
   )
 }

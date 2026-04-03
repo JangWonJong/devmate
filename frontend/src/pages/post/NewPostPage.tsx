@@ -1,5 +1,5 @@
 import { useRef, useState } from "react"
-import { useNavigate } from "react-router-dom"
+import { useLocation, useNavigate } from "react-router-dom"
 import { createPost } from "../../api/posts"
 
 function validateFiles(files: File[]) {
@@ -29,13 +29,24 @@ function validateFiles(files: File[]) {
 
 export function NewPostPage() {
   const nav = useNavigate()
+  const loc = useLocation()
+  const state = loc.state as
+   | {
+      prefilledTitle?: string
+      prefilledContent?: string
+      prefilledType?: "QUESTION" | "STUDY"
+    }
+  | undefined
+
   const fileInputRef = useRef<HTMLInputElement | null>(null)
 
-  const [title, setTitle] = useState("")
-  const [content, setContent] = useState("")
+
+  const [title, setTitle] = useState(state?.prefilledTitle ?? "")
+  const [content, setContent] = useState(state?.prefilledContent ?? "")
+  const [type, setType] = useState<"QUESTION" | "STUDY">(state?.prefilledType ?? "QUESTION")
+
   const [err, setErr] = useState<string | null>(null)
   const [loading, setLoading] = useState(false)
-  const [type, setType] = useState<"QUESTION" | "STUDY">("QUESTION")
   const [files, setFiles] = useState<File[]>([])
 
   const addFiles = (selected: File[]) => {
