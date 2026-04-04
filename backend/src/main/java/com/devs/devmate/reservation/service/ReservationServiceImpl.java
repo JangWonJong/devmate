@@ -9,6 +9,7 @@ import com.devs.devmate.notification.service.NotificationService;
 import com.devs.devmate.reservation.dto.*;
 import com.devs.devmate.reservation.entity.Reservation;
 import com.devs.devmate.reservation.entity.Room;
+import com.devs.devmate.reservation.repository.ReservationLockRepository;
 import com.devs.devmate.reservation.repository.ReservationRepository;
 import com.devs.devmate.reservation.repository.RoomRepository;
 import com.devs.devmate.study.entity.Study;
@@ -27,6 +28,7 @@ import java.time.LocalDateTime;
 import java.time.LocalTime;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.function.Supplier;
 
 
 @Service
@@ -41,6 +43,7 @@ public class ReservationServiceImpl implements ReservationService{
     private final StudyMemberRepository studyMemberRepository;
     private final NotificationService notificationService;
     private final ReservationAvailabilityEvaluator reservationAvailabilityEvaluator;
+    private final ReservationLockRepository lockRepository;
 
     private Room findRoom(Long roomId) {
         return roomRepository.findById(roomId)
@@ -156,6 +159,24 @@ public class ReservationServiceImpl implements ReservationService{
         }
     }
 
+    private <T> T executeWithLock(String key, Supplier<T> action) {
+
+        boolean locked = lockRepository.tryLock(key, 3);
+
+        if (!locked) {
+            throw new BusinessException(ErrorCode.RESERVATION_CONFLICT);
+        }
+        try {
+            return action.get();
+        } finally {
+            lockRepository.releaseLock(key);
+        }
+    }
+
+    private String createLockKey(Long roomId, LocalDate date) {
+        return "reservation:room" + roomId + ":date:" + date;
+    }
+
     private record TimeSlot(LocalTime startTime, LocalTime endTime){}
 
     private List<TimeSlot> createBaseSlots() {
@@ -187,22 +208,26 @@ public class ReservationServiceImpl implements ReservationService{
         if (member.getStatus() == MemberStatus.DELETED) {
             throw new BusinessException(ErrorCode.DELETED_MEMBER);
         }
-        validateReservationOverlap(
-                room.getId(), req.date(), req.startTime(), req.endTime());
 
-        Reservation saved = reservationRepository.save(
-                Reservation.builder()
-                        .member(member)
-                        .room(room)
-                        .date(req.date())
-                        .startTime(req.startTime())
-                        .endTime(req.endTime())
-                        .title(req.title().trim())
-                        .status(Reservation.Status.ACTIVE)
-                        .build()
-        );
+        String lockKey = createLockKey(req.roomId(), req.date());
 
-        return new ReservationCreateResponse(saved.getId());
+        return executeWithLock(lockKey, () -> {
+            validateReservationOverlap(
+                    room.getId(), req.date(), req.startTime(), req.endTime());
+
+            Reservation saved = reservationRepository.save(
+                    Reservation.builder()
+                            .member(member)
+                            .room(room)
+                            .date(req.date())
+                            .startTime(req.startTime())
+                            .endTime(req.endTime())
+                            .title(req.title().trim())
+                            .status(Reservation.Status.ACTIVE)
+                            .build()
+            );
+            return new ReservationCreateResponse(saved.getId());
+        });
     }
 
     @Override
@@ -231,38 +256,49 @@ public class ReservationServiceImpl implements ReservationService{
         Member member = memberRepository.findById(memberId)
                 .orElseThrow(() -> new BusinessException(ErrorCode.MEMBER_NOT_FOUND));
 
-        validateReservationOverlap(
-                room.getId(), req.date(), req.startTime(), req.endTime());
-
-        String title = "[스터디] " + study.getPost().getTitle();
-
-        Reservation saved = reservationRepository.save(
-                Reservation.builder()
-                        .member(member)
-                        .room(room)
-                        .study(study)
-                        .date(req.date())
-                        .startTime(req.startTime())
-                        .endTime(req.endTime())
-                        .title(title)
-                        .status(Reservation.Status.ACTIVE)
-                        .build()
-        );
-
-        List<StudyMember> joinedMembers = studyMemberRepository.findByStudyIdAndStatus(
-                studyId, StudyMember.Status.JOINED
-        );
-
-        for (StudyMember studyMember : joinedMembers) {
-            notificationService.createStudyReservationCreated(
-                    studyMember.getMember(),
-                    member,
-                    study.getPost().getId(),
-                    study.getPost().getTitle()
-            );
+        if (member.getStatus() == MemberStatus.DELETED) {
+            throw new BusinessException(ErrorCode.DELETED_MEMBER);
         }
 
-        return new ReservationCreateResponse(saved.getId());
+        String lockKey = createLockKey(req.roomId(), req.date());
+        String title = "[스터디] " + study.getPost().getTitle();
+
+        return executeWithLock(lockKey, () -> {
+            validateReservationOverlap(
+                    room.getId(),
+                    req.date(),
+                    req.startTime(),
+                    req.endTime()
+            );
+
+            Reservation saved = reservationRepository.save(
+                    Reservation.builder()
+                            .member(member)
+                            .room(room)
+                            .study(study)
+                            .date(req.date())
+                            .startTime(req.startTime())
+                            .endTime(req.endTime())
+                            .title(title)
+                            .status(Reservation.Status.ACTIVE)
+                            .build()
+            );
+
+            List<StudyMember> joinedMembers = studyMemberRepository.findByStudyIdAndStatus(
+                    studyId, StudyMember.Status.JOINED
+            );
+
+            for (StudyMember studyMember : joinedMembers) {
+                notificationService.createStudyReservationCreated(
+                        studyMember.getMember(),
+                        member,
+                        study.getPost().getId(),
+                        study.getPost().getTitle()
+                );
+            }
+
+            return new ReservationCreateResponse(saved.getId());
+        });
     }
 
     @Override

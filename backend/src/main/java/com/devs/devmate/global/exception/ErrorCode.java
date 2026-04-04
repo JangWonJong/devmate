@@ -49,6 +49,7 @@ public enum ErrorCode {
     RESERVATION_DAILY_LIMIT_EXCEEDED(HttpStatus.BAD_REQUEST, "RESERVATION_400_5", "하루 최대 3개의 예약만 가능합니다."),
     RESERVATION_DAILY_HOURS_EXCEEDED(HttpStatus.BAD_REQUEST, "RESERVATION_400_6", "하루 총 예약 가능 시간은 최대 5시간입니다."),
     MEMBER_RESERVATION_TIME_CONFLICT(HttpStatus.CONFLICT, "RESERVATION_409_2", "동일 시간대에 다른 예약이 이미 존재합니다."),
+    RESERVATION_CONFLICT(HttpStatus.CONFLICT, "RESERVATION_409_3","동시에 예약 요청이 발생했습니다. 잠시 후 다시 시도해주세요."),
 
     // COMMENT
     COMMENT_NOT_FOUND(HttpStatus.NOT_FOUND, "COMMENT_404", "댓글을 찾을 수 없습니다."),
@@ -71,7 +72,7 @@ public enum ErrorCode {
     INVALID_STUDY_LEADER_TARGET(HttpStatus.BAD_REQUEST, "STUDY_400_6", "리더 위임 대상이 올바르지 않습니다."),
     FORBIDDEN_STUDY_RESERVATION(HttpStatus.FORBIDDEN, "STUDY_403_4", "해당 스터디의 멤버만 예약할 수 있습니다."),
     STUDY_RESERVATION_MEMBER_CONFLICT(HttpStatus.CONFLICT,"STUDY_409_3","스터디 멤버 중 기존 예약과 시간이 겹치는 인원이 있어 예약할 수 없습니다."),
-    STUDY_JOIN_RESERVATION_CONFLICT(HttpStatus.CONFLICT, "STUDY_409_3", "기존 예약과 시간이 겹쳐 해당 스터디에 참가할 수 없습니다."),
+    STUDY_JOIN_RESERVATION_CONFLICT(HttpStatus.CONFLICT, "STUDY_409_4", "기존 예약과 시간이 겹쳐 해당 스터디에 참가할 수 없습니다."),
     FORBIDDEN_STUDY_UPDATE(HttpStatus.FORBIDDEN, "STUDY_403_5", "스터디 리더만 수정할 수 있습니다."),
     INVALID_STUDY_CAPACITY(HttpStatus.BAD_REQUEST, "STUDY_400_9", "현재 참여 인원보다 적게 정원을 설정할 수 없습니다."),
     FORBIDDEN_STUDY_NOTICE_UPDATE(HttpStatus.FORBIDDEN, "STUDY_403_6", "스터디 리더만 소개를 수정할 수 있습니다."),
