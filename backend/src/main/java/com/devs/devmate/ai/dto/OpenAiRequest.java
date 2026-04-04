@@ -9,18 +9,10 @@ import java.util.Map;
 public class OpenAiRequest {
 
     private final String model;
-    private final String instructions;
     private final String input;
-    private final Map<String, Object> text;
 
-    public OpenAiRequest(String model, String instructions, String input) {
+    public OpenAiRequest(String model, String input) {
         this.model = model;
-        this.instructions = instructions;
         this.input = input;
-        this.text = Map.of(
-                "format", Map.of(
-                        "type", "json_object"
-                )
-        );
     }
 }
