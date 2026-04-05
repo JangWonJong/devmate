@@ -2,16 +2,21 @@ package com.devs.devmate.reservation.controller;
 
 
 import com.devs.devmate.global.common.ApiResponse;
+import com.devs.devmate.global.common.JwtPrincipal;
+import com.devs.devmate.global.common.JwtProvider;
 import com.devs.devmate.global.security.SecurityUtil;
 import com.devs.devmate.reservation.dto.ReservationCreateRequest;
 import com.devs.devmate.reservation.dto.ReservationCreateResponse;
 import com.devs.devmate.reservation.dto.ReservationResponse;
 import com.devs.devmate.reservation.service.ReservationService;
+import com.devs.devmate.reservation.service.ReservationSseService;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
+import org.springframework.http.MediaType;
 import org.springframework.web.bind.annotation.*;
+import org.springframework.web.servlet.mvc.method.annotation.SseEmitter;
 
 import java.time.LocalDate;
 
@@ -19,7 +24,10 @@ import java.time.LocalDate;
 @RequiredArgsConstructor
 @RequestMapping("/api/reservations")
 public class ReservationController {
+
     private final ReservationService reservationService;
+    private final ReservationSseService reservationSseService;
+    private final JwtProvider jwtProvider;
 
     @PostMapping
     public ApiResponse<ReservationCreateResponse> create(@RequestBody @Valid ReservationCreateRequest req) {
@@ -57,6 +65,17 @@ public class ReservationController {
         Long memberId = SecurityUtil.currentMemberId();
         reservationService.cancel(memberId, id);
         return ApiResponse.ok();
+    }
+
+    @GetMapping(value = "/subscribe", produces = MediaType.TEXT_EVENT_STREAM_VALUE)
+    public SseEmitter subscribe(
+            @RequestParam Long roomId,
+            @RequestParam LocalDate date,
+            @RequestParam String token
+    ) {
+        JwtPrincipal principal = jwtProvider.parseAccessToken(token);
+        Long memberId = principal.memberId();
+        return reservationSseService.subscribe(memberId, roomId, date);
     }
 
 }

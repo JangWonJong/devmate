@@ -47,12 +47,15 @@ public class SecurityConfig {
                     .requestMatchers(HttpMethod.GET, "/api/studies/**").permitAll()
                     .requestMatchers(HttpMethod.GET, "/api/rooms/**").permitAll()
 
+                    .requestMatchers(HttpMethod.GET, "/api/reservations/subscribe").permitAll()
                     .requestMatchers(HttpMethod.GET, "/api/reservations/mine").authenticated()
                     .requestMatchers(HttpMethod.GET, "/api/reservations/**").permitAll()
 
                     .requestMatchers(HttpMethod.GET, "/api/members/*/likes/me").authenticated()
                     .requestMatchers(HttpMethod.GET, "/api/members/popular").permitAll()
                     .requestMatchers(HttpMethod.GET, "/api/members/*").permitAll()
+
+                    .requestMatchers(HttpMethod.GET, "/api/notifications/subscribe").permitAll()
 
                     .requestMatchers(HttpMethod.POST, "/api/ai/guide").permitAll()
 

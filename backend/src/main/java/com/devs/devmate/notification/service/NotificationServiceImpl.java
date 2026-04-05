@@ -25,6 +25,12 @@ public class NotificationServiceImpl implements NotificationService{
 
     private final NotificationRepository notificationRepository;
     private final MemberRepository memberRepository;
+    private final NotificationSseService notificationSseService;
+
+    private void push(Long memberId) {
+        long count = notificationRepository.countByReceiverIdAndIsReadFalse(memberId);
+        notificationSseService.send(memberId, count);
+    }
 
     @Override
     @Transactional(readOnly = true)
@@ -72,6 +78,8 @@ public class NotificationServiceImpl implements NotificationService{
                         .content(actor.getNickname() + "님이 내 게시글에 댓글을 남겼어요")
                         .targetUrl("/posts/" + postId)
                         .build());
+
+        push(receiver.getId());
     }
 
     @Override
@@ -87,6 +95,8 @@ public class NotificationServiceImpl implements NotificationService{
                         .content("내 댓글이 채택되었어요")
                         .targetUrl("/posts/" + postId)
                         .build());
+
+        push(receiver.getId());
 
 
     }
@@ -104,6 +114,8 @@ public class NotificationServiceImpl implements NotificationService{
                 .content( "[" + studyTitle + "] 스터디 공지가 수정되었어요")
                 .targetUrl("/posts/" + postId)
                 .build());
+
+        push(receiver.getId());
     }
 
     @Override
@@ -119,6 +131,8 @@ public class NotificationServiceImpl implements NotificationService{
                         .content(actor.getNickname() + "님이 [" +studyTitle + "] 스터디에 참여했어요")
                         .targetUrl("/posts/" + postId)
                         .build());
+
+        push(receiver.getId());
     }
 
     @Override
@@ -134,6 +148,7 @@ public class NotificationServiceImpl implements NotificationService{
                         .content(actor.getNickname() + "님이 [" + studyTitle + "] 스터디 예약을 했어요")
                         .targetUrl("/posts/" + postId)
                         .build());
+        push(receiver.getId());
     }
 
     @Override
@@ -149,6 +164,7 @@ public class NotificationServiceImpl implements NotificationService{
                         .content(actor.getNickname() + "님이 [" + postTitle + "] 스터디에서 탈퇴했어요.")
                         .targetUrl("/posts/" + postId)
                         .build());
+        push(receiver.getId());
     }
 
     @Override
@@ -169,6 +185,7 @@ public class NotificationServiceImpl implements NotificationService{
                         .targetUrl("/posts/" + postId)
                         .build()
         );
+        push(receiver.getId());
     }
 
     @Override
@@ -195,6 +212,7 @@ public class NotificationServiceImpl implements NotificationService{
                         .targetUrl("/posts/" + postId)
                         .build()
         );
+        push(receiver.getId());
     }
 
     @Override
@@ -220,6 +238,7 @@ public class NotificationServiceImpl implements NotificationService{
                         .targetUrl("/members/" + targetMemberId)
                         .build()
         );
+        push(receiver.getId());
     }
 
 }

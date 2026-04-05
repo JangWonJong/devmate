@@ -17,6 +17,7 @@ import {
 } from "../../utils/reservationUtils"
 import StudyInfoCard from "../../components/study/reservation/StudyInfoCard"
 import StudyReservationCreateSection from "../../components/study/reservation/StudyReservationCreateSection"
+import { tokenStore } from "../../auth/token"
 
 export function StudyReservationPage() {
   const nav = useNavigate()
@@ -73,6 +74,59 @@ export function StudyReservationPage() {
     }
   }, [roomId, date])
 
+  const loadAll = useCallback(async () => {
+    const page = await listReservations({
+      date,
+      roomId,
+      page: 0,
+      size: 50,
+      sort: "startTime,asc",
+    })
+    setItems(page.content)
+  }, [date, roomId])
+
+  const onCreate = async () => {
+    if (!parsedStudyId || Number.isNaN(parsedStudyId)) {
+      setErr("잘못된 스터디 정보예요.")
+      return
+    }
+
+    if (!roomId) {
+      setErr("방을 선택하세요.")
+      return
+    }
+
+    if (!selectedTime) {
+      setErr("예약 시간을 선택하세요.")
+      return
+    }
+
+    setSuccessMessage(null)
+
+    try {
+      setSaving(true)
+      setErr(null)
+
+      await createStudyReservation(parsedStudyId, {
+        roomId,
+        date,
+        startTime: selectedTime,
+        endTime: addHours(selectedTime, durationHours),
+      })
+
+      setSuccessMessage("스터디 예약이 완료되었어요.")
+      setSelectedTime(null)
+      setDurationHours(1)
+
+      await loadReservations()
+      await refreshAvailability()
+    } catch (e: any) {
+      setErr(apiErrorMessage(e, "스터디 예약 생성 실패"))
+    } finally {
+      setSaving(false)
+    }
+  }
+
   useEffect(() => {
     if (!successMessage) return
     const timer = window.setTimeout(() => {
@@ -80,6 +134,26 @@ export function StudyReservationPage() {
     }, 2500)
     return () => window.clearTimeout(timer)
   }, [successMessage])
+
+  useEffect(() => {
+      if (!roomId || !date) return
+  
+      const token = tokenStore.getAccess()
+      if (!token) return
+  
+      const es = new EventSource(
+        `${import.meta.env.VITE_API_BASE_URL}/api/reservations/subscribe?roomId=${roomId}&date=${date}&token=${encodeURIComponent(token)}`
+      )
+  
+      es.onmessage = () => {
+        refreshAvailability()
+        loadAll()
+      }
+  
+      return () => {
+        es.close()
+      }
+    }, [roomId, date, refreshAvailability, loadAll])
 
   useEffect(() => {
     ;(async () => {
@@ -130,48 +204,6 @@ export function StudyReservationPage() {
   useEffect(() => {
     setSelectedTime(null)
   }, [date, roomId, durationHours])
-
-  const onCreate = async () => {
-    if (!parsedStudyId || Number.isNaN(parsedStudyId)) {
-      setErr("잘못된 스터디 정보예요.")
-      return
-    }
-
-    if (!roomId) {
-      setErr("방을 선택하세요.")
-      return
-    }
-
-    if (!selectedTime) {
-      setErr("예약 시간을 선택하세요.")
-      return
-    }
-
-    setSuccessMessage(null)
-
-    try {
-      setSaving(true)
-      setErr(null)
-
-      await createStudyReservation(parsedStudyId, {
-        roomId,
-        date,
-        startTime: selectedTime,
-        endTime: addHours(selectedTime, durationHours),
-      })
-
-      setSuccessMessage("스터디 예약이 완료되었어요.")
-      setSelectedTime(null)
-      setDurationHours(1)
-
-      await loadReservations()
-      await refreshAvailability()
-    } catch (e: any) {
-      setErr(apiErrorMessage(e, "스터디 예약 생성 실패"))
-    } finally {
-      setSaving(false)
-    }
-  }
 
   if (loading) {
     return (

@@ -160,63 +160,7 @@ export function ReservationsPage() {
     }
   }, [scope, roomId, date])
 
-  useEffect(() => {
-    const sync = () => setLoggedIn(tokenStore.isLoggedIn())
-    sync()
-    return tokenStore.subscribe(sync)
-  }, [])
-
-  useEffect(() => {
-    ;(async () => {
-      if (!loggedIn) {
-        setMeId(null)
-        return
-      }
-      try {
-        const id = await getMeId()
-        setMeId(id)
-      } catch {
-        setMeId(null)
-      }
-    })()
-  }, [loggedIn])
-
-  useEffect(() => {
-    ;(async () => {
-      try {
-        setErr(null)
-        const res = await listRooms()
-        setRooms(res)
-        if (res.length > 0) {
-          setRoomId((prev) => (prev == null ? res[0].id : prev))
-        }
-      } catch (e: any) {
-        const status = e?.response?.status
-
-        if (status === 401 || status === 403) {
-          setRooms([])
-          setRoomId(null)
-          return
-        }
-
-        setErr(apiErrorMessage(e, "방 목록 조회 실패"))
-      }
-    })()
-  }, [])
-
-  useEffect(() => {
-    void refreshAvailability()
-  }, [refreshAvailability])
-
-  useEffect(() => {
-    if (!successMessage) return
-    const timer = window.setTimeout(() => {
-      setSuccessMessage(null)
-    }, 2500)
-    return () => window.clearTimeout(timer)
-  }, [successMessage])
-
-  const loadAll = async () => {
+  const loadAll = useCallback(async () => {
     const page = await listReservations({
       date,
       roomId,
@@ -225,9 +169,9 @@ export function ReservationsPage() {
       sort: "startTime,asc",
     })
     setItems(page.content)
-  }
+  }, [date, roomId])
 
-  const loadMine = async () => {
+  const loadMine = useCallback(async () => {
     const page = await listMyReservations({
       date: mineDate || undefined,
       page: 0,
@@ -235,46 +179,7 @@ export function ReservationsPage() {
       sort: mineDate ? "startTime,asc" : "date,desc",
     })
     setItems(page.content)
-  }
-
-  useEffect(() => {
-    ;(async () => {
-      try {
-        setErr(null)
-
-        if (scope === "mine") {
-          if (!loggedIn) {
-            setQuery({ scope: "all" }, { replace: true })
-            return
-          }
-          await loadMine()
-          return
-        }
-
-        await loadAll()
-      } catch (e: any) {
-        const status = e?.response?.status
-
-        if (scope === "all" && (status === 401 || status === 403)) {
-          setItems([])
-          return
-        }
-
-        setErr(apiErrorMessage(e, "예약 조회 실패"))
-      }
-    })()
-  }, [scope, date, roomId, mineDate, loggedIn, setQuery])
-
-  useEffect(() => {
-    setSelectedTime(null)
-  }, [date, roomId, scope, durationHours])
-
-  const emptyText = useMemo(() => {
-    if (scope === "mine") {
-      return loggedIn ? "내 예약이 없어요" : "로그인 후 내 예약을 확인할 수 있어요"
-    }
-    return "해당 날짜 예약이 없어요"
-  }, [scope, loggedIn])
+  }, [mineDate])
 
   const onCreate = async () => {
     if (!loggedIn) {
@@ -389,6 +294,123 @@ export function ReservationsPage() {
     nav(`/posts/${postId}`)
   }
 
+  useEffect(() => {
+    const sync = () => setLoggedIn(tokenStore.isLoggedIn())
+    sync()
+    return tokenStore.subscribe(sync)
+  }, [])
+
+  useEffect(() => {
+    ;(async () => {
+      if (!loggedIn) {
+        setMeId(null)
+        return
+      }
+      try {
+        const id = await getMeId()
+        setMeId(id)
+      } catch {
+        setMeId(null)
+      }
+    })()
+  }, [loggedIn])
+
+  useEffect(() => {
+    if (scope !== "all" || !roomId || !date) return
+
+    const token = tokenStore.getAccess()
+    if (!token) return
+
+    const es = new EventSource(
+      `${import.meta.env.VITE_API_BASE_URL}/api/reservations/subscribe?roomId=${roomId}&date=${date}&token=${encodeURIComponent(token)}`
+    )
+
+    es.onmessage = (e) => {
+      if (e.data === "connected") return
+      void refreshAvailability()
+      void loadAll()
+    }
+
+    return () => {
+      es.close()
+    }
+  }, [scope, roomId, date, refreshAvailability, loadAll])
+
+  useEffect(() => {
+    ;(async () => {
+      try {
+        setErr(null)
+        const res = await listRooms()
+        setRooms(res)
+        if (res.length > 0) {
+          setRoomId((prev) => (prev == null ? res[0].id : prev))
+        }
+      } catch (e: any) {
+        const status = e?.response?.status
+
+        if (status === 401 || status === 403) {
+          setRooms([])
+          setRoomId(null)
+          return
+        }
+
+        setErr(apiErrorMessage(e, "방 목록 조회 실패"))
+      }
+    })()
+  }, [])
+
+  useEffect(() => {
+    void refreshAvailability()
+  }, [refreshAvailability])
+
+  useEffect(() => {
+    if (!successMessage) return
+    const timer = window.setTimeout(() => {
+      setSuccessMessage(null)
+    }, 2500)
+    return () => window.clearTimeout(timer)
+  }, [successMessage])
+
+  useEffect(() => {
+    ;(async () => {
+      try {
+        setErr(null)
+
+        if (scope === "mine") {
+          if (!loggedIn) {
+            setQuery({ scope: "all" }, { replace: true })
+            return
+          }
+          await loadMine()
+          return
+        }
+
+        await loadAll()
+      } catch (e: any) {
+        const status = e?.response?.status
+
+        if (scope === "all" && (status === 401 || status === 403)) {
+          setItems([])
+          return
+        }
+
+        setErr(apiErrorMessage(e, "예약 조회 실패"))
+      }
+    })()
+  }, [scope, loggedIn, setQuery, loadMine, loadAll])
+
+  useEffect(() => {
+    setSelectedTime(null)
+  }, [date, roomId, scope, durationHours])
+
+  const emptyText = useMemo(() => {
+    if (scope === "mine") {
+      return loggedIn ? "내 예약이 없어요" : "로그인 후 내 예약을 확인할 수 있어요"
+    }
+    return "해당 날짜 예약이 없어요"
+  }, [scope, loggedIn])
+
+  
   return (
     <div className="space-y-6">
       <section className="flex flex-col gap-4 lg:flex-row lg:items-end lg:justify-between">

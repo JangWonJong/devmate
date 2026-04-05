@@ -259,14 +259,31 @@ export function AppLayout() {
     return () => document.removeEventListener("mousedown", onClickOutside)
   }, [notificationOpen])
 
+
   useEffect(() => {
     if (!loggedIn) return
 
-    const interval = setInterval(() => {
-      loadUnreadCount()
-    }, 15000) 
+    const token = tokenStore.getAccess()
+    if (!token) return
 
-    return () => clearInterval(interval)
+    const eventSource = new EventSource(
+      `${import.meta.env.VITE_API_BASE_URL}/api/notifications/subscribe?token=${encodeURIComponent(token)}`
+    )
+
+    eventSource.onmessage = () => {
+      void loadUnreadCount()
+      if (notificationOpen) {
+        void loadNotifications()
+      }
+    }
+
+    eventSource.onerror = (e) => {
+      console.error("SSE connection error", e)
+    }
+
+    return () => {
+      eventSource.close()
+    }
   }, [loggedIn, loadUnreadCount])
 
   useEffect(() => {

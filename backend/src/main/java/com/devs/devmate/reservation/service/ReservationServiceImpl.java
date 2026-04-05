@@ -21,6 +21,8 @@ import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import org.springframework.transaction.support.TransactionSynchronization;
+import org.springframework.transaction.support.TransactionSynchronizationManager;
 
 import java.time.Duration;
 import java.time.LocalDate;
@@ -44,6 +46,7 @@ public class ReservationServiceImpl implements ReservationService{
     private final NotificationService notificationService;
     private final ReservationAvailabilityEvaluator reservationAvailabilityEvaluator;
     private final ReservationLockRepository lockRepository;
+    private final ReservationSseService reservationSseService;
 
     private Room findRoom(Long roomId) {
         return roomRepository.findById(roomId)
@@ -174,7 +177,7 @@ public class ReservationServiceImpl implements ReservationService{
     }
 
     private String createLockKey(Long roomId, LocalDate date) {
-        return "reservation:room" + roomId + ":date:" + date;
+        return "reservation:room:" + roomId + ":date:" + date;
     }
 
     private record TimeSlot(LocalTime startTime, LocalTime endTime){}
@@ -192,6 +195,20 @@ public class ReservationServiceImpl implements ReservationService{
         }
 
         return slots;
+    }
+
+    private void sendReservationUpdateAfterCommit(Long roomId, LocalDate date) {
+        if (TransactionSynchronizationManager.isActualTransactionActive()) {
+            TransactionSynchronizationManager.registerSynchronization(new TransactionSynchronization() {
+                @Override
+                public void afterCommit() {
+                    reservationSseService.send(roomId, date);
+                }
+            });
+            return;
+
+        }
+        reservationSseService.send(roomId, date);
     }
 
     @Override
@@ -226,9 +243,14 @@ public class ReservationServiceImpl implements ReservationService{
                             .status(Reservation.Status.ACTIVE)
                             .build()
             );
+
+            sendReservationUpdateAfterCommit(req.roomId(), req.date());
+
             return new ReservationCreateResponse(saved.getId());
         });
     }
+
+
 
     @Override
     public ReservationCreateResponse createForStudy(Long memberId, Long studyId, StudyReservationCreateRequest req) {
@@ -297,6 +319,8 @@ public class ReservationServiceImpl implements ReservationService{
                 );
             }
 
+            sendReservationUpdateAfterCommit(req.roomId(), req.date());
+
             return new ReservationCreateResponse(saved.getId());
         });
     }
@@ -349,6 +373,8 @@ public class ReservationServiceImpl implements ReservationService{
         validateCancelable(reservation);
 
         reservation.cancel();
+
+        sendReservationUpdateAfterCommit(reservation.getRoom().getId(), reservation.getDate());
     }
 
     @Override
