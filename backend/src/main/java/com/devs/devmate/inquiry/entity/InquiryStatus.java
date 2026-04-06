@@ -1,6 +1,7 @@
 package com.devs.devmate.inquiry.entity;
 
 public enum InquiryStatus {
-    PENDING,
-    COMPLETED
+    RECEIVED,
+    IN_PROGRESS,
+    RESOLVED
 }

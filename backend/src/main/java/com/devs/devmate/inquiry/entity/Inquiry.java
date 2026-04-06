@@ -28,13 +28,15 @@ public class Inquiry extends BaseEntity {
     @Enumerated(EnumType.STRING)
     @Column(nullable = false, length = 20)
     @Builder.Default
-    private InquiryStatus status = InquiryStatus.PENDING;
+    private InquiryStatus status = InquiryStatus.RECEIVED;
 
     @Column(nullable = false, length = 2000)
     private String content;
 
-    public void complete() {
-        this.status = InquiryStatus.COMPLETED;
+    public void markInProgress() { this.status = InquiryStatus.IN_PROGRESS; }
+
+    public void resolve() {
+        this.status = InquiryStatus.RESOLVED;
     }
 
 

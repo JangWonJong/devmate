@@ -17,7 +17,14 @@ export default function AiAssistantPanel({ onMoveToWrite }: Props) {
 
   const handleSubmit = async () => {
     const trimmed = message.trim()
+
     if (!trimmed) return
+
+    if (trimmed.length < 5) {
+      setError("문제 상황을 조금 더 구체적으로 입력해 주세요.")
+      setResult(null)
+      return
+    }
 
     try {
       setLoading(true)
@@ -35,21 +42,23 @@ export default function AiAssistantPanel({ onMoveToWrite }: Props) {
   const handleMoveToWrite = () => {
     if (!result || !onMoveToWrite) return
 
+    const sections: string[] = [result.question]
+
+    sections.push(`현재 상황:\n${message.trim()}`)
+
+    if (result.details.trim()) {
+      sections.push(`확인해보면 좋은 내용:\n${result.details}`)
+    }
+
+    if (result.hints.trim()) {
+      sections.push(`점검 포인트:\n${result.hints}`)
+    }
+
     onMoveToWrite({
       title: result.question,
       type: "QUESTION",
-      content: `[문제 상황]
-${message}
-
-[시도한 내용 / 환경]
-${result.details}
-
-[점검 힌트]
-${result.hints}
-
-[질문 의도]
-비슷한 문제를 격은 분들의 점검 포인트나 해결 경험을 듣고 싶습니다.`
-            })
+      content: sections.join("\n\n"),
+    })
   }
 
   return (
@@ -68,12 +77,15 @@ ${result.hints}
 
         <textarea
           value={message}
-          onChange={(e) => setMessage(e.target.value)}
+          onChange={(e) => {
+            setMessage(e.target.value)
+            if (error) setError("")
+          }}
           placeholder="예: Spring Security JWT 재발급이 잘 안 되고 있습니다. access token 만료 후 refresh 요청이 실패합니다."
           className="min-h-[120px] w-full resize-none rounded-xl border border-slate-300 bg-white px-3 py-3 text-sm text-slate-900 outline-none focus:border-blue-500 focus:ring-2 focus:ring-blue-100"
         />
         <p className="mb-3 text-xs text-blue-600">
-        💡 AI가 질문을 더 명확하게 정리해드립니다.
+          💡 AI가 질문을 더 명확하게 정리해드립니다.
         </p>
 
         <div className="mt-3 flex items-center justify-between">
@@ -102,14 +114,15 @@ ${result.hints}
         <div className="mt-4 flex-1 overflow-y-auto rounded-2xl border border-slate-200 bg-white p-4">
           <div className="space-y-4">
             <p className="mb-4 text-xs text-slate-500">
-            아래 내용을 참고해서 질문을 작성해보세요.
+              아래 내용을 참고해서 질문을 작성해보세요.
             </p>
+
             <section>
               <h4 className="mb-2 text-sm font-semibold text-slate-900">추천 질문</h4>
               <div
                 onClick={() => setMessage(result.question)}
                 className="cursor-pointer rounded-xl bg-slate-100 px-4 py-3 text-sm font-medium text-slate-900 hover:bg-slate-200"
-                >
+              >
                 {result.question}
               </div>
             </section>

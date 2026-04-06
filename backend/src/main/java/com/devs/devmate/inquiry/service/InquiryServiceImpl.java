@@ -5,6 +5,7 @@ import com.devs.devmate.global.exception.ErrorCode;
 import com.devs.devmate.inquiry.dto.InquiryCreateRequest;
 import com.devs.devmate.inquiry.dto.InquiryResponse;
 import com.devs.devmate.inquiry.entity.Inquiry;
+import com.devs.devmate.inquiry.entity.InquiryStatus;
 import com.devs.devmate.inquiry.repository.InquiryRepository;
 import com.devs.devmate.member.entity.Member;
 import com.devs.devmate.member.repository.MemberRepository;
@@ -44,5 +45,42 @@ public class InquiryServiceImpl implements InquiryService{
                 .stream()
                 .map(InquiryResponse::from)
                 .toList();
+    }
+
+    @Override
+    @Transactional
+    public void updateStatus(Long inquiryId, InquiryStatus status) {
+        Inquiry inquiry = inquiryRepository.findById(inquiryId)
+                .orElseThrow(() -> new BusinessException(ErrorCode.INQUIRY_NOT_FOUND));
+
+        if (status == InquiryStatus.RECEIVED) {
+            return;
+        }
+
+        if (status == InquiryStatus.IN_PROGRESS) {
+            inquiry.markInProgress();
+            return;
+        }
+
+        if (status == InquiryStatus.RESOLVED) {
+            inquiry.resolve();
+        }
+    }
+
+    @Override
+    @Transactional
+    public void delete(Long memberId, Long inquiryId) {
+        Inquiry inquiry = inquiryRepository.findById(inquiryId)
+                .orElseThrow(() -> new BusinessException(ErrorCode.INQUIRY_NOT_FOUND));
+
+        if (!inquiry.getMember().getId().equals(memberId)) {
+            throw new BusinessException(ErrorCode.FORBIDDEN_INQUIRY);
+        }
+
+        if (inquiry.getStatus() != InquiryStatus.RECEIVED) {
+            throw new BusinessException(ErrorCode.INQUIRY_CANCEL_NOT_ALLOWED);
+        }
+
+        inquiryRepository.delete(inquiry);
     }
 }

@@ -5,6 +5,7 @@ import com.devs.devmate.global.common.ApiResponse;
 import com.devs.devmate.global.security.SecurityUtil;
 import com.devs.devmate.inquiry.dto.InquiryCreateRequest;
 import com.devs.devmate.inquiry.dto.InquiryResponse;
+import com.devs.devmate.inquiry.dto.InquiryStatusUpdateRequest;
 import com.devs.devmate.inquiry.service.InquiryService;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
@@ -36,5 +37,22 @@ public class InquiryController {
         Long memberId = SecurityUtil.currentMemberId();
 
         return ApiResponse.ok(inquiryService.findMyInquiries(memberId));
+    }
+
+    @PatchMapping("/{inquiryId}/status")
+    public ApiResponse<Void> updateStatus(
+            @PathVariable Long inquiryId,
+            @RequestBody @Valid InquiryStatusUpdateRequest request
+            ) {
+        inquiryService.updateStatus(inquiryId, request.getStatus());
+
+        return ApiResponse.ok(null);
+    }
+
+    @DeleteMapping("/{inquiryId}")
+    public ApiResponse<Void> delete(@PathVariable Long inquiryId) {
+        Long memberId = SecurityUtil.currentMemberId();
+        inquiryService.delete(memberId, inquiryId);
+        return ApiResponse.ok(null);
     }
 }
