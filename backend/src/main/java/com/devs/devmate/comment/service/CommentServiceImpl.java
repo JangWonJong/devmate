@@ -53,7 +53,8 @@ public class CommentServiceImpl implements CommentService{
         notificationService.createCommentCreated(
                 post.getMember(),
                 member,
-                post.getId()
+                post.getId(),
+                savedComment.getId()
         );
 
         return savedComment.getId();
@@ -136,7 +137,8 @@ public class CommentServiceImpl implements CommentService{
         notificationService.createCommentAccepted(
                 comment.getMember(),
                 post.getMember(),
-                post.getId()
+                post.getId(),
+                comment.getId()
         );
     }
 

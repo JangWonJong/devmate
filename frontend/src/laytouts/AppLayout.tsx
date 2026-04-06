@@ -17,6 +17,7 @@ import SupportPanel from "../components/support/SupportPanel"
 export function AppLayout() {
   const nav = useNavigate()
   const loc = useLocation()
+  const toastTimerRef = useRef<number | null>(null)
 
   const [loggedIn, setLoggedIn] = useState(tokenStore.isLoggedIn())
   const [me, setMe] = useState<MeResponse | null>(null)
@@ -26,6 +27,7 @@ export function AppLayout() {
   const [notifications, setNotifications] = useState<NotificationResponse[]>([])
   const [notificationLoading, setNotificationLoading] = useState(false)
   const [unreadCount, setUnreadCount] = useState(0)
+  const [toast, setToast] = useState<string | null>(null)
 
   const [supportOpen, setSupportOpen] = useState(false)
 
@@ -271,7 +273,19 @@ export function AppLayout() {
     )
 
     eventSource.onmessage = () => {
+      setToast("새 알림이 도착했습니다.")
+
+      if (toastTimerRef.current) {
+        window.clearTimeout(toastTimerRef.current)
+      }
+
+      toastTimerRef.current = window.setTimeout(() => {
+        setToast(null)
+        toastTimerRef.current = null
+      }, 3000)
+
       void loadUnreadCount()
+
       if (notificationOpen) {
         void loadNotifications()
       }
@@ -283,8 +297,13 @@ export function AppLayout() {
 
     return () => {
       eventSource.close()
+
+      if (toastTimerRef.current) {
+        window.clearTimeout(toastTimerRef.current)
+        toastTimerRef.current = null
+      }
     }
-  }, [loggedIn, loadUnreadCount])
+  }, [loggedIn, loadUnreadCount, loadNotifications, notificationOpen])
 
   useEffect(() => {
     if (!loggedIn) return
@@ -325,7 +344,11 @@ export function AppLayout() {
           onClick={() => setSupportOpen((prev) => !prev)}
         />
         <SupportPanel open={supportOpen} onClose={() => setSupportOpen(false)} />
-
+      {toast && (
+        <div className="fixed bottom-6 right-6 z-[9999] rounded-xl bg-slate-900 px-4 py-3 text-sm text-white shadow-lg">
+          🔔 {toast}
+        </div>
+      )}
     </div>
   )
 }

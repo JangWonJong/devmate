@@ -322,6 +322,13 @@ public class StudyServiceImpl implements StudyService{
         currentLeader.changeRoleToMember();
         targetMember.changeRoleToLeader();
 
+        notificationService.createStudyLeaderDelegated(
+                targetMember.getMember(),
+                currentLeader.getMember(),
+                study.getPost().getId(),
+                study.getPost().getTitle()
+        );
+
         return study.getId();
     }
 

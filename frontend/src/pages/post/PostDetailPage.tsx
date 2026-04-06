@@ -1,5 +1,5 @@
 import { useEffect, useRef, useState } from "react"
-import { useNavigate, useParams } from "react-router-dom"
+import { useLocation, useNavigate, useParams } from "react-router-dom"
 import {
   deletePost,
   getPost,
@@ -44,9 +44,9 @@ import PostDetailHeader from "../../components/post/detail/PostDetailHeader"
 import StudyInfoSection from "../../components/study/detail/StudyInfoSection"
 import CommentSection from "../../components/post/detail/CommentSection"
 
-
 export function PostDetailPage() {
   const nav = useNavigate()
+  const location = useLocation()
   const { id } = useParams()
 
   const [loadErr, setLoadErr] = useState<string | null>(null)
@@ -82,6 +82,7 @@ export function PostDetailPage() {
   const [commentLikeLoadingMap, setCommentLikeLoadingMap] = useState<Record<number, boolean>>({})
 
   const handledNotFoundRef = useRef(false)
+  const handledHashRef = useRef<string | null>(null)
 
   const applyComments = (res: CommentResponse[]) => {
     setComments(res)
@@ -107,6 +108,7 @@ export function PostDetailPage() {
 
   useEffect(() => {
     handledNotFoundRef.current = false
+    handledHashRef.current = null
   }, [id])
 
   useEffect(() => {
@@ -166,6 +168,25 @@ export function PostDetailPage() {
       }
     })()
   }, [id, loggedIn])
+
+  useEffect(() => {
+    if (!comments.length) return
+    if (!location.hash) return
+    if (handledHashRef.current === location.hash) return
+
+    const timer = window.setTimeout(() => {
+      const el = document.querySelector(location.hash)
+      if (el) {
+        el.scrollIntoView({
+          behavior: "smooth",
+          block: "center",
+        })
+        handledHashRef.current = location.hash
+      }
+    }, 100)
+
+    return () => window.clearTimeout(timer)
+  }, [comments, location.hash])
 
   useEffect(() => {
     if (!post) return
@@ -240,6 +261,17 @@ export function PostDetailPage() {
       }
     })()
   }, [id, loggedIn])
+
+  useEffect(() => {
+    if (loading) return
+
+    if (!location.hash) {
+      window.scrollTo({
+        top: 0,
+        behavior: "auto",
+      })
+    }
+  }, [location.pathname, location.hash, loading])
 
   const refreshStudySection = async (postId: number) => {
     const s = await getStudyByPostId(postId)

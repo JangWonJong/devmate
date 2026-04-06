@@ -66,7 +66,7 @@ public class NotificationServiceImpl implements NotificationService{
     }
 
     @Override
-    public void createCommentCreated(Member receiver, Member actor, Long postId) {
+    public void createCommentCreated(Member receiver, Member actor, Long postId, Long commentId) {
         if (receiver.getId().equals(actor.getId())) {
             return;
         }
@@ -76,14 +76,14 @@ public class NotificationServiceImpl implements NotificationService{
                         .actor(actor)
                         .type(NotificationType.COMMENT_CREATED)
                         .content(actor.getNickname() + "님이 내 게시글에 댓글을 남겼어요")
-                        .targetUrl("/posts/" + postId)
+                        .targetUrl("/posts/" + postId + "#comment-" + commentId)
                         .build());
 
         push(receiver.getId());
     }
 
     @Override
-    public void createCommentAccepted(Member receiver, Member actor, Long postId) {
+    public void createCommentAccepted(Member receiver, Member actor, Long postId, Long commentId) {
         if (receiver.getId().equals(actor.getId())) {
             return;
         }
@@ -93,7 +93,7 @@ public class NotificationServiceImpl implements NotificationService{
                         .actor(actor)
                         .type(NotificationType.COMMENT_ACCEPTED)
                         .content("내 댓글이 채택되었어요")
-                        .targetUrl("/posts/" + postId)
+                        .targetUrl("/posts/" + postId + "#comment-" + commentId)
                         .build());
 
         push(receiver.getId());
@@ -189,16 +189,16 @@ public class NotificationServiceImpl implements NotificationService{
     }
 
     @Override
-    public void createCommentLiked(Long receiverId, Long actorId, Long postId, String commentContent) {
+    public void createCommentLiked(Long receiverId, Long actorId, Long postId, String commentContent, Long commentId) {
         Member receiver = memberRepository.findById(receiverId)
                 .orElseThrow(() -> new BusinessException(ErrorCode.MEMBER_NOT_FOUND));
         Member actor = memberRepository.findById(actorId)
                 .orElseThrow(() -> new BusinessException(ErrorCode.MEMBER_NOT_FOUND));
 
-        String preview = commentContent;
+        /*String preview = commentContent;
         if (preview != null && preview.length() >20 ) {
             preview = preview.substring(0, 20) + "...";
-        }
+        }*/
 
         String content = actor.getNickname() + "님이 회원님의 댓글에 좋아요를 했습니다.";
         //String content = actor.getNickname() + "님이 회원님의 댓글(\"" + preview + "\")을 좋아요했습니다.";
@@ -209,7 +209,7 @@ public class NotificationServiceImpl implements NotificationService{
                         .actor(actor)
                         .type(NotificationType.COMMENT_LIKED)
                         .content(content)
-                        .targetUrl("/posts/" + postId)
+                        .targetUrl("/posts/" + postId + "#comment-" + commentId)
                         .build()
         );
         push(receiver.getId());
@@ -238,6 +238,23 @@ public class NotificationServiceImpl implements NotificationService{
                         .targetUrl("/members/" + targetMemberId)
                         .build()
         );
+        push(receiver.getId());
+    }
+
+    @Override
+    public void createStudyLeaderDelegated(Member receiver, Member actor, Long postId, String studyTitle) {
+        if (receiver.getId().equals(actor.getId())) {
+            return;
+        }
+
+        notificationRepository.save(Notification.builder()
+                .receiver(receiver)
+                .actor(actor)
+                .type(NotificationType.STUDY_LEADER_DELEGATED)
+                .content(actor.getNickname() + "님이 [" + studyTitle + "] 스터디 리더를 위임했어요")
+                .targetUrl("/posts/" + postId)
+                .build());
+
         push(receiver.getId());
     }
 

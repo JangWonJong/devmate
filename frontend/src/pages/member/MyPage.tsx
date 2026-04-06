@@ -511,7 +511,7 @@ export function MyPage() {
                 <CommentItem
                   key={comment.commentId}
                   comment={comment}
-                  onClick={() => nav(`/posts/${comment.postId}`)}
+                  onClick={() => nav(`/posts/${comment.postId}#comment-${comment.commentId}`)}
                 />
               ))}
             </div>

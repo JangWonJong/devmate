@@ -1,4 +1,4 @@
-import { Link } from "react-router-dom"
+import { Link, useLocation } from "react-router-dom"
 import { actionButtonClass } from "../../../utils/button"
 
 type CommentItem = {
@@ -88,6 +88,8 @@ export default function CommentSection({
   commentLikeLoadingMap,
   onToggleCommentLike,
 }: CommentSectionProps) {
+  const location = useLocation()
+
   const sortedComments = [...comments].sort((a, b) => {
     if (a.adopted === b.adopted) return 0
     return a.adopted ? -1 : 1
@@ -140,20 +142,22 @@ export default function CommentSection({
           sortedComments.map((c) => {
             const isMyComment = meId != null && c.memberId === meId
             const isEditing = editingCommentId === c.id
+            const isTargetComment = location.hash === `#comment-${c.id}`
 
             return (
               <div
+                id={`comment-${c.id}`}
                 key={c.id}
-                className={`rounded-3xl border p-5 ${
+                className={`scroll-mt-24 rounded-3xl border p-5 transition ${
                   c.adopted
                     ? "border-emerald-300 bg-emerald-50"
                     : "border-slate-200 bg-slate-50"
-                }`}
+                } ${isTargetComment ? "ring-2 ring-indigo-300 ring-offset-2" : ""}`}
               >
                 <div className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
                   <div className="flex flex-wrap items-center gap-2 text-sm text-slate-500">
                     <Link to={`/members/${c.memberId}`} className="font-medium text-slate-700 hover:underline">
-                        {c.authorNickname}
+                      {c.authorNickname}
                     </Link>
 
                     {c.adopted && (
@@ -233,12 +237,11 @@ export default function CommentSection({
                         type="button"
                         onClick={() => onToggleCommentLike(c.id)}
                         disabled={commentLikeLoadingMap[c.id]}
-                        className={`inline-flex items-center gap-1 rounded-xl border px-3 py-1 text-xs font-medium transition
-                          ${
-                            commentLikedMap[c.id]
-                              ? "border-red-200 bg-red-50 text-red-600"
-                              : "border-slate-200 bg-white text-slate-600"
-                          }`}
+                        className={`inline-flex items-center gap-1 rounded-xl border px-3 py-1 text-xs font-medium transition ${
+                          commentLikedMap[c.id]
+                            ? "border-red-200 bg-red-50 text-red-600"
+                            : "border-slate-200 bg-white text-slate-600"
+                        }`}
                       >
                         <span>{commentLikedMap[c.id] ? "❤️" : "🤍"}</span>
                         <span>{commentLikeCountMap[c.id] ?? 0}</span>

@@ -9,5 +9,6 @@ public enum NotificationType {
     STUDY_LEAVE,
     POST_LIKED,
     COMMENT_LIKED,
-    MEMBER_LIKED
+    MEMBER_LIKED,
+    STUDY_LEADER_DELEGATED
 }

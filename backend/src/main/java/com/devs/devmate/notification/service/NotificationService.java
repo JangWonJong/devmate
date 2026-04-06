@@ -18,9 +18,9 @@ public interface NotificationService {
 
     void markAllAsRead(Long memberId);
 
-    void createCommentCreated(Member receiver, Member actor, Long postId);
+    void createCommentCreated(Member receiver, Member actor, Long postId, Long commentId);
 
-    void createCommentAccepted(Member receiver, Member actor, Long postId);
+    void createCommentAccepted(Member receiver, Member actor, Long postId, Long commentId);
 
     void createStudyNoticeUpdated(Member receiver, Member actor, Long postId, String studyTitle);
 
@@ -32,9 +32,10 @@ public interface NotificationService {
 
     void createPostLiked(Long receiverId, Long actorId, Long postId, String postTitle);
 
-    void createCommentLiked(Long receiverId, Long actorId, Long postId, String commentContent);
+    void createCommentLiked(Long receiverId, Long actorId, Long postId, String commentContent, Long commentId);
 
     void createMemberLiked(Long receiverId, Long actorId, Long targetMemberId);
 
+    void createStudyLeaderDelegated(Member receiver, Member actor, Long postId, String studyTitle);
 }
 

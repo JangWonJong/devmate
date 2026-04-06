@@ -12,6 +12,7 @@ export type NotificationType =
     | "POST_LIKED"
     | "COMMENT_LIKED"
     | "MEMBER_LIKED"
+    | "STUDY_LEADER_DELEGATED"
 
 export const getNotificationLabel = (type: NotificationResponse["type"]) => {
   switch (type) {
@@ -22,7 +23,7 @@ export const getNotificationLabel = (type: NotificationResponse["type"]) => {
     case "STUDY_NOTICE_UPDATED":
       return "📢 공지"
     case "STUDY_JOINED":
-      return "🤝 참가"
+      return "👥 참가"
     case "STUDY_RESERVATION_CREATED":
       return "📅 예약"
     case "STUDY_LEAVE":
@@ -33,6 +34,8 @@ export const getNotificationLabel = (type: NotificationResponse["type"]) => {
       return "🧡 댓글 좋아요"
     case "MEMBER_LIKED":
       return "💖 프로필 좋아요"
+    case "STUDY_LEADER_DELEGATED":
+      return "👑 리더 위임"
     default:
       return "🔔 알림"
   }
@@ -84,6 +87,11 @@ export const getNotificationLabelStyle = (type: NotificationResponse["type"]) =>
       return {
         background: "#fce7f3",
         color: "#be185d",
+      }
+      case "STUDY_LEADER_DELEGATED":
+      return {
+        background: "#eef2ff",
+        color: "#4338ca",
       }
       default:
         return {

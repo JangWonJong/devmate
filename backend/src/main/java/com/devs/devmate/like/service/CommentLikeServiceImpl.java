@@ -53,7 +53,8 @@ public class CommentLikeServiceImpl implements CommentLikeService{
                     receiverId,
                     memberId,
                     comment.getPost().getId(),
-                    comment.getContent()
+                    comment.getContent(),
+                    comment.getId()
             );
         }
     }
