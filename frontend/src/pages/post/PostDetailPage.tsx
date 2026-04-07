@@ -174,18 +174,42 @@ export function PostDetailPage() {
     if (!location.hash) return
     if (handledHashRef.current === location.hash) return
 
-    const timer = window.setTimeout(() => {
-      const el = document.querySelector(location.hash)
-      if (el) {
-        el.scrollIntoView({
-          behavior: "smooth",
-          block: "center",
-        })
-        handledHashRef.current = location.hash
-      }
-    }, 100)
+    const targetId = location.hash.replace("#", "")
 
-    return () => window.clearTimeout(timer)
+    let retryCount = 0
+    let retryTimer: number | null = null
+
+    const scrollToTarget = () => {
+      const el = document.getElementById(targetId)
+      if (!el) return false
+
+      const top = window.scrollY + el.getBoundingClientRect().top - 120
+
+      window.scrollTo({
+        top: Math.max(top, 0),
+        behavior: "smooth",
+      })
+
+      handledHashRef.current = location.hash
+      return true
+    }
+
+    const tryScroll = () => {
+      if (scrollToTarget()) return
+
+      if (retryCount >= 5) return
+
+      retryCount += 1
+      retryTimer = window.setTimeout(tryScroll, 150)
+    }
+
+    tryScroll()
+
+    return () => {
+      if (retryTimer) {
+        window.clearTimeout(retryTimer)
+      }
+    }
   }, [comments, location.hash])
 
   useEffect(() => {

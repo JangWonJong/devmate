@@ -260,8 +260,8 @@ export function AppLayout() {
     document.addEventListener("mousedown", onClickOutside)
     return () => document.removeEventListener("mousedown", onClickOutside)
   }, [notificationOpen])
-
-
+  
+  
   useEffect(() => {
     if (!loggedIn) return
 
