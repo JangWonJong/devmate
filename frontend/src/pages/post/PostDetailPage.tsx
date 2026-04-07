@@ -117,6 +117,7 @@ export function PostDetailPage() {
         setMeId(null)
         return
       }
+
       try {
         const memberId = await getMeId()
         setMeId(memberId)
@@ -170,14 +171,24 @@ export function PostDetailPage() {
   }, [id, loggedIn])
 
   useEffect(() => {
+    if (loading) return
+
+    let retryTimer: number | null = null
+
+    if (!location.hash) {
+      window.scrollTo({
+        top: 0,
+        behavior: "auto",
+      })
+      handledHashRef.current = null
+      return
+    }
+
     if (!comments.length) return
-    if (!location.hash) return
     if (handledHashRef.current === location.hash) return
 
     const targetId = location.hash.replace("#", "")
-
     let retryCount = 0
-    let retryTimer: number | null = null
 
     const scrollToTarget = () => {
       const el = document.getElementById(targetId)
@@ -196,7 +207,6 @@ export function PostDetailPage() {
 
     const tryScroll = () => {
       if (scrollToTarget()) return
-
       if (retryCount >= 5) return
 
       retryCount += 1
@@ -210,7 +220,7 @@ export function PostDetailPage() {
         window.clearTimeout(retryTimer)
       }
     }
-  }, [comments, location.hash])
+  }, [loading, comments.length, location.pathname, location.hash])
 
   useEffect(() => {
     if (!post) return
@@ -285,17 +295,6 @@ export function PostDetailPage() {
       }
     })()
   }, [id, loggedIn])
-
-  useEffect(() => {
-    if (loading) return
-
-    if (!location.hash) {
-      window.scrollTo({
-        top: 0,
-        behavior: "auto",
-      })
-    }
-  }, [location.pathname, location.hash, loading])
 
   const refreshStudySection = async (postId: number) => {
     const s = await getStudyByPostId(postId)
