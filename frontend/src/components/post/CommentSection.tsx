@@ -1,5 +1,5 @@
 import { Link, useLocation } from "react-router-dom"
-import { actionButtonClass } from "../../../utils/button"
+import { actionButtonClass } from "../../utils/button"
 
 type CommentItem = {
   id: number

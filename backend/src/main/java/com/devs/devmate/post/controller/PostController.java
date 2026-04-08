@@ -38,12 +38,26 @@ public class PostController {
             @RequestParam(required = false, defaultValue = "false") boolean mine,
             @RequestParam(required = false) String keyword,
             @RequestParam(required = false) Boolean solved,
+            @RequestParam(required = false) String type,
             Pageable pageable){
             if (mine) {
                 Long memberId = SecurityUtil.currentMemberId();
-                return ApiResponse.ok(postService.listMine(memberId, keyword, solved, pageable));
+                return ApiResponse.ok(postService.listMine(memberId, keyword, solved, type, pageable));
             }
-        return ApiResponse.ok(postService.list(keyword, solved, pageable));
+        return ApiResponse.ok(postService.list(keyword, solved, type, pageable));
+    }
+
+    @GetMapping("/popular")
+    public ApiResponse<List<PostResponse>> listPopular(
+            @RequestParam(defaultValue = "5") int limit
+    ) {
+        return ApiResponse.ok(postService.listPopular(limit));
+    }
+
+    @GetMapping("/liked")
+    public ApiResponse<List<PostResponse>> likedPosts() {
+        Long memberId = SecurityUtil.currentMemberId();
+        return ApiResponse.ok(postService.listLikedPosts(memberId));
     }
 
     @GetMapping("/{postId}")
@@ -74,12 +88,6 @@ public class PostController {
         Long memberId = SecurityUtil.currentMemberId();
         postService.solve(memberId, postId);
         return ApiResponse.ok();
-    }
-
-    @GetMapping("/liked")
-    public ApiResponse<List<PostResponse>> likedPosts() {
-        Long memberId = SecurityUtil.currentMemberId();
-        return ApiResponse.ok(postService.listLikedPosts(memberId));
     }
 
 }

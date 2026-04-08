@@ -17,9 +17,12 @@ import com.devs.devmate.study.entity.StudyMember;
 import com.devs.devmate.study.repository.StudyMemberRepository;
 import com.devs.devmate.study.repository.StudyRepository;
 import lombok.RequiredArgsConstructor;
+import org.springframework.data.domain.PageRequest;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.time.LocalDateTime;
+import java.util.Comparator;
 import java.util.List;
 import java.util.Optional;
 
@@ -28,6 +31,8 @@ import java.util.Optional;
 @RequiredArgsConstructor
 @Transactional
 public class StudyServiceImpl implements StudyService{
+
+    private static final int POPULAR_STUDY_CANDIDATE_SIZE = 30;
 
     private final StudyRepository studyRepository;
     private final StudyMemberRepository studyMemberRepository;
@@ -123,6 +128,44 @@ public class StudyServiceImpl implements StudyService{
                 study.getPost().getId(),
                 study.getPost().getTitle()
         );
+    }
+
+    private long calculateStudyPopularityScore(Study study) {
+        long currentMembers = studyMemberRepository.countByStudyIdAndStatus(
+                study.getId(),
+                StudyMember.Status.JOINED
+        );
+
+        long score = 0L;
+        score += currentMembers * 3L;
+
+        if (study.isRecruiting()) {
+            score += 5L;
+        }
+
+        if (study.getCreatedAt() != null) {
+            LocalDateTime now = LocalDateTime.now();
+
+            if (study.getCreatedAt().isAfter(now.minusDays(1))) {
+                score += 8L;
+            } else if (study.getCreatedAt().isAfter(now.minusDays(3))) {
+                score += 5L;
+            } else if (study.getCreatedAt().isAfter(now.minusDays(7))) {
+                score += 3L;
+            }
+        }
+
+        return score;
+    }
+
+    private StudyResponse toStudyResponse(Study study) {
+        long currentMembers = studyMemberRepository.countByStudyIdAndStatus(
+                study.getId(),
+                StudyMember.Status.JOINED
+        );
+        String leaderNickname = findLeaderNickname(study.getId());
+
+        return StudyResponse.from(study, currentMembers, leaderNickname);
     }
 
     // 게시글 작성자만 해당 Study post로 study 생성 가능
@@ -444,5 +487,26 @@ public class StudyServiceImpl implements StudyService{
         notifyStudyNoticeUpdated(study, studyMember.getMember());
 
         return study.getId();
+    }
+
+    @Override
+    @Transactional(readOnly = true)
+    public List<StudyResponse> listPopular(int limit) {
+        int safeLimit = Math.max(1, Math.min(limit, 10));
+
+        List<Study> candidates = studyRepository.findRecentStudies(
+                PageRequest.of(0, POPULAR_STUDY_CANDIDATE_SIZE)
+        );
+
+        return candidates.stream()
+                .sorted(
+                        Comparator
+                                .comparingLong(this::calculateStudyPopularityScore)
+                                .reversed()
+                                .thenComparing(Study::getId, Comparator.reverseOrder())
+                )
+                .limit(safeLimit)
+                .map(this::toStudyResponse)
+                .toList();
     }
 }

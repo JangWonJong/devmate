@@ -31,11 +31,6 @@ public class StudyController {
         return ApiResponse.ok(studyService.create(memberId, request));
     }
 
-    @GetMapping("/{studyId}")
-    public ApiResponse<StudyResponse> get(@PathVariable Long studyId) {
-        return ApiResponse.ok(studyService.get(studyId));
-    }
-
     @PostMapping("/{studyId}/join")
     public ApiResponse<Long> join(@PathVariable Long studyId) {
         Long memberId = SecurityUtil.currentMemberId();
@@ -61,6 +56,20 @@ public class StudyController {
         return ApiResponse.ok(studyService.delegateLeader(memberId, studyId, request.targetMemberId()));
     }
 
+    @PostMapping("/{studyId}/reservations")
+    public ApiResponse<ReservationCreateResponse> createReservation(
+            @PathVariable Long studyId,
+            @RequestBody @Valid StudyReservationCreateRequest request
+    ) {
+        Long memberId = SecurityUtil.currentMemberId();
+        return ApiResponse.ok(reservationService.createForStudy(memberId, studyId, request));
+    }
+
+    @GetMapping("/{studyId}")
+    public ApiResponse<StudyResponse> get(@PathVariable Long studyId) {
+        return ApiResponse.ok(studyService.get(studyId));
+    }
+
     @GetMapping("/{studyId}/members")
     public ApiResponse<List<StudyMemberResponse>> getMembers(@PathVariable Long studyId) {
         return ApiResponse.ok(studyService.getMembers(studyId));
@@ -77,21 +86,19 @@ public class StudyController {
         return ApiResponse.ok(studyService.getByPostId(postId));
     }
 
-    @PostMapping("/{studyId}/reservations")
-    public ApiResponse<ReservationCreateResponse> createReservation(
-            @PathVariable Long studyId,
-            @RequestBody @Valid StudyReservationCreateRequest request
-            ) {
-        Long memberId = SecurityUtil.currentMemberId();
-        return ApiResponse.ok(reservationService.createForStudy(memberId, studyId, request));
-    }
-
     @GetMapping("/{studyId}/reservations")
     public ApiResponse<Page<ReservationResponse>> listReservations(
             @PathVariable Long studyId,
             Pageable pageable
     ) {
         return ApiResponse.ok(reservationService.listStudyReservations(studyId, pageable));
+    }
+
+    @GetMapping("/popular")
+    public ApiResponse<List<StudyResponse>> listPopular(
+            @RequestParam(defaultValue = "3") int limit
+    ) {
+        return ApiResponse.ok(studyService.listPopular(limit));
     }
 
     @PatchMapping("/{studyId}/capacity")

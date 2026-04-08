@@ -40,9 +40,9 @@ import {
   type ReservationResponse,
 } from "../../api/reservations"
 import { apiErrorMessage } from "../../utils/error"
-import PostDetailHeader from "../../components/post/detail/PostDetailHeader"
+import PostDetailHeader from "../../components/post/PostDetailHeader"
 import StudyInfoSection from "../../components/study/detail/StudyInfoSection"
-import CommentSection from "../../components/post/detail/CommentSection"
+import CommentSection from "../../components/post/CommentSection"
 
 export function PostDetailPage() {
   const nav = useNavigate()

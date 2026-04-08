@@ -123,7 +123,7 @@ export async function updateStudyCapacity(studyId: number, req: { maxMembers: nu
 
   const {data} = await http.patch<ApiResponse<number>>(`/api/studies/${studyId}/capacity`, req)
   
-  if (!data.success || !data.data) {
+  if (!data.success || !data.data == null) {
     throw new Error(data.error?.message ?? "스터디 정원 수정 실패")
   }
 
@@ -137,10 +137,23 @@ export async function updateStudyNotice(studyId: number, notice:string) {
     `/api/studies/${studyId}/notice`, { notice}
   )
 
-  if (!data.success || !data.data) {
+  if (!data.success || !data.data == null) {
     throw new Error(data.error?.message ?? "공지 수정 실패")
   }
 
   return data.data
   
+}
+
+
+export async function listPopularStudies(limit = 3): Promise<StudyResponse[]> {
+  const { data } = await http.get<ApiResponse<StudyResponse[]>>("/api/studies/popular", {
+    params: { limit },
+  })
+
+  if (!data.success || data.data == null) {
+    throw new Error(data.error?.message ?? "Popular studies failed")
+  }
+
+  return data.data
 }

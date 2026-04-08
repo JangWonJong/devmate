@@ -1,7 +1,7 @@
 import { useEffect, useState } from "react"
 import { useNavigate, Link } from "react-router-dom"
-import type { PostResponse } from "../../../api/posts"
-import { actionButtonClass } from "../../../utils/button"
+import type { PostResponse } from "../../api/posts"
+import { actionButtonClass } from "../../utils/button"
 
 
 function StatusBadge({ solved }: { solved: boolean }) {

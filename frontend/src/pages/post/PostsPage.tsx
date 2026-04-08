@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useState } from "react"
-import { listPosts, type PostResponse } from "../../api/posts"
+import { listPosts, listPopularQuestionPosts, type PostResponse } from "../../api/posts"
 import { Link, useNavigate, useSearchParams } from "react-router-dom"
 import { tokenStore } from "../../auth/token"
 import {
@@ -15,6 +15,7 @@ import {
 } from "lucide-react"
 import { imageUrl } from "../../utils/image"
 import { apiErrorMessage } from "../../utils/error"
+import { listPopularStudies, type StudyResponse } from "../../api/study"
 
 type PageInfo = {
   totalPages: number
@@ -28,6 +29,7 @@ type Query = {
   page?: number
   size?: number
   sort?: "id,desc" | "id,asc" | "likes,desc"
+  type?: "QUESTION" | "STUDY" | null
 }
 
 function toInt(v: string | null, def: number) {
@@ -48,6 +50,12 @@ function toSort(v: string | null): "id,desc" | "id,asc" | "likes,desc" {
   if (v === "id,asc") return "id,asc"
   if (v === "likes,desc") return "likes,desc"
   return "id,desc"
+}
+
+function toType(v: string | null): "QUESTION" | "STUDY" | undefined {
+  if (v === "QUESTION") return "QUESTION"
+  if (v === "STUDY") return "STUDY"
+  return undefined
 }
 
 function normalizeSize(v: string | null, def = 10) {
@@ -109,6 +117,7 @@ export function PostsPage() {
   const size = normalizeSize(sp.get("size"), 10)
   const q = sp.get("q") ?? ""
   const hasQuery = q.trim().length > 0
+  const type = toType(sp.get("type"))
 
   const setQuery = useCallback(
     (next: Query, options?: { replace?: boolean }) => {
@@ -118,6 +127,7 @@ export function PostsPage() {
       const curPage = toInt(sp.get("page"), 0)
       const curSort = toSort(sp.get("sort"))
       const curSize = normalizeSize(sp.get("size"), 10)
+      const curType = toType(sp.get("type"))
 
       const nextQ = (next.q ?? curQ)?.trim()
       const nextScope = next.scope ?? curScope
@@ -125,6 +135,8 @@ export function PostsPage() {
       const nextPage = next.page ?? curPage
       const nextSize = next.size ?? curSize
       const nextSort = next.sort ?? curSort
+      const nextType = next.type === undefined ? curType : next.type
+
 
       const params: Record<string, string> = {}
       if (nextQ) params.q = nextQ
@@ -133,6 +145,7 @@ export function PostsPage() {
       if (nextPage !== 0) params.page = String(nextPage)
       if (nextSort !== "id,desc") params.sort = nextSort
       if (nextSize !== 10) params.size = String(nextSize)
+      if (nextType != null) params.type = nextType 
 
       setSp(params, { replace: options?.replace ?? false })
     },
@@ -147,6 +160,10 @@ export function PostsPage() {
   const [loading, setLoading] = useState(false)
   const [qInput, setQInput] = useState(q)
   const [popularMembers, setPopularMembers] = useState<PopularMemberResponse[]>([])
+  const [popularQuestions, setPopularQuestions] = useState<PostResponse[]>([])
+  const [popularStudies, setPopularStudies] = useState<StudyResponse[]>([])
+  const [popularLoading, setPopularLoading] = useState(false)
+
 
   useEffect(() => {
     setQInput(q)
@@ -191,6 +208,7 @@ export function PostsPage() {
           mine: scope === "mine",
           keyword: q || undefined,
           solved: onlySolved ? true : undefined,
+          type,
         })
 
         setItems(res.content)
@@ -208,7 +226,7 @@ export function PostsPage() {
         setLoading(false)
       }
     })()
-  }, [page, size, scope, sort, q, onlySolved, loggedIn, setQuery])
+  }, [page, size, scope, sort, q, onlySolved, loggedIn, type, setQuery])
 
   useEffect(() => {
     ;(async () => {
@@ -217,6 +235,24 @@ export function PostsPage() {
         setPopularMembers(members.filter((m) => m.popularityScore > 0))
       } catch {
         setPopularMembers([])
+      }
+    })()
+  }, [])
+
+  useEffect(() => {
+    ;(async () => {
+      try {
+        setPopularLoading(true)
+        const q = await listPopularQuestionPosts(5)
+        const s = await listPopularStudies(3)
+
+        setPopularQuestions(q)
+        setPopularStudies(s)
+      } catch {
+        setPopularQuestions([])
+        setPopularStudies([])
+      } finally {
+        setPopularLoading(false)
       }
     })()
   }, [])
@@ -233,7 +269,7 @@ export function PostsPage() {
     <div className="space-y-8">
       <section className="space-y-3">
         <h1 className="text-4xl font-bold tracking-tight text-slate-900">
-          게시글
+          커뮤니티
         </h1>
         <p className="text-lg leading-8 text-slate-600">
           개발 고민을 공유하고, 해결 과정을 기록해보세요.
@@ -292,16 +328,30 @@ export function PostsPage() {
               </label>
 
               <ScopeButton
-                active={scope === "all"}
-                onClick={() => setQuery({ scope: "all", page: 0 })}
+                active={scope === "all" && !type}
+                onClick={() => setQuery({ scope: "all", type: null, page: 0 })}
               >
                 전체 글
               </ScopeButton>
 
               <ScopeButton
-                active={scope === "mine"}
+                active={scope === "all" && type === "QUESTION"}
+                onClick={() => setQuery({ type: "QUESTION", scope: "all", page: 0 })}
+              >
+                질문 글
+              </ScopeButton>
+
+              <ScopeButton
+                active={scope === "all" && type === "STUDY"}
+                onClick={() => setQuery({ type: "STUDY", scope: "all", page: 0 })}
+              >
+                스터디 글
+              </ScopeButton>
+
+              <ScopeButton
+                active={scope === "mine" && !type}
                 disabled={!loggedIn}
-                onClick={() => setQuery({ scope: "mine", page: 0 })}
+                onClick={() => setQuery({ scope: "mine", type: null, page: 0 })}
               >
                 내 글만
               </ScopeButton>
@@ -342,6 +392,107 @@ export function PostsPage() {
 
       <div className="grid gap-6 xl:grid-cols-[minmax(0,1fr)_280px]">
         <div className="min-w-0 space-y-5">
+          {popularLoading ? (
+            <div className="rounded-[24px] border border-slate-200 bg-white px-4 py-3 text-sm text-slate-500 shadow-sm">
+              인기글 불러오는 중...
+            </div>
+          ) : (
+            <div className="grid gap-4 md:grid-cols-2 items-start">
+
+              {/* 🔥 인기 질문 */}
+              {popularQuestions.length > 0 && (
+                <section className="rounded-[24px] border border-slate-200 bg-white p-5 shadow-sm">
+                  <div className="mb-4 flex items-center justify-between">
+                    <h2 className="text-sm font-semibold text-slate-800">
+                      🔥 인기 질문
+                    </h2>
+                    <span className="text-xs text-slate-400">
+                      좋아요 + 댓글 기준
+                    </span>
+                  </div>
+
+                  <div className="space-y-3">
+                    {popularQuestions.map((p, idx) => (
+                      <div
+                        key={p.id}
+                        onClick={() => nav(`/posts/${p.id}`)}
+                        className="cursor-pointer rounded-xl border border-slate-200 px-4 py-3 hover:bg-slate-50"
+                      >
+                        <div className="flex items-center justify-between">
+                          <div className="flex items-center gap-2 text-sm">
+                            <span className="font-semibold">{idx + 1}</span>
+                            <span className="truncate">{p.title}</span>
+                          </div>
+
+                          <div className="flex gap-2 text-xs text-slate-500">
+                            <span>❤️ {p.likeCount}</span>
+                            <span>💬 {p.commentCount}</span>
+                          </div>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                </section>
+              )}
+
+              {/* 📚 인기 스터디 */}
+              {popularStudies.length > 0 && (
+                <section className="rounded-[24px] border border-slate-200 bg-white p-5 shadow-sm">
+                  <div className="mb-4 flex items-center justify-between">
+                    <h2 className="text-sm font-semibold text-slate-800">
+                      📚 인기 스터디
+                    </h2>
+                    <span className="text-xs text-slate-400">
+                      참여 인원 + 모집 상태
+                    </span>
+                  </div>
+
+                  <div className="space-y-3">
+                    {popularStudies.map((s, idx) => (
+                      <div
+                        key={s.id}
+                        onClick={() => nav(`/posts/${s.postId}`)}
+                        className="cursor-pointer rounded-xl border border-slate-200 px-4 py-3 hover:bg-slate-50"
+                      >
+                        <div className="flex items-center justify-between">
+                          <div className="flex flex-col text-sm">
+                            <div className="flex items-center gap-2">
+                              <span className="font-semibold">{idx + 1}</span>
+                              <span className="truncate">{s.postTitle}</span>
+                            </div>
+                            <span className="text-xs text-slate-400">
+                              리더: {s.leaderNickname}
+                            </span>
+                          </div>
+
+                          <div className="flex gap-2 text-xs text-slate-500">
+                            <span>👥 {s.currentMembers}/{s.maxMembers}</span>
+                            <span className={`font-medium ${
+                                s.status === "RECRUITING"
+                                  ? "text-emerald-600"
+                                  : "text-slate-400"
+                              }`}>
+                            {s.status === "RECRUITING" ? "모집중" : "마감"}
+                            </span>
+                          </div>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                  <div className="mt-4">
+                  <button
+                    onClick={() => setQuery({ type: "STUDY", scope: "all", page: 0 })}
+                    className="w-full rounded-xl border border-slate-200 px-4 py-2 text-sm text-slate-600 transition hover:bg-slate-50"
+                  >
+                    스터디 모집글 더 보기 →
+                  </button>
+                </div>
+                </section>
+              )}
+
+            </div>
+          )}
+
           <section className="space-y-5">
             {!loading && items.length === 0 ? (
               <div className="rounded-[28px] border border-slate-200 bg-white px-6 py-10 text-center text-slate-500 shadow-sm">

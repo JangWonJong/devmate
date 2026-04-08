@@ -4,6 +4,8 @@ import type { PageResponse } from "./page"
 
 export type PostCreateRequest = { title: string, content: string, type: "QUESTION" | "STUDY"}
 
+export type PostTypeFilter =  "QUESTION" | "STUDY"
+
 export type PostResponse = {
     id: number
     title: string
@@ -14,6 +16,7 @@ export type PostResponse = {
     type: "QUESTION" | "STUDY"
     attachments: PostAttachmentResponse[]
     likeCount: number
+    commentCount: number
     createdAt: string
     updatedAt: string
 }
@@ -72,6 +75,7 @@ export async function listPosts(params?: {
     mine?: boolean
     keyword?: string
     solved?: boolean
+    type?: PostTypeFilter
 
 }) {
     const page = params?.page ?? 0
@@ -80,10 +84,11 @@ export async function listPosts(params?: {
     const mine = params?.mine ?? false
     const keyword = params?.keyword
     const solved = params?.solved
+    const type = params?.type
 
     const {data} = await http.get<ApiResponse<PageResponse<PostResponse>>>(
         "/api/posts", 
-        {params: {page, size, sort, mine, keyword, solved}}
+        {params: {page, size, sort, mine, keyword, solved, type}}
     )
     if (!data.success || data.data == null) throw new Error(data.error?.message ?? "List failed")
     return data.data
@@ -168,6 +173,18 @@ export async function listLikedPosts() {
 
   if (!data.success || !data.data) {
     throw new Error(data.error?.message ?? "좋아요한 게시글 조회 실패")
+  }
+
+  return data.data
+}
+
+export async function listPopularQuestionPosts(limit = 5): Promise<PostResponse[]> {
+  const { data } = await http.get<ApiResponse<PostResponse[]>>("/api/posts/popular", {
+    params: { limit },
+  })
+
+  if (!data.success || data.data == null) {
+    throw new Error(data.error?.message ?? "Popular posts failed")
   }
 
   return data.data

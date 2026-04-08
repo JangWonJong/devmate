@@ -29,4 +29,6 @@ public interface StudyService {
     Long updateCapacity(Long memberId, Long studyId, Integer maxMembers);
 
     Long updateNotice(Long memberId, Long studyId, String notice);
+
+    List<StudyResponse> listPopular(int limit);
 }

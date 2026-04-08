@@ -26,12 +26,16 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.multipart.MultipartFile;
 
+import java.time.LocalDateTime;
+import java.util.Comparator;
 import java.util.List;
 
 @Service
 @RequiredArgsConstructor
 @Transactional
 public class PostServiceImpl implements PostService {
+
+    private static final int POPULAR_POST_CANDIDATE_SIZE = 50;
 
     private final PostRepository postRepository;
     private final MemberRepository memberRepository;
@@ -74,10 +78,6 @@ public class PostServiceImpl implements PostService {
                 .toList();
     }
 
-    private Long countPost(Post post) {
-        return postLikeRepository.countByPostId(post.getId());
-    }
-
     private boolean isLikeSort(Pageable pageable) {
         return pageable.getSort().stream()
                 .anyMatch(order -> order.getProperty().equals("likes"));
@@ -85,6 +85,56 @@ public class PostServiceImpl implements PostService {
 
     private Pageable withoutSort(Pageable pageable) {
         return PageRequest.of(pageable.getPageNumber(), pageable.getPageSize());
+    }
+
+    private Long countPostLike(Post post) {
+        return postLikeRepository.countByPostId(post.getId());
+    }
+
+    private Long countComment(Post post) {
+        return commentRepository.countByPostId(post.getId());
+    }
+
+    private long calculatePopularityScore(Post post) {
+        long likeCount = countPostLike(post);
+        long commentCount = countComment(post);
+
+        long score = 0L;
+        score += likeCount * 3L;
+        score += commentCount * 2L;
+
+        if (post.isSolved()) {
+            score += 5L;
+        }
+
+        LocalDateTime createdAt = post.getCreatedAt();
+        if (createdAt != null) {
+            LocalDateTime now = LocalDateTime.now();
+
+            if (createdAt.isAfter(now.minusDays(1))) {
+                score += 10L;
+            } else if (createdAt.isAfter(now.minusDays(3))) {
+                score += 7L;
+            } else if (createdAt.isAfter(now.minusDays(7))) {
+                score += 4L;
+            } else if (createdAt.isAfter(now.minusDays(14))) {
+                score += 2L;
+            }
+        }
+
+        return score;
+    }
+
+    private Post.PostType normalizeType(String type) {
+        if (type == null || type.isBlank()) {
+            return null;
+        }
+
+        try {
+            return Post.PostType.valueOf(type.trim().toUpperCase());
+        } catch (IllegalArgumentException e) {
+            throw new BusinessException(ErrorCode.INVALID_POST_TYPE);
+        }
     }
 
     @Override
@@ -110,86 +160,154 @@ public class PostServiceImpl implements PostService {
 
     @Override
     @Transactional(readOnly = true)
-    public Page<PostResponse> list(String keyword, Boolean solved, Pageable pageable) {
+    public Page<PostResponse> list(String keyword, Boolean solved, String type, Pageable pageable) {
         String k = normalize(keyword);
+        Post.PostType postType = normalizeType(type);
 
         if (isLikeSort(pageable)) {
             Pageable unsorted = withoutSort(pageable);
 
-            if (k == null && solved == null) {
-                return postRepository.findAllOrderByLikeCountDesc(unsorted)
-                        .map(post -> PostResponse.from(post, countPost(post)));
-            }
-            if (k != null && solved == null) {
-                return postRepository.searchAllOrderByLikeCountDesc(k, unsorted)
-                        .map(post -> PostResponse.from(post, countPost(post)));
-            }
-            if (k == null) {
-                return postRepository.findBySolvedOrderByLikeCountDesc(solved, unsorted)
-                        .map(post -> PostResponse.from(post, countPost(post)));
+            if (postType == null) {
+                if (k == null && solved == null) {
+                    return postRepository.findAllOrderByLikeCountDesc(unsorted)
+                            .map(post -> PostResponse.from(post, countPostLike(post), countComment(post)));
+                }
+                if (k != null && solved == null) {
+                    return postRepository.searchAllOrderByLikeCountDesc(k, unsorted)
+                            .map(post -> PostResponse.from(post, countPostLike(post), countComment(post)));
+                }
+                if (k == null) {
+                    return postRepository.findBySolvedOrderByLikeCountDesc(solved, unsorted)
+                            .map(post -> PostResponse.from(post, countPostLike(post), countComment(post)));
+                }
+                return postRepository.searchAllWithSolvedOrderByLikeCountDesc(k, solved, unsorted)
+                        .map(post -> PostResponse.from(post, countPostLike(post), countComment(post)));
             }
 
-            return postRepository.searchAllWithSolvedOrderByLikeCountDesc(k, solved, unsorted)
-                    .map(post -> PostResponse.from(post, countPost(post)));
+            if (k == null && solved == null) {
+                return postRepository.findByTypeOrderByLikeCountDesc(postType, unsorted)
+                        .map(post -> PostResponse.from(post, countPostLike(post), countComment(post)));
+            }
+            if (k != null && solved == null) {
+                return postRepository.searchAllWithTypeOrderByLikeCountDesc(k, postType, unsorted)
+                        .map(post -> PostResponse.from(post, countPostLike(post), countComment(post)));
+            }
+            if (k == null) {
+                return postRepository.findBySolvedAndTypeOrderByLikeCountDesc(solved, postType, unsorted)
+                        .map(post -> PostResponse.from(post, countPostLike(post), countComment(post)));
+            }
+            return postRepository.searchAllWithSolvedAndTypeOrderByLikeCountDesc(k, solved, postType, unsorted)
+                    .map(post -> PostResponse.from(post, countPostLike(post), countComment(post)));
+        }
+
+        if (postType == null) {
+            if (k == null && solved == null) {
+                return postRepository.findAll(pageable)
+                        .map(post -> PostResponse.from(post, countPostLike(post), countComment(post)));
+            }
+            if (k != null && solved == null) {
+                return postRepository.searchAll(k, pageable)
+                        .map(post -> PostResponse.from(post, countPostLike(post), countComment(post)));
+            }
+            if (k == null) {
+                return postRepository.findBySolved(solved, pageable)
+                        .map(post -> PostResponse.from(post, countPostLike(post), countComment(post)));
+            }
+            return postRepository.searchAllWithSolved(k, solved, pageable)
+                    .map(post -> PostResponse.from(post, countPostLike(post), countComment(post)));
         }
 
         if (k == null && solved == null) {
-            return postRepository.findAll(pageable)
-                    .map(post -> PostResponse.from(post, countPost(post)));
+            return postRepository.findByType(postType, pageable)
+                    .map(post -> PostResponse.from(post, countPostLike(post), countComment(post)));
         }
         if (k != null && solved == null) {
-            return postRepository.searchAll(k, pageable)
-                    .map(post -> PostResponse.from(post, countPost(post)));
+            return postRepository.searchAllWithType(k, postType, pageable)
+                    .map(post -> PostResponse.from(post, countPostLike(post), countComment(post)));
         }
         if (k == null) {
-            return postRepository.findBySolved(solved, pageable)
-                    .map(post -> PostResponse.from(post, countPost(post)));
+            return postRepository.findBySolvedAndType(solved, postType, pageable)
+                    .map(post -> PostResponse.from(post, countPostLike(post), countComment(post)));
         }
 
-        return postRepository.searchAllWithSolved(k, solved, pageable)
-                .map(post -> PostResponse.from(post, countPost(post)));
+        return postRepository.searchAllWithSolvedAndType(k, solved, postType, pageable)
+                .map(post -> PostResponse.from(post, countPostLike(post), countComment(post)));
     }
 
     @Override
     @Transactional(readOnly = true)
-    public Page<PostResponse> listMine(Long memberId, String keyword, Boolean solved, Pageable pageable) {
+    public Page<PostResponse> listMine(Long memberId, String keyword, Boolean solved, String type, Pageable pageable) {
         String k = normalize(keyword);
+        Post.PostType postType = normalizeType(type);
 
         if (isLikeSort(pageable)) {
             Pageable unsorted = withoutSort(pageable);
 
-            if (k == null && solved == null) {
-                return postRepository.findMineOrderByLikeCountDesc(memberId, unsorted)
-                        .map(post -> PostResponse.from(post, countPost(post)));
-            }
-            if (k != null && solved == null) {
-                return postRepository.searchMineOrderByLikeCountDesc(memberId, k, unsorted)
-                        .map(post -> PostResponse.from(post, countPost(post)));
-            }
-            if (k == null) {
-                return postRepository.findMineBySolvedOrderByLikeCountDesc(memberId, solved, unsorted)
-                        .map(post -> PostResponse.from(post, countPost(post)));
+            if (postType == null) {
+                if (k == null && solved == null) {
+                    return postRepository.findMineOrderByLikeCountDesc(memberId, unsorted)
+                            .map(post -> PostResponse.from(post, countPostLike(post), countComment(post)));
+                }
+                if (k != null && solved == null) {
+                    return postRepository.searchMineOrderByLikeCountDesc(memberId, k, unsorted)
+                            .map(post -> PostResponse.from(post, countPostLike(post), countComment(post)));
+                }
+                if (k == null) {
+                    return postRepository.findMineBySolvedOrderByLikeCountDesc(memberId, solved, unsorted)
+                            .map(post -> PostResponse.from(post, countPostLike(post), countComment(post)));
+                }
+                return postRepository.searchMineWithSolvedOrderByLikeCountDesc(memberId, k, solved, unsorted)
+                        .map(post -> PostResponse.from(post, countPostLike(post), countComment(post)));
             }
 
-            return postRepository.searchMineWithSolvedOrderByLikeCountDesc(memberId, k, solved, unsorted)
-                    .map(post -> PostResponse.from(post, countPost(post)));
+            if (k == null && solved == null) {
+                return postRepository.findMineByTypeOrderByLikeCountDesc(memberId, postType, unsorted)
+                        .map(post -> PostResponse.from(post, countPostLike(post), countComment(post)));
+            }
+            if (k != null && solved == null) {
+                return postRepository.searchMineWithTypeOrderByLikeCountDesc(memberId, k, postType, unsorted)
+                        .map(post -> PostResponse.from(post, countPostLike(post), countComment(post)));
+            }
+            if (k == null) {
+                return postRepository.findMineBySolvedAndTypeOrderByLikeCountDesc(memberId, solved, postType, unsorted)
+                        .map(post -> PostResponse.from(post, countPostLike(post), countComment(post)));
+            }
+            return postRepository.searchMineWithSolvedAndTypeOrderByLikeCountDesc(memberId, k, solved, postType, unsorted)
+                    .map(post -> PostResponse.from(post, countPostLike(post), countComment(post)));
+        }
+
+        if (postType == null) {
+            if (k == null && solved == null) {
+                return postRepository.findByMemberId(memberId, pageable)
+                        .map(post -> PostResponse.from(post, countPostLike(post), countComment(post)));
+            }
+            if (k != null && solved == null) {
+                return postRepository.searchMine(memberId, k, pageable)
+                        .map(post -> PostResponse.from(post, countPostLike(post), countComment(post)));
+            }
+            if (k == null) {
+                return postRepository.findByMemberIdAndSolved(memberId, solved, pageable)
+                        .map(post -> PostResponse.from(post, countPostLike(post), countComment(post)));
+            }
+            return postRepository.searchMineWithSolved(memberId, k, solved, pageable)
+                    .map(post -> PostResponse.from(post, countPostLike(post), countComment(post)));
         }
 
         if (k == null && solved == null) {
-            return postRepository.findByMemberId(memberId, pageable)
-                    .map(post -> PostResponse.from(post, countPost(post)));
+            return postRepository.findByMemberIdAndType(memberId, postType, pageable)
+                    .map(post -> PostResponse.from(post, countPostLike(post), countComment(post)));
         }
         if (k != null && solved == null) {
-            return postRepository.searchMine(memberId, k, pageable)
-                    .map(post -> PostResponse.from(post, countPost(post)));
+            return postRepository.searchMineWithType(memberId, k, postType, pageable)
+                    .map(post -> PostResponse.from(post, countPostLike(post), countComment(post)));
         }
         if (k == null) {
-            return postRepository.findByMemberIdAndSolved(memberId, solved, pageable)
-                    .map(post -> PostResponse.from(post, countPost(post)));
+            return postRepository.findByMemberIdAndSolvedAndType(memberId, solved, postType, pageable)
+                    .map(post -> PostResponse.from(post, countPostLike(post), countComment(post)));
         }
 
-        return postRepository.searchMineWithSolved(memberId, k, solved, pageable)
-                .map(post -> PostResponse.from(post, countPost(post)));
+        return postRepository.searchMineWithSolvedAndType(memberId, k, solved, postType, pageable)
+                .map(post -> PostResponse.from(post, countPostLike(post), countComment(post)));
     }
 
     @Override
@@ -198,7 +316,7 @@ public class PostServiceImpl implements PostService {
         Post post = postRepository.findById(postId)
                 .orElseThrow(() -> new BusinessException(ErrorCode.POST_NOT_FOUND));
 
-        return PostResponse.from(post, countPost(post));
+        return PostResponse.from(post, countPostLike(post), countComment(post));
     }
 
     @Override
@@ -282,7 +400,28 @@ public class PostServiceImpl implements PostService {
     @Transactional(readOnly = true)
     public List<PostResponse> listLikedPosts(Long memberId) {
         return postRepository.findLikedPostsByMemberId(memberId).stream()
-                .map(post -> PostResponse.from(post, countPost(post)))
+                .map(post -> PostResponse.from(post, countPostLike(post), countComment(post)))
+                .toList();
+    }
+
+    @Override
+    @Transactional(readOnly = true)
+    public List<PostResponse> listPopular(int limit) {
+        int safeLimit = Math.max(1, Math.min(limit, 20));
+
+        List<Post> candidates = postRepository.findRecentQuestionPosts(
+                PageRequest.of(0, POPULAR_POST_CANDIDATE_SIZE)
+        );
+
+        return candidates.stream()
+                .sorted(
+                        Comparator
+                                .comparingLong(this::calculatePopularityScore)
+                                .reversed()
+                                .thenComparing(Post::getId, Comparator.reverseOrder())
+                )
+                .limit(safeLimit)
+                .map(post -> PostResponse.from(post, countPostLike(post), countComment(post)))
                 .toList();
     }
 }

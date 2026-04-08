@@ -24,8 +24,9 @@ public class PostResponse {
     private long likeCount;
     private LocalDateTime createdAt;
     private LocalDateTime updatedAt;
+    private long commentCount;
 
-    public static PostResponse from(Post post, long likeCount){
+    public static PostResponse from(Post post, long likeCount, long commentCount){
         String authorNickname = post.getMember().isDeleted()
                 ? "탈퇴한 회원"
                 : post.getMember().getNickname();
@@ -51,6 +52,7 @@ public class PostResponse {
                 .type(post.getType().name())
                 .attachments(attachments)
                 .likeCount(likeCount)
+                .commentCount(commentCount)
                 .createdAt(post.getCreatedAt())
                 .updatedAt(post.getUpdatedAt())
                 .build();
