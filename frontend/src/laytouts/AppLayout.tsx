@@ -316,6 +316,17 @@ export function AppLayout() {
     return () => window.removeEventListener("focus", handleFocus)
   }, [loggedIn, loadUnreadCount])
 
+  useEffect(() => {
+    if (loc.hash) return
+
+    window.scrollTo({
+      top: 0,
+      left: 0,
+      behavior: "auto",
+    })
+  }, [loc.pathname, loc.search])
+
+
   return (
     <div className="min-h-screen bg-white text-slate-900">
       <AppHeader

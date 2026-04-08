@@ -176,15 +176,10 @@ export function PostDetailPage() {
     let retryTimer: number | null = null
 
     if (!location.hash) {
-      window.scrollTo({
-        top: 0,
-        behavior: "auto",
-      })
       handledHashRef.current = null
       return
     }
 
-    if (!comments.length) return
     if (handledHashRef.current === location.hash) return
 
     const targetId = location.hash.replace("#", "")
@@ -194,12 +189,18 @@ export function PostDetailPage() {
       const el = document.getElementById(targetId)
       if (!el) return false
 
-      const top = window.scrollY + el.getBoundingClientRect().top - 120
-
-      window.scrollTo({
-        top: Math.max(top, 0),
+      el.scrollIntoView({
         behavior: "smooth",
+        block: "start",
       })
+
+      window.setTimeout(() => {
+        window.scrollBy({
+          top: -120,
+          left: 0,
+          behavior: "auto",
+        })
+      }, 150)
 
       handledHashRef.current = location.hash
       return true
@@ -207,10 +208,10 @@ export function PostDetailPage() {
 
     const tryScroll = () => {
       if (scrollToTarget()) return
-      if (retryCount >= 5) return
+      if (retryCount >= 10) return
 
       retryCount += 1
-      retryTimer = window.setTimeout(tryScroll, 150)
+      retryTimer = window.setTimeout(tryScroll, 200)
     }
 
     tryScroll()
@@ -220,7 +221,7 @@ export function PostDetailPage() {
         window.clearTimeout(retryTimer)
       }
     }
-  }, [loading, comments.length, location.pathname, location.hash])
+  }, [loading, comments.length, location.hash])
 
   useEffect(() => {
     if (!post) return
@@ -294,7 +295,7 @@ export function PostDetailPage() {
         setLikeCount(post?.likeCount ?? 0)
       }
     })()
-  }, [id, loggedIn])
+  }, [id, loggedIn, post?.likeCount])
 
   const refreshStudySection = async (postId: number) => {
     const s = await getStudyByPostId(postId)
