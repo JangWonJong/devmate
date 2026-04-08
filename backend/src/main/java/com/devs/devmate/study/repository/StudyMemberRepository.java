@@ -8,17 +8,19 @@ import java.util.Optional;
 
 public interface StudyMemberRepository extends JpaRepository<StudyMember, Long> {
 
-    long countByStudyIdAndStatus(Long studyId, StudyMember.Status status);
-
     Optional<StudyMember> findByStudyIdAndMemberIdAndStatus(
             Long studyId, Long memberId, StudyMember.Status status
     );
 
     Optional<StudyMember> findByStudyIdAndMemberId(Long studyId, Long memberId);
 
+    Optional<StudyMember> findByStudyIdAndRoleAndStatus(Long studyId, StudyMember.Role role, StudyMember.Status status);
+
     List<StudyMember> findByStudyIdAndStatus(Long studyId, StudyMember.Status status);
 
     List<StudyMember> findByMemberIdAndStatus(Long memberId, StudyMember.Status status);
+
+    long countByStudyIdAndStatus(Long studyId, StudyMember.Status status);
 
     boolean existsByMemberIdAndRoleAndStatus(Long memberId, StudyMember.Role role, StudyMember.Status status);
 
@@ -26,5 +28,5 @@ public interface StudyMemberRepository extends JpaRepository<StudyMember, Long> 
 
     void deleteByStudyId(Long studyId);
 
-    Optional<StudyMember> findByStudyIdAndRoleAndStatus(Long studyId, StudyMember.Role role, StudyMember.Status status);
+    boolean existsByStudyIdAndMemberIdAndStatus(Long studyId, Long memberId, StudyMember.Status status);
 }

@@ -15,7 +15,7 @@ import {
 } from "lucide-react"
 import { imageUrl } from "../../utils/image"
 import { apiErrorMessage } from "../../utils/error"
-import { listPopularStudies, type StudyResponse } from "../../api/study"
+import { listPopularStudies, joinStudy, type StudyResponse } from "../../api/study"
 
 type PageInfo = {
   totalPages: number
@@ -159,11 +159,14 @@ export function PostsPage() {
   const [err, setErr] = useState<string | null>(null)
   const [loading, setLoading] = useState(false)
   const [qInput, setQInput] = useState(q)
+  
   const [popularMembers, setPopularMembers] = useState<PopularMemberResponse[]>([])
   const [popularQuestions, setPopularQuestions] = useState<PostResponse[]>([])
   const [popularStudies, setPopularStudies] = useState<StudyResponse[]>([])
   const [popularLoading, setPopularLoading] = useState(false)
 
+  const [joiningStudyId, setJoiningStudyId] = useState<number | null>(null)
+  const [joinErr, setJoinErr] = useState<string | null>(null)
 
   useEffect(() => {
     setQInput(q)
@@ -256,6 +259,40 @@ export function PostsPage() {
       }
     })()
   }, [])
+
+  const handleJoinPopularStudy = async (studyId: number) => {
+    if (!loggedIn) {
+      nav("/login")
+      return
+    }
+
+    try {
+      setJoiningStudyId(studyId)
+      setJoinErr(null)
+
+      await joinStudy(studyId)
+
+      setPopularStudies((prev) =>
+        prev.map((study) =>
+          study.id === studyId
+            ? {
+                ...study,
+                joinedByMe: true,
+                currentMembers: study.currentMembers + 1,
+                status:
+                  study.currentMembers + 1 >= study.maxMembers
+                    ? "CLOSED"
+                    : study.status,
+              }
+            : study
+        )
+      )
+    } catch (e: any) {
+      setJoinErr(apiErrorMessage(e, "스터디 참여 실패"))
+    } finally {
+      setJoiningStudyId(null)
+    }
+  }
 
   const emptyText = (() => {
     if (hasQuery) return "검색 결과가 없어요"
@@ -384,6 +421,12 @@ export function PostsPage() {
         </div>
       )}
 
+      {joinErr && (
+        <div className="rounded-2xl border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-700">
+          {joinErr}
+        </div>
+      )}
+
       {loading && (
         <div className="rounded-2xl border border-slate-200 bg-white px-4 py-3 text-sm text-slate-500 shadow-sm">
           게시글 불러오는 중...
@@ -425,8 +468,8 @@ export function PostsPage() {
                           </div>
 
                           <div className="flex gap-2 text-xs text-slate-500">
-                            <span>❤️ {p.likeCount}</span>
-                            <span>💬 {p.commentCount}</span>
+                            <span>❤️ {p.likeCount ?? 0}</span>
+                            <span>💬 {p.commentCount ?? 0}</span>
                           </div>
                         </div>
                       </div>
@@ -449,35 +492,72 @@ export function PostsPage() {
 
                   <div className="space-y-3">
                     {popularStudies.map((s, idx) => (
-                      <div
-                        key={s.id}
-                        onClick={() => nav(`/posts/${s.postId}`)}
-                        className="cursor-pointer rounded-xl border border-slate-200 px-4 py-3 hover:bg-slate-50"
-                      >
-                        <div className="flex items-center justify-between">
-                          <div className="flex flex-col text-sm">
-                            <div className="flex items-center gap-2">
-                              <span className="font-semibold">{idx + 1}</span>
-                              <span className="truncate">{s.postTitle}</span>
-                            </div>
-                            <span className="text-xs text-slate-400">
-                              리더: {s.leaderNickname}
-                            </span>
+                    <div
+                      key={s.id}
+                      onClick={() => nav(`/posts/${s.postId}`)}
+                      className="cursor-pointer rounded-xl border border-slate-200 px-4 py-3 transition hover:bg-slate-50"
+                    >
+                      <div className="flex items-center justify-between gap-3">
+                        <div className="min-w-0 flex flex-col text-sm">
+                          <div className="flex items-center gap-2">
+                            <span className="shrink-0 font-semibold">{idx + 1}</span>
+                            <span className="truncate">{s.postTitle}</span>
                           </div>
+                          <span className="text-xs text-slate-400">
+                            리더: {s.leaderNickname}
+                          </span>
+                        </div>
 
-                          <div className="flex gap-2 text-xs text-slate-500">
-                            <span>👥 {s.currentMembers}/{s.maxMembers}</span>
-                            <span className={`font-medium ${
-                                s.status === "RECRUITING"
-                                  ? "text-emerald-600"
-                                  : "text-slate-400"
-                              }`}>
+                        <div className="flex shrink-0 items-center gap-2 text-xs">
+                          <span className="text-slate-500">
+                            👥 {s.currentMembers}/{s.maxMembers}
+                          </span>
+
+                          <span
+                            className={`font-medium ${
+                              s.status === "RECRUITING"
+                                ? "text-emerald-600"
+                                : "text-slate-400"
+                            }`}
+                          >
                             {s.status === "RECRUITING" ? "모집중" : "마감"}
-                            </span>
-                          </div>
+                          </span>
+
+                          {s.joinedByMe ? (
+                            <button
+                              type="button"
+                              disabled
+                              onClick={(e) => e.stopPropagation()}
+                              className="ml-1 rounded-lg border border-emerald-200 bg-emerald-50 px-2.5 py-1 text-[11px] font-medium text-emerald-600"
+                            >
+                              참여중
+                            </button>
+                          ) : s.status === "RECRUITING" ? (
+                            <button
+                              type="button"
+                              disabled={joiningStudyId === s.id}
+                              onClick={(e) => {
+                                e.stopPropagation()
+                                void handleJoinPopularStudy(s.id)
+                              }}
+                              className="ml-1 rounded-lg border border-slate-300 px-2.5 py-1 text-[11px] font-medium text-slate-700 transition hover:bg-slate-100 disabled:cursor-not-allowed disabled:border-slate-200 disabled:text-slate-400"
+                            >
+                              {joiningStudyId === s.id ? "참여중..." : "참여"}
+                            </button>
+                          ) : (
+                            <button
+                              type="button"
+                              disabled
+                              onClick={(e) => e.stopPropagation()}
+                              className="ml-1 rounded-lg border border-slate-200 px-2.5 py-1 text-[11px] text-slate-400"
+                            >
+                              마감
+                            </button>
+                          )}
                         </div>
                       </div>
-                    ))}
+                    </div>
+                  ))}
                   </div>
                   <div className="mt-4">
                   <button
@@ -535,16 +615,15 @@ export function PostsPage() {
                             )}
                           </div>
 
-                          <div
-                            className={`flex shrink-0 items-center gap-1 rounded-full px-2.5 py-1 text-xs font-medium ${
-                              (p.likeCount ?? 0) > 0
-                                ? "border-red-100 bg-red-50 text-red-600"
-                                : "border-slate-200 bg-slate-100 text-slate-400"
-                            }`}
-                          >
-                            <span>❤️</span>
-                            <span>{p.likeCount ?? 0}</span>
-                          </div>
+                          <div className="flex items-center gap-2 text-xs">
+                          <span className="flex items-center gap-1 rounded-full bg-slate-100 px-2 py-1 text-red-500">
+                          ❤️ {p.likeCount ?? 0}
+                        </span>
+
+                        <span className="flex items-center gap-1 rounded-full bg-slate-100 px-2 py-1 text-slate-600">
+                          💬 {p.commentCount ?? 0}
+                        </span>
+                        </div>
                         </div>
 
                         <div className="space-y-2">

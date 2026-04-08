@@ -30,5 +30,5 @@ public interface StudyService {
 
     Long updateNotice(Long memberId, Long studyId, String notice);
 
-    List<StudyResponse> listPopular(int limit);
+    List<StudyResponse> listPopular(Long viewerMemberId, int limit);
 }

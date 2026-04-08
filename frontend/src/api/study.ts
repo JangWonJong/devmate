@@ -17,6 +17,7 @@ export type StudyResponse = {
     status: string
     currentMembers: number
     createdAt: string
+    joinedByMe: boolean
 }
 
 export type StudyMemberResponse = {

@@ -158,14 +158,27 @@ public class StudyServiceImpl implements StudyService{
         return score;
     }
 
-    private StudyResponse toStudyResponse(Study study) {
+    private boolean isJoinedByMe(Long viewerMemberId, Long studyId) {
+        if (viewerMemberId == null) {
+            return false;
+        }
+
+        return studyMemberRepository.existsByStudyIdAndMemberIdAndStatus(
+                studyId,
+                viewerMemberId,
+                StudyMember.Status.JOINED
+        );
+    }
+
+    private StudyResponse toStudyResponse(Study study, Long viewerMemberId) {
         long currentMembers = studyMemberRepository.countByStudyIdAndStatus(
                 study.getId(),
                 StudyMember.Status.JOINED
         );
         String leaderNickname = findLeaderNickname(study.getId());
+        boolean joinedByMe = isJoinedByMe(viewerMemberId, study.getId());
 
-        return StudyResponse.from(study, currentMembers, leaderNickname);
+        return StudyResponse.from(study, currentMembers, leaderNickname, joinedByMe);
     }
 
     // 게시글 작성자만 해당 Study post로 study 생성 가능
@@ -218,7 +231,7 @@ public class StudyServiceImpl implements StudyService{
                 StudyMember.Status.JOINED
         );
         String leaderNickname = findLeaderNickname(study.getId());
-        return StudyResponse.from(study, currentMembers, leaderNickname);
+        return StudyResponse.from(study, currentMembers, leaderNickname, false);
     }
 
     @Override
@@ -411,8 +424,9 @@ public class StudyServiceImpl implements StudyService{
                             StudyMember.Status.JOINED
                     );
                     String leaderNickname = findLeaderNickname(study.getId());
+                    boolean joinedByMe = isJoinedByMe(memberId, study.getId());
 
-                    return StudyResponse.from(study, currentMembers, leaderNickname);
+                    return StudyResponse.from(study, currentMembers, leaderNickname, joinedByMe);
                 })
                 .toList();
     }
@@ -432,7 +446,7 @@ public class StudyServiceImpl implements StudyService{
 
         String leaderNickname = findLeaderNickname(study.getId());
 
-        return StudyResponse.from(study, currentMembers, leaderNickname);
+        return StudyResponse.from(study, currentMembers, leaderNickname, false);
     }
 
     @Override
@@ -491,7 +505,7 @@ public class StudyServiceImpl implements StudyService{
 
     @Override
     @Transactional(readOnly = true)
-    public List<StudyResponse> listPopular(int limit) {
+    public List<StudyResponse> listPopular(Long viewerMemberId, int limit) {
         int safeLimit = Math.max(1, Math.min(limit, 10));
 
         List<Study> candidates = studyRepository.findRecentStudies(
@@ -506,7 +520,7 @@ public class StudyServiceImpl implements StudyService{
                                 .thenComparing(Study::getId, Comparator.reverseOrder())
                 )
                 .limit(safeLimit)
-                .map(this::toStudyResponse)
+                .map(study -> toStudyResponse(study, viewerMemberId))
                 .toList();
     }
 }

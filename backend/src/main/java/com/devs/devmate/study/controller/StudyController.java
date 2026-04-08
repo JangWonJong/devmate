@@ -98,7 +98,8 @@ public class StudyController {
     public ApiResponse<List<StudyResponse>> listPopular(
             @RequestParam(defaultValue = "3") int limit
     ) {
-        return ApiResponse.ok(studyService.listPopular(limit));
+        Long memberId = SecurityUtil.currentMemberIdOrNull();
+        return ApiResponse.ok(studyService.listPopular(memberId, limit));
     }
 
     @PatchMapping("/{studyId}/capacity")

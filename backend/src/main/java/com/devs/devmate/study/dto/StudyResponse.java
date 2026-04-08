@@ -22,9 +22,15 @@ public class StudyResponse {
     private String notice;
     private String status;
     private Long currentMembers;
+    private boolean joinedByMe;
     private LocalDateTime createdAt;
 
-    public static StudyResponse from(Study study, long currentMembers, String leaderNickname) {
+    public static StudyResponse from(
+            Study study,
+            long currentMembers,
+            String leaderNickname,
+            boolean joinedByMe
+    ) {
         String authorNickname = study.getPost().getMember().isDeleted()
                 ? "탈퇴한 회원"
                 : study.getPost().getMember().getNickname();
@@ -39,6 +45,7 @@ public class StudyResponse {
                 .notice(study.getNotice())
                 .status(study.getStatus().name())
                 .currentMembers(currentMembers)
+                .joinedByMe(joinedByMe)
                 .createdAt(study.getCreatedAt())
                 .build();
     }
