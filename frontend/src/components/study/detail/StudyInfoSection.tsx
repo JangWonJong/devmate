@@ -3,7 +3,6 @@ import type { StudyMemberResponse, StudyResponse } from "../../../api/study"
 import type { ReservationResponse } from "../../../api/reservations"
 import { actionButtonClass } from "../../../utils/button"
 
-
 function studyStatusLabel(status: string) {
   switch (status) {
     case "RECRUITING":
@@ -28,7 +27,9 @@ function StudyStatusBadge({ status }: { status: string }) {
       : "bg-slate-100 text-slate-600"
 
   return (
-    <span className={`inline-flex rounded-full px-2.5 py-1 text-xs font-medium ${className}`}>
+    <span
+      className={`inline-flex rounded-full px-2.5 py-1 text-xs font-medium ${className}`}
+    >
       {label}
     </span>
   )
@@ -129,7 +130,9 @@ export default function StudyInfoSection({
         </h2>
 
         <div className="space-y-4">
-          <div className="text-sm text-slate-500">아직 스터디가 생성되지 않았습니다.</div>
+          <div className="text-sm text-slate-500">
+            아직 스터디가 생성되지 않았습니다.
+          </div>
 
           {isAuthor && (
             <ActionButton variant="primary" onClick={onCreateStudy}>
@@ -148,13 +151,14 @@ export default function StudyInfoSection({
   const isStudyLeader = studyMembers.some(
     (member) => member.memberId === meId && member.role === "LEADER"
   )
-  const isStudyJoined = studyMembers.some((member) => member.memberId === meId)
+  const isStudyJoined = study.joinedByMe
 
-  const canJoin = !isStudyJoined && isRecruiting
-  const canLeave = isStudyJoined && !isStudyLeader
-  const canClose = isStudyJoined && isStudyLeader && isRecruiting
-  const canUpdateCapacity = isStudyJoined && isStudyLeader
-  const canUpdateNotice = isStudyJoined && isStudyLeader
+  const canJoin = loggedIn && !isStudyJoined && isRecruiting
+  const canLeave = loggedIn && isStudyJoined && !isStudyLeader
+  const canClose = loggedIn && isStudyJoined && isStudyLeader && isRecruiting
+  const canUpdateCapacity = loggedIn && isStudyJoined && isStudyLeader
+  const canUpdateNotice = loggedIn && isStudyJoined && isStudyLeader
+  const canReserve = loggedIn && isStudyJoined
 
   return (
     <section className="rounded-[28px] border border-slate-200 bg-white p-8 shadow-sm">
@@ -267,7 +271,7 @@ export default function StudyInfoSection({
 
         {loggedIn ? (
           <div className="flex flex-wrap gap-3">
-            {isStudyJoined && (
+            {canReserve && (
               <ActionButton
                 variant="primary"
                 onClick={() => nav(`/studies/${study.id}/reservation`)}
@@ -278,27 +282,37 @@ export default function StudyInfoSection({
 
             {canJoin && (
               <button
+                type="button"
                 onClick={onJoinStudy}
                 className={actionButtonClass("success")}
               >
                 참가하기
               </button>
             )}
-            {canLeave && <button
-              onClick={onLeaveStudy}
-              className={actionButtonClass("danger")}
-            >
-              탈퇴하기
-            </button>}
-            {canClose && <button
-              onClick={onCloseStudy}
-              className={actionButtonClass("subtle")}
-            >
-              모집 마감
-            </button>}
+
+            {canLeave && (
+              <button
+                type="button"
+                onClick={onLeaveStudy}
+                className={actionButtonClass("danger")}
+              >
+                탈퇴하기
+              </button>
+            )}
+
+            {canClose && (
+              <button
+                type="button"
+                onClick={onCloseStudy}
+                className={actionButtonClass("subtle")}
+              >
+                모집 마감
+              </button>
+            )}
 
             {canUpdateNotice && (
               <button
+                type="button"
                 onClick={onUpdateNotice}
                 className={actionButtonClass("default")}
               >
@@ -308,6 +322,7 @@ export default function StudyInfoSection({
 
             {canUpdateCapacity && (
               <button
+                type="button"
                 onClick={onUpdateCapacity}
                 className={actionButtonClass("default")}
               >

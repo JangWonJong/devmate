@@ -10,7 +10,7 @@ public interface StudyService {
 
     Long create(Long memberId, StudyCreateRequest request);
 
-    StudyResponse get(Long studyId);
+    StudyResponse get(Long viewerMemberId, Long studyId);
 
     Long join(Long memberId, Long studyId);
 
@@ -24,7 +24,7 @@ public interface StudyService {
 
     List<StudyResponse> getMyStudies(Long memberId);
 
-    StudyResponse getByPostId(Long postId);
+    StudyResponse getByPostId(Long viewerMemberId, Long postId);
 
     Long updateCapacity(Long memberId, Long studyId, Integer maxMembers);
 

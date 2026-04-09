@@ -67,7 +67,8 @@ public class StudyController {
 
     @GetMapping("/{studyId}")
     public ApiResponse<StudyResponse> get(@PathVariable Long studyId) {
-        return ApiResponse.ok(studyService.get(studyId));
+        Long memberId = SecurityUtil.currentMemberIdOrNull();
+        return ApiResponse.ok(studyService.get(memberId, studyId));
     }
 
     @GetMapping("/{studyId}/members")
@@ -83,7 +84,8 @@ public class StudyController {
 
     @GetMapping("/post/{postId}")
     public ApiResponse<StudyResponse> getByPostId(@PathVariable Long postId) {
-        return ApiResponse.ok(studyService.getByPostId(postId));
+        Long memberId = SecurityUtil.currentMemberIdOrNull();
+        return ApiResponse.ok(studyService.getByPostId(memberId, postId));
     }
 
     @GetMapping("/{studyId}/reservations")
