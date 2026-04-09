@@ -3,7 +3,7 @@ import { useNavigate } from "react-router-dom"
 import { getMe, type MeResponse } from "../../api/members"
 import { getMyStudies } from "../../api/study"
 import { listMyReservations } from "../../api/reservations"
-import { listLikedPosts, listPosts, type PostResponse } from "../../api/posts"
+import { listLikedPosts, listPosts, listBookmarkedPosts, type PostResponse } from "../../api/posts"
 import { listMyComments, type MyCommentResponse } from "../../api/comments"
 import { apiErrorMessage } from "../../utils/error"
 import { imageUrl } from "../../utils/image"
@@ -162,6 +162,7 @@ export function MyPage() {
   const [myComments, setMyComments] = useState<MyCommentResponse[]>([])
   const [likedPosts, setLikedPosts] = useState<PostResponse[]>([])
   const [imageOpen, setImageOpen] = useState(false)
+  const [bookmarkedPosts, setBookmarkedPosts] = useState<PostResponse[]>([])
 
   const [loading, setLoading] = useState(true)
   const [err, setErr] = useState<string | null>(null)
@@ -182,6 +183,7 @@ export function MyPage() {
           myPostsPage,
           myCommentsData,
           likedPostsData,
+          bookmarkedPostsData,
         ] = await Promise.all([
           getMe(),
           getMyStudies(),
@@ -189,6 +191,7 @@ export function MyPage() {
           listPosts({ mine: true, page: 0, size: 10, sort: "id,desc" }),
           listMyComments(),
           listLikedPosts(),
+          listBookmarkedPosts(),
         ])
 
         setMe(meData)
@@ -203,6 +206,7 @@ export function MyPage() {
         setMyPostsCount(myPostsPage.totalElements)
         setMyComments(myCommentsData.slice(0, 10))
         setLikedPosts(likedPostsData.slice(0, 10))
+        setBookmarkedPosts(bookmarkedPostsData.slice(0, 10))
       } catch (e) {
         setErr(apiErrorMessage(e, "마이페이지 조회 실패"))
       } finally {
@@ -486,6 +490,28 @@ export function MyPage() {
           ) : (
             <div className="space-y-3">
               {likedPosts.map((post) => (
+                <PostItem
+                  key={post.id}
+                  post={post}
+                  onClick={() => nav(`/posts/${post.id}`)}
+                />
+              ))}
+            </div>
+          )}
+        </div>
+      </section>
+
+      <section className="rounded-2xl border border-slate-200 bg-white p-6 shadow-sm">
+        <div className="space-y-4">
+          <SectionHeader title="북마크한 게시글" />
+
+          {bookmarkedPosts.length === 0 ? (
+            <div className="rounded-xl border border-slate-200 bg-slate-50 px-4 py-4 text-sm text-slate-500">
+              북마크한 게시글이 아직 없어요.
+            </div>
+          ) : (
+            <div className="space-y-3">
+              {bookmarkedPosts.map((post) => (
                 <PostItem
                   key={post.id}
                   post={post}

@@ -140,6 +140,10 @@ type PostDetailHeaderProps = {
   likeCount: number
   likeLoading: boolean
   onToggleLike: () => void
+  bookmarkedByMe: boolean
+  bookmarkCount: number
+  bookmarkLoading: boolean
+  onToggleBookmark: () => void
 }
 
 export default function PostDetailHeader({
@@ -154,6 +158,10 @@ export default function PostDetailHeader({
   likeCount,
   likeLoading,
   onToggleLike,
+  bookmarkedByMe,
+  bookmarkCount,
+  bookmarkLoading,
+  onToggleBookmark,
 }: PostDetailHeaderProps) {
   const nav = useNavigate()
   const isStudyPost = post.type === "STUDY"
@@ -289,7 +297,7 @@ export default function PostDetailHeader({
         )}
 
         <div className="mt-6 flex flex-wrap items-center justify-between gap-3 border-t border-slate-100 pt-6">
-
+        <div className="flex items-center gap-2">
         {/* ⭐ 좋아요 (왼쪽) */}
         <button
           onClick={onToggleLike}
@@ -305,6 +313,19 @@ export default function PostDetailHeader({
           {likedByMe ? "❤️" : "🤍"} {likeCount}
         </button>
 
+         <button
+        onClick={onToggleBookmark}
+        disabled={bookmarkLoading}
+        className={`flex items-center gap-1 rounded-xl px-3 py-1 text-sm transition
+          ${
+            bookmarkedByMe
+              ? "bg-amber-100 text-amber-700"
+              : "bg-slate-100 text-slate-600"
+          }
+          hover:scale-105 active:scale-95`}>
+        {bookmarkedByMe ? "🔖" : "📑"} {bookmarkCount}
+      </button>
+        </div>
         {/* 오른쪽 버튼들 */}
         <div className="flex gap-3">
           {isMine && canSolve && (

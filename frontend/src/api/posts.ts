@@ -42,6 +42,11 @@ export type PostLikeStatusResponse = {
   likeCount: number
 }
 
+export type PostBookmarkStatusResponse = {
+  bookmarkedByMe: boolean
+  bookmarkCount: number
+}
+
 export type PostSort = "id,desc" | "id,asc" | "likes,desc"
 
 export async function createPost(
@@ -185,6 +190,44 @@ export async function listPopularQuestionPosts(limit = 5): Promise<PostResponse[
 
   if (!data.success || data.data == null) {
     throw new Error(data.error?.message ?? "Popular posts failed")
+  }
+
+  return data.data
+}
+
+export async function bookmarkPost(postId: number | string) {
+  const { data } = await http.post<ApiResponse<null>>(`/api/posts/${postId}/bookmarks`)
+
+  if (!data.success) {
+    throw new Error(data.error?.message ?? "북마크 처리에 실패했습니다.")
+  }
+}
+
+export async function unbookmarkPost(postId: number | string) {
+  const { data } = await http.delete<ApiResponse<null>>(`/api/posts/${postId}/bookmarks`)
+
+  if (!data.success) {
+    throw new Error(data.error?.message ?? "북마크 취소에 실패했습니다.")
+  }
+}
+
+export async function getPostBookmarkStatus(postId: number | string) {
+  const { data } = await http.get<ApiResponse<PostBookmarkStatusResponse>>(
+    `/api/posts/${postId}/bookmarks/me`
+  )
+
+  if (!data.success || !data.data) {
+    throw new Error(data.error?.message ?? "북마크 상태 조회에 실패했습니다.")
+  }
+
+  return data.data
+}
+
+export async function listBookmarkedPosts() {
+  const { data } = await http.get<ApiResponse<PostResponse[]>>("/api/posts/bookmarked")
+
+  if (!data.success || !data.data) {
+    throw new Error(data.error?.message ?? "북마크한 게시글 조회 실패")
   }
 
   return data.data

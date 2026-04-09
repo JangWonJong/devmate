@@ -1,6 +1,7 @@
 package com.devs.devmate.post.controller;
 
 
+import com.devs.devmate.bookmark.service.PostBookmarkService;
 import com.devs.devmate.global.common.ApiResponse;
 import com.devs.devmate.global.security.SecurityUtil;
 import com.devs.devmate.post.dto.PostCreateRequest;
@@ -23,6 +24,7 @@ import java.util.List;
 public class PostController {
 
     private final PostService postService;
+    private final PostBookmarkService postBookmarkService;
 
     @PostMapping(consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
     public ApiResponse<Long> create(
@@ -88,6 +90,12 @@ public class PostController {
         Long memberId = SecurityUtil.currentMemberId();
         postService.solve(memberId, postId);
         return ApiResponse.ok();
+    }
+
+    @GetMapping("/bookmarked")
+    public ApiResponse<List<PostResponse>> listMyBookmarkedPosts() {
+        Long memberId = SecurityUtil.currentMemberId();
+        return ApiResponse.ok(postBookmarkService.listBookmarkedPosts(memberId));
     }
 
 }

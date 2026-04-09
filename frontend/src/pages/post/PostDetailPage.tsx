@@ -7,6 +7,9 @@ import {
   getPostLikeStatus,
   likePost,
   unlikePost,
+  bookmarkPost,
+  unbookmarkPost,
+  getPostBookmarkStatus,
   type PostResponse,
 } from "../../api/posts"
 import { tokenStore } from "../../auth/token"
@@ -80,6 +83,10 @@ export function PostDetailPage() {
   const [commentLikedMap, setCommentLikedMap] = useState<Record<number, boolean>>({})
   const [commentLikeCountMap, setCommentLikeCountMap] = useState<Record<number, number>>({})
   const [commentLikeLoadingMap, setCommentLikeLoadingMap] = useState<Record<number, boolean>>({})
+  
+  const [bookmarkedByMe, setBookmarkedByMe] = useState(false)
+  const [bookmarkCount, setBookmarkCount] = useState(0)
+  const [bookmarkLoading, setBookmarkLoading] = useState(false)
 
   const handledNotFoundRef = useRef(false)
   const handledHashRef = useRef<string | null>(null)
@@ -296,6 +303,25 @@ export function PostDetailPage() {
       }
     })()
   }, [id, loggedIn, post?.likeCount])
+
+  useEffect(() => {
+    ;(async () => {
+      if (!id || !loggedIn) {
+        setBookmarkedByMe(false)
+        setBookmarkCount(0)
+        return
+      }
+
+      try {
+        const res = await getPostBookmarkStatus(id)
+        setBookmarkedByMe(res.bookmarkedByMe)
+        setBookmarkCount(res.bookmarkCount)
+      } catch {
+        setBookmarkedByMe(false)
+        setBookmarkCount(0)
+      }
+    })()
+  }, [id, loggedIn])  
 
   const refreshStudySection = async (postId: number) => {
     const s = await getStudyByPostId(postId)
@@ -656,6 +682,35 @@ export function PostDetailPage() {
     }
   }
 
+  const onToggleBookmark = async () => {
+    if (!id || bookmarkLoading) return
+
+    if (!loggedIn) {
+      alert("로그인이 필요합니다.")
+      return
+    }
+
+    try {
+      setActionErr(null)
+      setBookmarkLoading(true)
+
+      if (bookmarkedByMe) {
+        await unbookmarkPost(id)
+        setBookmarkedByMe(false)
+        setBookmarkCount((prev) => Math.max(0, prev - 1))
+      } else {
+        await bookmarkPost(id)
+        setBookmarkedByMe(true)
+        setBookmarkCount((prev) => prev + 1)
+      }
+    } catch (e: any) {
+      setActionErr(apiErrorMessage(e, "북마크 처리 실패"))
+    } finally {
+      setBookmarkLoading(false)
+    }
+  }
+
+
   if (loading) {
     return (
       <div className="rounded-2xl border border-slate-200 bg-white px-4 py-3 text-sm text-slate-500 shadow-sm">
@@ -698,6 +753,10 @@ export function PostDetailPage() {
         likeCount={likeCount}
         likeLoading={likeLoading}
         onToggleLike={onToggleLike}
+        bookmarkedByMe={bookmarkedByMe}
+        bookmarkCount={bookmarkCount}
+        bookmarkLoading={bookmarkLoading}
+        onToggleBookmark={onToggleBookmark}
       />
 
       {isStudyPost && (
