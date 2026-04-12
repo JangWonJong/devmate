@@ -30,10 +30,10 @@ public class PostBookmarkServiceImpl implements PostBookmarkService{
     private final CommentRepository commentRepository;
 
 
-    private PostResponse toResponse(Post post) {
+    private PostResponse toResponse(Post post, boolean bookmarkedByMe) {
         long likeCount = postLikeRepository.countByPostId(post.getId());
         long commentCount = commentRepository.countByPostId(post.getId());
-        return PostResponse.from(post, likeCount, commentCount);
+        return PostResponse.from(post, likeCount, commentCount, bookmarkedByMe);
     }
 
     @Override
@@ -98,7 +98,7 @@ public class PostBookmarkServiceImpl implements PostBookmarkService{
     @Override
     public List<PostResponse> listBookmarkedPosts(Long memberId) {
         return postBookmarkRepository.findBookmarkedPostsByMemberId(memberId).stream()
-                .map(this::toResponse)
+                .map(post -> toResponse(post, true))
                 .toList();
     }
 }

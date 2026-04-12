@@ -25,8 +25,9 @@ public class PostResponse {
     private LocalDateTime createdAt;
     private LocalDateTime updatedAt;
     private long commentCount;
+    private boolean bookmarkedByMe;
 
-    public static PostResponse from(Post post, long likeCount, long commentCount){
+    public static PostResponse from(Post post, long likeCount, long commentCount, boolean bookmarkedByMe){
         String authorNickname = post.getMember().isDeleted()
                 ? "탈퇴한 회원"
                 : post.getMember().getNickname();
@@ -55,6 +56,7 @@ public class PostResponse {
                 .commentCount(commentCount)
                 .createdAt(post.getCreatedAt())
                 .updatedAt(post.getUpdatedAt())
+                .bookmarkedByMe(bookmarkedByMe)
                 .build();
     }
 

@@ -12,13 +12,13 @@ import java.util.List;
 public interface PostService {
 
     Long create(Long memberId, PostCreateRequest request, List<MultipartFile> files);
-    Page<PostResponse> list(String keyword, Boolean solved, String type, Pageable pageable);
+    Page<PostResponse> list(Long memberId, String keyword, Boolean solved, String type, Pageable pageable);
     Page<PostResponse> listMine(Long memberId, String keyword, Boolean solved, String type, Pageable pageable);
-    PostResponse get(Long postId);
+    PostResponse get(Long memberId, Long postId);
     void update(Long memberId, Long postId, PostUpdateRequest request, List<MultipartFile> files);
     void delete(Long memberId, Long postId);
     void solve(Long memberId, Long postId);
     List<PostResponse> listLikedPosts(Long memberId);
-    List<PostResponse> listPopular(int limit);
+    List<PostResponse> listPopular(Long memberId, int limit);
 
 }

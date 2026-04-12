@@ -616,6 +616,11 @@ export function PostsPage() {
                           </div>
 
                           <div className="flex items-center gap-2 text-xs">
+                            {p.bookmarkedByMe && (
+                          <span className="flex items-center gap-1 rounded-full bg-amber-50 px-2 py-1 text-amber-700">
+                            🔖 저장됨
+                          </span>
+                           )}
                           <span className="flex items-center gap-1 rounded-full bg-slate-100 px-2 py-1 text-red-500">
                           ❤️ {p.likeCount ?? 0}
                         </span>

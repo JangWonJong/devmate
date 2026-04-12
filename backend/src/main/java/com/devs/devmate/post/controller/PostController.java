@@ -46,14 +46,18 @@ public class PostController {
                 Long memberId = SecurityUtil.currentMemberId();
                 return ApiResponse.ok(postService.listMine(memberId, keyword, solved, type, pageable));
             }
-        return ApiResponse.ok(postService.list(keyword, solved, type, pageable));
+
+            Long memberId = SecurityUtil.currentMemberIdOrNull();
+
+        return ApiResponse.ok(postService.list(memberId, keyword, solved, type, pageable));
     }
 
     @GetMapping("/popular")
     public ApiResponse<List<PostResponse>> listPopular(
             @RequestParam(defaultValue = "5") int limit
     ) {
-        return ApiResponse.ok(postService.listPopular(limit));
+        Long memberId = SecurityUtil.currentMemberIdOrNull();
+        return ApiResponse.ok(postService.listPopular(memberId, limit));
     }
 
     @GetMapping("/liked")
@@ -64,7 +68,9 @@ public class PostController {
 
     @GetMapping("/{postId}")
     public ApiResponse<PostResponse> get(@PathVariable Long postId){
-        return ApiResponse.ok(postService.get(postId));
+
+        Long memberId = SecurityUtil.currentMemberIdOrNull();
+        return ApiResponse.ok(postService.get(memberId, postId));
     }
 
     @PatchMapping(value = "/{postId}", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)

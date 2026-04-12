@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react"
+import { useEffect, useState, useRef } from "react"
 import { useNavigate } from "react-router-dom"
 import { getMe, type MeResponse } from "../../api/members"
 import { getMyStudies } from "../../api/study"
@@ -170,6 +170,23 @@ export function MyPage() {
   const recentPostCount = countRecentActivities(myPosts, 3)
   const recentCommentCount = countRecentActivities(myComments, 3)
   const recentLikeCount = countRecentActivities(likedPosts, 3)
+  const myPostsRef = useRef<HTMLElement | null >(null)
+  const likedPostsRef = useRef<HTMLElement | null >(null)
+  const bookmarkedPostsRef = useRef<HTMLElement | null >(null)
+  const myCommentsRef = useRef<HTMLElement | null >(null)
+
+  const recentBookmarkCount = countRecentActivities(bookmarkedPosts, 3)
+
+  const scrollTo = (ref: React.RefObject<HTMLElement | null>) => {
+    if (!ref.current) return
+
+    const top = ref.current.getBoundingClientRect().top + window.scrollY - 100
+
+    window.scrollTo({
+      top,
+      behavior: "smooth",
+    })
+  }
 
   useEffect(() => {
     const fetchData = async () => {
@@ -430,30 +447,79 @@ export function MyPage() {
       </section>
 
       <section className="rounded-2xl border border-slate-200 bg-white p-6 shadow-sm">
-        <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
+        <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-5">
           <StatCard label="내 상태" value={me?.status ?? "-"} />
-          <StatCard label="내 글" value={`${myPostsCount}개`} />
-          <StatCard label="참여 중 스터디" value={`${myStudiesCount}개`} />
-          <StatCard label="예정 예약" value={`${upcomingReservationsCount}건`} />
+
+          <button
+            type="button"
+            onClick={() => scrollTo(myPostsRef)}
+            className="text-left rounded-2xl transition hover:-translate-y-0.5 hover:shadow-sm"
+          >
+            <StatCard label="내 글" value={`${myPostsCount}개`} helper="클릭 이동" />
+          </button>
+
+          <button
+            type="button"
+            onClick={() => nav("/mystudies")}
+            className="text-left rounded-2xl transition hover:-translate-y-0.5 hover:shadow-sm"
+          >
+            <StatCard label="참여 중 스터디" value={`${myStudiesCount}개`} helper="페이지 이동" />
+          </button>
+
+          <button
+            type="button"
+            onClick={() => nav("/reservations?scope=mine")}
+            className="text-left rounded-2xl transition hover:-translate-y-0.5 hover:shadow-sm"
+          >
+            <StatCard label="예정 예약" value={`${upcomingReservationsCount}건`} helper="페이지 이동" />
+          </button>
+
+          <button
+            type="button"
+            onClick={() => scrollTo(bookmarkedPostsRef)}
+            className="text-left rounded-2xl transition hover:-translate-y-0.5 hover:shadow-sm"
+          >
+            <StatCard
+              label="북마크"
+              value={`${bookmarkedPosts.length}개`}
+              helper="클릭 이동"
+            />
+          </button>
         </div>
 
         <div className="mt-5 flex flex-wrap items-center gap-2 border-t border-slate-200 pt-4">
           <span className="text-sm font-semibold text-slate-900">최근 활동</span>
-          <span className="rounded-full bg-blue-50 px-3 py-1 text-sm font-medium text-blue-700">
+          <button
+            onClick={() => scrollTo(myPostsRef)}
+            className="rounded-full bg-blue-50 px-3 py-1 text-sm font-medium text-blue-700 hover:opacity-80"
+          >
             작성글 {recentPostCount}건
-          </span>
+          </button>
 
-          <span className="rounded-full bg-emerald-50 px-3 py-1 text-sm font-medium text-emerald-700">
+          <button
+            onClick={() => scrollTo(myCommentsRef)}
+            className="rounded-full bg-emerald-50 px-3 py-1 text-sm font-medium text-emerald-700 hover:opacity-80"
+          >
             댓글 {recentCommentCount}건
-          </span>
+          </button>
 
-          <span className="rounded-full bg-rose-50 px-3 py-1 text-sm font-medium text-rose-700">
+          <button
+            onClick={() => scrollTo(likedPostsRef)}
+            className="rounded-full bg-rose-50 px-3 py-1 text-sm font-medium text-rose-700 hover:opacity-80"
+          >
             좋아요 {recentLikeCount}건
-          </span>
+          </button>
+
+          <button
+            onClick={() => scrollTo(bookmarkedPostsRef)}
+            className="rounded-full bg-amber-50 px-3 py-1 text-sm font-medium text-amber-700 hover:opacity-80"
+          >
+            북마크 {recentBookmarkCount}건
+          </button>
         </div>
       </section>
 
-      <section className="rounded-2xl border border-slate-200 bg-white p-6 shadow-sm">
+      <section ref = {myPostsRef} className="rounded-2xl border border-slate-200 bg-white p-6 shadow-sm">
         <div className="space-y-4">
           <SectionHeader
             title="내가 쓴 글"
@@ -479,7 +545,7 @@ export function MyPage() {
         </div>
       </section>
 
-      <section className="rounded-2xl border border-slate-200 bg-white p-6 shadow-sm">
+      <section ref = {likedPostsRef} className="rounded-2xl border border-slate-200 bg-white p-6 shadow-sm">
         <div className="space-y-4">
           <SectionHeader title="좋아요한 게시글" />
 
@@ -501,7 +567,7 @@ export function MyPage() {
         </div>
       </section>
 
-      <section className="rounded-2xl border border-slate-200 bg-white p-6 shadow-sm">
+      <section ref = {bookmarkedPostsRef} className="rounded-2xl border border-slate-200 bg-white p-6 shadow-sm">
         <div className="space-y-4">
           <SectionHeader title="북마크한 게시글" />
 
@@ -523,7 +589,7 @@ export function MyPage() {
         </div>
       </section>
 
-      <section className="rounded-2xl border border-slate-200 bg-white p-6 shadow-sm">
+      <section ref = {myCommentsRef} className="rounded-2xl border border-slate-200 bg-white p-6 shadow-sm">
         <div className="space-y-4">
           <SectionHeader title="내가 쓴 댓글" />
 
@@ -572,6 +638,7 @@ export function MyPage() {
           </div>
         </div>
       )}
+
     </div>
   )
 }

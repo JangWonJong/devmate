@@ -19,6 +19,7 @@ export type PostResponse = {
     commentCount: number
     createdAt: string
     updatedAt: string
+    bookmarkedByMe: boolean
 }
 
 export type PostUpdateRequest = {
