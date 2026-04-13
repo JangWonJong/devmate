@@ -406,6 +406,46 @@
                 Pageable pageable
         );
 
+        @Query("""
+        select pb.post
+        from PostBookmark pb
+        join pb.post p
+        where pb.member.id = :memberId
+          and (:keyword is null or lower(p.title) like lower(concat('%', :keyword, '%'))
+               or lower(p.content) like lower(concat('%', :keyword, '%')))
+          and (:solved is null or p.solved = :solved)
+          and (:type is null or p.type = :type)
+        order by p.id desc
+        """)
+        Page<Post> findBookmarkedPosts(
+                @Param("memberId") Long memberId,
+                @Param("keyword") String keyword,
+                @Param("solved") Boolean solved,
+                @Param("type") Post.PostType type,
+                Pageable pageable
+        );
+
+        @Query("""
+        select p
+        from Post p
+        join PostBookmark pb on pb.post = p
+        left join PostLike pl on pl.post = p
+        where pb.member.id = :memberId
+          and (:keyword is null or lower(p.title) like lower(concat('%', :keyword, '%'))
+               or lower(p.content) like lower(concat('%', :keyword, '%')))
+          and (:solved is null or p.solved = :solved)
+          and (:type is null or p.type = :type)
+        group by p
+        order by count(pl.id) desc, p.id desc
+        """)
+        Page<Post> findBookmarkedPostsOrderByLikeCountDesc(
+                @Param("memberId") Long memberId,
+                @Param("keyword") String keyword,
+                @Param("solved") Boolean solved,
+                @Param("type") Post.PostType type,
+                Pageable pageable
+        );
+
     }
 
 

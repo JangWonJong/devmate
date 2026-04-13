@@ -82,6 +82,7 @@ export async function listPosts(params?: {
     keyword?: string
     solved?: boolean
     type?: PostTypeFilter
+    bookmarked?: boolean
 
 }) {
     const page = params?.page ?? 0
@@ -91,10 +92,11 @@ export async function listPosts(params?: {
     const keyword = params?.keyword
     const solved = params?.solved
     const type = params?.type
+    const bookmarked = params?.bookmarked ?? false
 
     const {data} = await http.get<ApiResponse<PageResponse<PostResponse>>>(
         "/api/posts", 
-        {params: {page, size, sort, mine, keyword, solved, type}}
+        {params: {page, size, sort, mine, keyword, solved, type, bookmarked}}
     )
     if (!data.success || data.data == null) throw new Error(data.error?.message ?? "List failed")
     return data.data

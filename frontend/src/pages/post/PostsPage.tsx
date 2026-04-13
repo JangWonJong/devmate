@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useState } from "react"
-import { listPosts, listPopularQuestionPosts, type PostResponse } from "../../api/posts"
+import { listPosts, listPopularQuestionPosts, bookmarkPost, unbookmarkPost, type PostResponse } from "../../api/posts"
 import { Link, useNavigate, useSearchParams } from "react-router-dom"
 import { tokenStore } from "../../auth/token"
 import {
@@ -30,6 +30,7 @@ type Query = {
   size?: number
   sort?: "id,desc" | "id,asc" | "likes,desc"
   type?: "QUESTION" | "STUDY" | null
+  bookmarked?: boolean
 }
 
 function toInt(v: string | null, def: number) {
@@ -118,6 +119,8 @@ export function PostsPage() {
   const q = sp.get("q") ?? ""
   const hasQuery = q.trim().length > 0
   const type = toType(sp.get("type"))
+  const bookmarked = toBool(sp.get("bookmarked"), false)
+
 
   const setQuery = useCallback(
     (next: Query, options?: { replace?: boolean }) => {
@@ -128,6 +131,7 @@ export function PostsPage() {
       const curSort = toSort(sp.get("sort"))
       const curSize = normalizeSize(sp.get("size"), 10)
       const curType = toType(sp.get("type"))
+      const curBookmarked = toBool(sp.get("bookmarked"), false)
 
       const nextQ = (next.q ?? curQ)?.trim()
       const nextScope = next.scope ?? curScope
@@ -136,7 +140,7 @@ export function PostsPage() {
       const nextSize = next.size ?? curSize
       const nextSort = next.sort ?? curSort
       const nextType = next.type === undefined ? curType : next.type
-
+      const nextBookmarked = next.bookmarked ?? curBookmarked
 
       const params: Record<string, string> = {}
       if (nextQ) params.q = nextQ
@@ -145,7 +149,8 @@ export function PostsPage() {
       if (nextPage !== 0) params.page = String(nextPage)
       if (nextSort !== "id,desc") params.sort = nextSort
       if (nextSize !== 10) params.size = String(nextSize)
-      if (nextType != null) params.type = nextType 
+      if (nextType != null) params.type = nextType
+      if (nextBookmarked) params.bookmarked = "true"
 
       setSp(params, { replace: options?.replace ?? false })
     },
@@ -167,6 +172,8 @@ export function PostsPage() {
 
   const [joiningStudyId, setJoiningStudyId] = useState<number | null>(null)
   const [joinErr, setJoinErr] = useState<string | null>(null)
+
+  const [bookmarkingPostId, setBookmarkingPostId] = useState<number | null>(null)
 
   useEffect(() => {
     setQInput(q)
@@ -199,8 +206,8 @@ export function PostsPage() {
         setLoading(true)
         setErr(null)
 
-        if (!loggedIn && scope === "mine") {
-          setQuery({ scope: "all", page: 0 }, { replace: true })
+        if (!loggedIn && (scope === "mine" || bookmarked)) {
+          setQuery({ scope: "all", bookmarked: false, page: 0 }, { replace: true })
           return
         }
 
@@ -212,6 +219,7 @@ export function PostsPage() {
           keyword: q || undefined,
           solved: onlySolved ? true : undefined,
           type,
+          bookmarked,
         })
 
         setItems(res.content)
@@ -229,7 +237,7 @@ export function PostsPage() {
         setLoading(false)
       }
     })()
-  }, [page, size, scope, sort, q, onlySolved, loggedIn, type, setQuery])
+  }, [page, size, scope, sort, q, onlySolved, loggedIn, type, bookmarked, setQuery])
 
   useEffect(() => {
     ;(async () => {
@@ -293,9 +301,53 @@ export function PostsPage() {
       setJoiningStudyId(null)
     }
   }
+ 
+  const handleToggleBookmark = async (postId: number, bookmarkedByMe: boolean) => {
+    if (!loggedIn) {
+      nav("/login")
+      return
+    }
+
+    try {
+      setBookmarkingPostId(postId)
+      setErr(null)
+
+      if (bookmarkedByMe) {
+        await unbookmarkPost(postId)
+      } else {
+        await bookmarkPost(postId)
+      }
+
+      setItems((prev) =>
+        bookmarked && bookmarkedByMe
+        ? prev.filter((item) => item.id !== postId)
+        : prev.map((item) =>
+            item.id === postId
+              ? { ...item, bookmarkedByMe: !bookmarkedByMe }
+              : item
+          )
+      )
+
+      setPopularQuestions((prev) =>
+        prev.map((item) =>
+          item.id === postId
+            ? { ...item, bookmarkedByMe: !bookmarkedByMe }
+            : item
+        )
+      )
+    } catch (e: any) {
+      setErr(apiErrorMessage(e, "북마크 처리 실패"))
+    } finally {
+      setBookmarkingPostId(null)
+    }
+  }
+
 
   const emptyText = (() => {
     if (hasQuery) return "검색 결과가 없어요"
+    if (bookmarked) {
+      return loggedIn ? "저장한 글이 아직 없어요" : "로그인 후 저장한 글을 확인할 수 있어요"
+    }
     if (scope === "mine") {
       return loggedIn ? "내 글이 아직 없어요" : "로그인 후 내 글을 확인할 수 있어요"
     }
@@ -366,21 +418,21 @@ export function PostsPage() {
 
               <ScopeButton
                 active={scope === "all" && !type}
-                onClick={() => setQuery({ scope: "all", type: null, page: 0 })}
+                onClick={() => setQuery({ scope: "all", bookmarked: false, type: null, page: 0 })}
               >
                 전체 글
               </ScopeButton>
 
               <ScopeButton
                 active={scope === "all" && type === "QUESTION"}
-                onClick={() => setQuery({ type: "QUESTION", scope: "all", page: 0 })}
+                onClick={() => setQuery({ type: "QUESTION", bookmarked: false, scope: "all", page: 0 })}
               >
                 질문 글
               </ScopeButton>
 
               <ScopeButton
                 active={scope === "all" && type === "STUDY"}
-                onClick={() => setQuery({ type: "STUDY", scope: "all", page: 0 })}
+                onClick={() => setQuery({ type: "STUDY", bookmarked: false, scope: "all", page: 0 })}
               >
                 스터디 글
               </ScopeButton>
@@ -388,9 +440,23 @@ export function PostsPage() {
               <ScopeButton
                 active={scope === "mine" && !type}
                 disabled={!loggedIn}
-                onClick={() => setQuery({ scope: "mine", type: null, page: 0 })}
+                onClick={() => setQuery({ scope: "mine", bookmarked: false, type: null, page: 0 })}
               >
                 내 글만
+              </ScopeButton>
+
+              <ScopeButton
+                active={bookmarked}
+                disabled={!loggedIn}
+                onClick={() =>
+                  setQuery({
+                    bookmarked: !bookmarked,
+                    scope: "all",
+                    type: null,
+                    page: 0,
+                  })
+                }>
+                저장한 글
               </ScopeButton>
             </div>
 
@@ -435,7 +501,8 @@ export function PostsPage() {
 
       <div className="grid gap-6 xl:grid-cols-[minmax(0,1fr)_280px]">
         <div className="min-w-0 space-y-5">
-          {popularLoading ? (
+          {!bookmarked && (
+            popularLoading ? (
             <div className="rounded-[24px] border border-slate-200 bg-white px-4 py-3 text-sm text-slate-500 shadow-sm">
               인기글 불러오는 중...
             </div>
@@ -450,7 +517,7 @@ export function PostsPage() {
                       🔥 인기 질문
                     </h2>
                     <span className="text-xs text-slate-400">
-                      좋아요 + 댓글 기준
+                      좋아요 + 댓글 + 날짜 기준
                     </span>
                   </div>
 
@@ -461,15 +528,30 @@ export function PostsPage() {
                         onClick={() => nav(`/posts/${p.id}`)}
                         className="cursor-pointer rounded-xl border border-slate-200 px-4 py-3 hover:bg-slate-50"
                       >
-                        <div className="flex items-center justify-between">
-                          <div className="flex items-center gap-2 text-sm">
-                            <span className="font-semibold">{idx + 1}</span>
+                        <div className="flex items-center justify-between gap-3">
+                          <div className="min-w-0 flex flex-1 items-center gap-2 text-sm">
+                            <span className="shrink-0 font-semibold">{idx + 1}</span>
                             <span className="truncate">{p.title}</span>
                           </div>
 
-                          <div className="flex gap-2 text-xs text-slate-500">
+                          <div className="ml-2 flex shrink-0 items-center gap-2 text-xs">
                             <span>❤️ {p.likeCount ?? 0}</span>
                             <span>💬 {p.commentCount ?? 0}</span>
+                            <button
+                              type="button"
+                              disabled={bookmarkingPostId === p.id}
+                              onClick={(e) => {
+                                e.stopPropagation()
+                                void handleToggleBookmark(p.id, p.bookmarkedByMe)
+                              }}
+                              className={`rounded-full px-2 py-1 ${
+                                p.bookmarkedByMe
+                                  ? "bg-amber-50 text-amber-700"
+                                  : "bg-slate-100 text-slate-500"
+                              }`}
+                            >
+                              {p.bookmarkedByMe ? "🔖" : "📑"}
+                            </button>
                           </div>
                         </div>
                       </div>
@@ -561,7 +643,7 @@ export function PostsPage() {
                   </div>
                   <div className="mt-4">
                   <button
-                    onClick={() => setQuery({ type: "STUDY", scope: "all", page: 0 })}
+                    onClick={() => setQuery({ type: "STUDY", scope: "all", bookmarked: false, page: 0 })}
                     className="w-full rounded-xl border border-slate-200 px-4 py-2 text-sm text-slate-600 transition hover:bg-slate-50"
                   >
                     스터디 모집글 더 보기 →
@@ -571,6 +653,7 @@ export function PostsPage() {
               )}
 
             </div>
+          )
           )}
 
           <section className="space-y-5">
@@ -592,7 +675,7 @@ export function PostsPage() {
                     <div className="px-5 py-4">
                       <div className="space-y-4">
                         <div className="flex items-start justify-between gap-3">
-                          <div className="flex flex-wrap items-center gap-2">
+                          <div className="min-w-0 flex flex-wrap items-center gap-2">
                             <StatusBadge solved={p.solved} />
 
                             {p.type === "STUDY" && (
@@ -615,24 +698,39 @@ export function PostsPage() {
                             )}
                           </div>
 
-                          <div className="flex items-center gap-2 text-xs">
-                            {p.bookmarkedByMe && (
-                          <span className="flex items-center gap-1 rounded-full bg-amber-50 px-2 py-1 text-amber-700">
-                            🔖 저장됨
-                          </span>
-                           )}
-                          <span className="flex items-center gap-1 rounded-full bg-slate-100 px-2 py-1 text-red-500">
-                          ❤️ {p.likeCount ?? 0}
-                        </span>
+                          <div className="ml-3 flex shrink-0 items-center gap-2 text-xs">
+                            <button
+                              type="button"
+                              disabled={bookmarkingPostId === p.id}
+                              onClick={(e) => {
+                                e.stopPropagation()
+                                void handleToggleBookmark(p.id, p.bookmarkedByMe)
+                              }}
+                              className={`flex items-center gap-1 rounded-full px-2 py-1 transition ${
+                                p.bookmarkedByMe
+                                  ? "bg-amber-50 text-amber-700"
+                                  : "bg-slate-100 text-slate-500 hover:bg-amber-50 hover:text-amber-700"
+                              } disabled:cursor-not-allowed disabled:opacity-60`}
+                            >
+                              {bookmarkingPostId === p.id
+                                ? "처리중..."
+                                : p.bookmarkedByMe
+                                ? "🔖 저장됨"
+                                : "📑 저장"}
+                            </button>
 
-                        <span className="flex items-center gap-1 rounded-full bg-slate-100 px-2 py-1 text-slate-600">
-                          💬 {p.commentCount ?? 0}
-                        </span>
-                        </div>
+                            <span className="flex items-center gap-1 rounded-full bg-slate-100 px-2 py-1 text-red-500">
+                              ❤️ {p.likeCount ?? 0}
+                            </span>
+
+                            <span className="flex items-center gap-1 rounded-full bg-slate-100 px-2 py-1 text-slate-600">
+                              💬 {p.commentCount ?? 0}
+                            </span>
+                          </div>
                         </div>
 
-                        <div className="space-y-2">
-                          <h2 className="break-words text-xl font-bold leading-8 tracking-tight text-slate-900">
+                        <div className="min-w-0 space-y-2">
+                          <h2 className="break-all text-xl font-bold leading-8 tracking-tight text-slate-900 sm:break-words">
                             {p.title}
                           </h2>
 

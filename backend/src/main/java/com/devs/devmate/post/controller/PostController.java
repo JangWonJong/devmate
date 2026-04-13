@@ -38,6 +38,7 @@ public class PostController {
     @GetMapping
     public ApiResponse<Page<PostResponse>> list(
             @RequestParam(required = false, defaultValue = "false") boolean mine,
+            @RequestParam(required = false, defaultValue = "false") boolean bookmarked,
             @RequestParam(required = false) String keyword,
             @RequestParam(required = false) Boolean solved,
             @RequestParam(required = false) String type,
@@ -45,6 +46,10 @@ public class PostController {
             if (mine) {
                 Long memberId = SecurityUtil.currentMemberId();
                 return ApiResponse.ok(postService.listMine(memberId, keyword, solved, type, pageable));
+            }
+            if (bookmarked) {
+                Long memberId = SecurityUtil.currentMemberId();
+                return ApiResponse.ok(postService.listBookmarked(memberId, keyword, solved, type, pageable));
             }
 
             Long memberId = SecurityUtil.currentMemberIdOrNull();

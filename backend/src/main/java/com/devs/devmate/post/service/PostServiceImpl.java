@@ -21,6 +21,7 @@ import com.devs.devmate.study.repository.StudyMemberRepository;
 import com.devs.devmate.study.repository.StudyRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageImpl;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
@@ -50,7 +51,7 @@ public class PostServiceImpl implements PostService {
     private final CommentLikeRepository commentLikeRepository;
     private final PostBookmarkRepository postBookmarkRepository;
 
-    
+
     private String normalize(String keyword) {
         if (keyword == null) return null;
         String k = keyword.trim();
@@ -115,13 +116,13 @@ public class PostServiceImpl implements PostService {
             LocalDateTime now = LocalDateTime.now();
 
             if (createdAt.isAfter(now.minusDays(1))) {
-                score += 10L;
-            } else if (createdAt.isAfter(now.minusDays(3))) {
-                score += 7L;
-            } else if (createdAt.isAfter(now.minusDays(7))) {
                 score += 4L;
-            } else if (createdAt.isAfter(now.minusDays(14))) {
+            } else if (createdAt.isAfter(now.minusDays(3))) {
+                score += 3L;
+            } else if (createdAt.isAfter(now.minusDays(7))) {
                 score += 2L;
+            } else if (createdAt.isAfter(now.minusDays(14))) {
+                score += 1L;
             }
         }
 
@@ -316,6 +317,45 @@ public class PostServiceImpl implements PostService {
 
         return postRepository.searchMineWithSolvedAndType(memberId, k, solved, postType, pageable)
                 .map(post -> PostResponse.from(post, countPostLike(post), countComment(post), isBookmarked(post, memberId)));
+    }
+
+    @Override
+    @Transactional(readOnly = true)
+    public Page<PostResponse> listBookmarked(Long memberId, String keyword, Boolean solved, String type, Pageable pageable) {
+
+        String k = normalize(keyword);
+        Post.PostType postType = normalizeType(type);
+
+        Page<Post> page;
+
+        if (isLikeSort(pageable)) {
+            Pageable unsorted = withoutSort(pageable);
+            page = postRepository.findBookmarkedPostsOrderByLikeCountDesc(
+                    memberId,
+                    k,
+                    solved,
+                    postType,
+                    unsorted
+            );
+        } else {
+            page = postRepository.findBookmarkedPosts(
+                    memberId,
+                    k,
+                    solved,
+                    postType,
+                    pageable
+            );
+        }
+
+        return page.map(post ->
+                PostResponse.from(
+                        post,
+                        countPostLike(post),
+                        countComment(post),
+                        true
+                )
+        );
+
     }
 
     @Override
