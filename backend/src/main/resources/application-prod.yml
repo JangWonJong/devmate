@@ -18,6 +18,13 @@ spring:
       max-file-size: 5MB
       max-request-size: 20MB
 
+  data:
+    redis:
+      host: ${REDIS_HOST:localhost}
+      port: ${REDIS_PORT:6379}
+      password: ${REDIS_PASSWORD:}
+      timeout: 2s
+
 jwt:
   secret: ${JWT_SECRET}
   access-exp-min: 15

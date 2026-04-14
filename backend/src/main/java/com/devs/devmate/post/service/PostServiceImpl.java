@@ -19,15 +19,20 @@ import com.devs.devmate.post.repository.PostRepository;
 import com.devs.devmate.reservation.repository.ReservationRepository;
 import com.devs.devmate.study.repository.StudyMemberRepository;
 import com.devs.devmate.study.repository.StudyRepository;
+import com.fasterxml.jackson.core.type.TypeReference;
+import com.fasterxml.jackson.databind.SerializationFeature;
+import com.fasterxml.jackson.datatype.jsr310.JavaTimeModule;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
-import org.springframework.data.domain.PageImpl;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
+import org.springframework.data.redis.core.StringRedisTemplate;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.multipart.MultipartFile;
+import com.fasterxml.jackson.databind.ObjectMapper;
 
+import java.time.Duration;
 import java.time.LocalDateTime;
 import java.util.Comparator;
 import java.util.List;
@@ -38,6 +43,8 @@ import java.util.List;
 public class PostServiceImpl implements PostService {
 
     private static final int POPULAR_POST_CANDIDATE_SIZE = 50;
+    private static final Duration POPULAR_POST_CACHE_TTL = Duration.ofSeconds(60);
+    private static final String POPULAR_POST_CACHE_KEY_PREFIX = "popular:questions:limit:";
 
     private final PostRepository postRepository;
     private final MemberRepository memberRepository;
@@ -50,6 +57,7 @@ public class PostServiceImpl implements PostService {
     private final PostLikeRepository postLikeRepository;
     private final CommentLikeRepository commentLikeRepository;
     private final PostBookmarkRepository postBookmarkRepository;
+    private final StringRedisTemplate stringRedisTemplate;
 
 
     private String normalize(String keyword) {
@@ -144,6 +152,13 @@ public class PostServiceImpl implements PostService {
     private boolean isBookmarked(Post post, Long memberId) {
         if (memberId == null) return false;
         return postBookmarkRepository.existsByPostIdAndMemberId(post.getId(), memberId);
+    }
+
+    private ObjectMapper redisObjectMapper() {
+        ObjectMapper objectMapper = new ObjectMapper();
+        objectMapper.registerModule(new JavaTimeModule());
+        objectMapper.disable(SerializationFeature.WRITE_DATES_AS_TIMESTAMPS);
+        return objectMapper;
     }
 
     @Override
@@ -456,12 +471,26 @@ public class PostServiceImpl implements PostService {
     @Transactional(readOnly = true)
     public List<PostResponse> listPopular(Long memberId, int limit) {
         int safeLimit = Math.max(1, Math.min(limit, 20));
+        String cacheKey = POPULAR_POST_CACHE_KEY_PREFIX + safeLimit;
+
+        try {
+            String cachedJson = stringRedisTemplate.opsForValue().get(cacheKey);
+
+            if (cachedJson != null && !cachedJson.isBlank()) {
+                return redisObjectMapper().readValue(
+                        cachedJson,
+                        new TypeReference<List<PostResponse>>() {}
+                );
+            }
+        } catch (Exception e) {
+            // 캐시 조회 실패 시 DB fallback
+        }
 
         List<Post> candidates = postRepository.findRecentQuestionPosts(
                 PageRequest.of(0, POPULAR_POST_CANDIDATE_SIZE)
         );
 
-        return candidates.stream()
+        List<PostResponse> result = candidates.stream()
                 .sorted(
                         Comparator
                                 .comparingLong(this::calculatePopularityScore)
@@ -469,7 +498,21 @@ public class PostServiceImpl implements PostService {
                                 .thenComparing(Post::getId, Comparator.reverseOrder())
                 )
                 .limit(safeLimit)
-                .map(post -> PostResponse.from(post, countPostLike(post), countComment(post), isBookmarked(post, memberId)))
+                .map(post -> PostResponse.from(
+                        post,
+                        countPostLike(post),
+                        countComment(post),
+                        false
+                ))
                 .toList();
+
+        try {
+            String json = redisObjectMapper().writeValueAsString(result);
+            stringRedisTemplate.opsForValue().set(cacheKey, json, POPULAR_POST_CACHE_TTL);
+        } catch (Exception e) {
+            // 캐시 저장 실패해도 응답은 정상 반환
+        }
+
+        return result;
     }
 }
