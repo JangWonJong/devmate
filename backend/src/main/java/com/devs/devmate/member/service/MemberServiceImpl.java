@@ -20,6 +20,8 @@ import com.devs.devmate.reservation.repository.ReservationRepository;
 import com.devs.devmate.study.entity.Study;
 import com.devs.devmate.study.entity.StudyMember;
 import com.devs.devmate.study.repository.StudyMemberRepository;
+import com.fasterxml.jackson.databind.SerializationFeature;
+import com.fasterxml.jackson.datatype.jsr310.JavaTimeModule;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.data.redis.core.StringRedisTemplate;
@@ -53,7 +55,6 @@ public class MemberServiceImpl implements MemberService{
     private final CommentLikeRepository commentLikeRepository;
     private final MemberLikeRepository memberLikeRepository;
     private final StringRedisTemplate stringRedisTemplate;
-    private final ObjectMapper objectMapper;
 
     private static final String POPULAR_MEMBER_KEY = "popular:members:limit:";
     private static final Duration POPULAR_MEMBER_TTL = Duration.ofSeconds(60);
@@ -101,6 +102,13 @@ public class MemberServiceImpl implements MemberService{
     private long receivedLikeCount(Long memberId) {
         return  postLikeRepository.countReceivedPostLikes(memberId)
                 + commentLikeRepository.countReceivedCommentLikes(memberId);
+    }
+
+    private ObjectMapper redisObjectMapper() {
+        ObjectMapper objectMapper = new ObjectMapper();
+        objectMapper.registerModule(new JavaTimeModule());
+        objectMapper.disable(SerializationFeature.WRITE_DATES_AS_TIMESTAMPS);
+        return objectMapper;
     }
 
     @Override
@@ -370,6 +378,7 @@ public class MemberServiceImpl implements MemberService{
     }
 
     @Override
+    @Transactional(readOnly = true)
     public List<PopularMemberResponse> getPopularMembers(int limit) {
         int normalizedLimit = Math.max(1, Math.min(limit, 10));
         String key = POPULAR_MEMBER_KEY + normalizedLimit;
@@ -378,7 +387,7 @@ public class MemberServiceImpl implements MemberService{
             String cached = stringRedisTemplate.opsForValue().get(key);
 
             if (cached != null && !cached.isBlank()) {
-                return objectMapper.readValue(
+                return redisObjectMapper().readValue(
                         cached,
                         new TypeReference<List<PopularMemberResponse>>() {}
                 );
@@ -387,7 +396,6 @@ public class MemberServiceImpl implements MemberService{
             log.warn("인기 멤버 캐시 조회 실패", e);
         }
 
-        // 2. 기존 DB 로직
         List<PopularMemberResponse> result = memberRepository.findAllByStatus(MemberStatus.ACTIVE).stream()
                 .map(member -> {
                     long receivedLikeCount = receivedLikeCount(member.getId());
@@ -406,13 +414,12 @@ public class MemberServiceImpl implements MemberService{
                     );
                 })
                 .sorted(Comparator.comparingLong(PopularMemberResponse::popularityScore).reversed()
-                        .thenComparing(PopularMemberResponse::id))
+                        .thenComparing(PopularMemberResponse::id, Comparator.reverseOrder()))
                 .limit(normalizedLimit)
                 .toList();
 
-        // 3. Redis 저장
         try {
-            String json = objectMapper.writeValueAsString(result);
+            String json = redisObjectMapper().writeValueAsString(result);
             stringRedisTemplate.opsForValue().set(key, json, POPULAR_MEMBER_TTL);
         } catch (Exception e) {
             log.warn("인기 멤버 캐시 저장 실패", e);

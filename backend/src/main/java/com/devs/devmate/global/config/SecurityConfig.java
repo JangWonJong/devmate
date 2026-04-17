@@ -40,6 +40,8 @@ public class SecurityConfig {
                     .requestMatchers(HttpMethod.OPTIONS, "/**").permitAll()
                     .requestMatchers("/error","/api/members/signup", "/api/auth/**").permitAll()
 
+                    .requestMatchers("/api/analytics/**").permitAll()
+
                     .requestMatchers(HttpMethod.GET, "/api/posts/**").permitAll()
                     .requestMatchers(HttpMethod.GET, "/api/posts/*/comments").permitAll()
                     .requestMatchers("/uploads/**").permitAll()

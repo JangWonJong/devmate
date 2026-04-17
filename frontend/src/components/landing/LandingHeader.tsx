@@ -1,6 +1,7 @@
 import { Link, useNavigate } from "react-router-dom"
 import { logout } from "../../api/auth"
 import { tokenStore } from "../../auth/token"
+import { VisitorStats } from "../common/VisitorStats"
 
 type LandingHeaderProps = {
   isLoggedIn?: boolean
@@ -19,13 +20,14 @@ export default function LandingHeader({
     } finally {
       tokenStore.clear()
       nav("/", { replace: true })
-      window.location.reload()
     }
   }
 
   return (
     <header className="sticky top-0 z-50 border-b border-slate-200 bg-white/90 backdrop-blur">
       <div className="mx-auto flex h-16 max-w-7xl items-center justify-between px-6">
+        <div className="flex items-center gap-8">
+        <div className="flex items-center gap-3">
         <Link to="/" className="flex items-center gap-2">
           <img
             src="/devmine2.png"
@@ -33,7 +35,9 @@ export default function LandingHeader({
             className="h-15 w-auto object-contain"
           />
         </Link>
+        <VisitorStats compact />
 
+        </div>
         <nav className="hidden items-center gap-8 md:flex">
           <Link
             to="/posts"
@@ -54,7 +58,8 @@ export default function LandingHeader({
             예약
           </Link>
         </nav>
-
+        </div>
+        
         <div className="flex items-center gap-3">
           {isLoggedIn ? (
             <>
