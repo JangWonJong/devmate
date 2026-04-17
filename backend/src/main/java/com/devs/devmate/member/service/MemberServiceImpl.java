@@ -21,11 +21,17 @@ import com.devs.devmate.study.entity.Study;
 import com.devs.devmate.study.entity.StudyMember;
 import com.devs.devmate.study.repository.StudyMemberRepository;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
+import org.springframework.data.redis.core.StringRedisTemplate;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.multipart.MultipartFile;
+import com.fasterxml.jackson.core.type.TypeReference;
+import com.fasterxml.jackson.databind.ObjectMapper;
 
+
+import java.time.Duration;
 import java.util.Comparator;
 import java.util.List;
 import java.util.ArrayList;
@@ -34,6 +40,7 @@ import java.util.ArrayList;
 @Service
 @RequiredArgsConstructor
 @Transactional
+@Slf4j
 public class MemberServiceImpl implements MemberService{
 
     private final MemberRepository memberRepository;
@@ -45,6 +52,11 @@ public class MemberServiceImpl implements MemberService{
     private final PostLikeRepository postLikeRepository;
     private final CommentLikeRepository commentLikeRepository;
     private final MemberLikeRepository memberLikeRepository;
+    private final StringRedisTemplate stringRedisTemplate;
+    private final ObjectMapper objectMapper;
+
+    private static final String POPULAR_MEMBER_KEY = "popular:members:limit:";
+    private static final Duration POPULAR_MEMBER_TTL = Duration.ofSeconds(60);
 
     private Member findActiveMember(Long memberId) {
         Member member = memberRepository.findById(memberId)
@@ -360,14 +372,29 @@ public class MemberServiceImpl implements MemberService{
     @Override
     public List<PopularMemberResponse> getPopularMembers(int limit) {
         int normalizedLimit = Math.max(1, Math.min(limit, 10));
+        String key = POPULAR_MEMBER_KEY + normalizedLimit;
 
-        return memberRepository.findAllByStatus(MemberStatus.ACTIVE).stream()
+        try {
+            String cached = stringRedisTemplate.opsForValue().get(key);
+
+            if (cached != null && !cached.isBlank()) {
+                return objectMapper.readValue(
+                        cached,
+                        new TypeReference<List<PopularMemberResponse>>() {}
+                );
+            }
+        } catch (Exception e) {
+            log.warn("인기 멤버 캐시 조회 실패", e);
+        }
+
+        // 2. 기존 DB 로직
+        List<PopularMemberResponse> result = memberRepository.findAllByStatus(MemberStatus.ACTIVE).stream()
                 .map(member -> {
                     long receivedLikeCount = receivedLikeCount(member.getId());
                     long profileLikeCount = memberLikeRepository.countByTargetMemberId(member.getId());
                     long popularityScore = receivedLikeCount + profileLikeCount;
 
-                    return  new PopularMemberResponse(
+                    return new PopularMemberResponse(
                             member.getId(),
                             member.getNickname(),
                             member.getBio(),
@@ -382,6 +409,16 @@ public class MemberServiceImpl implements MemberService{
                         .thenComparing(PopularMemberResponse::id))
                 .limit(normalizedLimit)
                 .toList();
+
+        // 3. Redis 저장
+        try {
+            String json = objectMapper.writeValueAsString(result);
+            stringRedisTemplate.opsForValue().set(key, json, POPULAR_MEMBER_TTL);
+        } catch (Exception e) {
+            log.warn("인기 멤버 캐시 저장 실패", e);
+        }
+
+        return result;
     }
 
 }

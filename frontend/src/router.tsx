@@ -1,5 +1,5 @@
 import { createBrowserRouter } from "react-router-dom"
-import LandingLayout from "./laytouts/LandingLayout";
+import LandingLayout from "./laytouts/LandingLayout"
 import {AppLayout} from "./laytouts/AppLayout"
 import { PostsPage } from "./pages/post/PostsPage"
 import { NewPostPage } from "./pages/post/NewPostPage"
@@ -14,7 +14,7 @@ import { MyStudiesPage } from "./pages/study/MyStudiesPage"
 import { StudyReservationPage } from "./pages/reservation/StudyReservationPage"
 import { MyPage } from "./pages/member/MyPage"
 import { AccountSettingsPage } from "./pages/member/AccountSettingsPage"
-import { MemberProfilePage } from "./pages/member/MemberProfilePage";
+import { MemberProfilePage } from "./pages/member/MemberProfilePage"
 
 
 export const router = createBrowserRouter([
