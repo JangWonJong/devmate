@@ -1,6 +1,7 @@
 package com.devs.devmate.inquiry.entity;
 
 import com.devs.devmate.global.entity.BaseEntity;
+import com.devs.devmate.global.entity.ProcessableEntity;
 import com.devs.devmate.member.entity.Member;
 import jakarta.persistence.*;
 import lombok.*;
@@ -11,7 +12,7 @@ import lombok.*;
 @AllArgsConstructor(access = AccessLevel.PRIVATE)
 @Builder
 @Table(name = "inquiries")
-public class Inquiry extends BaseEntity {
+public class Inquiry extends ProcessableEntity {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
@@ -33,10 +34,23 @@ public class Inquiry extends BaseEntity {
     @Column(nullable = false, length = 2000)
     private String content;
 
-    public void markInProgress() { this.status = InquiryStatus.IN_PROGRESS; }
+    @Column(length = 2000)
+    private String adminReply;
 
-    public void resolve() {
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "processed_by")
+    private Member processedBy;
+
+    public void markInProgress(Member admin) {
+        this.status = InquiryStatus.IN_PROGRESS;
+        this.processedBy = admin;
+    }
+
+    public void resolve(String adminReply, Member admin) {
         this.status = InquiryStatus.RESOLVED;
+        this.adminReply = adminReply;
+        this.processedBy = admin;
+        markProcessed();
     }
 
 

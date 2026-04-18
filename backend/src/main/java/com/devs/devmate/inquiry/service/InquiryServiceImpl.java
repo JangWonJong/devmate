@@ -49,26 +49,6 @@ public class InquiryServiceImpl implements InquiryService{
 
     @Override
     @Transactional
-    public void updateStatus(Long inquiryId, InquiryStatus status) {
-        Inquiry inquiry = inquiryRepository.findById(inquiryId)
-                .orElseThrow(() -> new BusinessException(ErrorCode.INQUIRY_NOT_FOUND));
-
-        if (status == InquiryStatus.RECEIVED) {
-            return;
-        }
-
-        if (status == InquiryStatus.IN_PROGRESS) {
-            inquiry.markInProgress();
-            return;
-        }
-
-        if (status == InquiryStatus.RESOLVED) {
-            inquiry.resolve();
-        }
-    }
-
-    @Override
-    @Transactional
     public void delete(Long memberId, Long inquiryId) {
         Inquiry inquiry = inquiryRepository.findById(inquiryId)
                 .orElseThrow(() -> new BusinessException(ErrorCode.INQUIRY_NOT_FOUND));

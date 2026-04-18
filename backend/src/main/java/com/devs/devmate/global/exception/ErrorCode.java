@@ -11,6 +11,10 @@ public enum ErrorCode {
     INVALID_REQUEST(HttpStatus.BAD_REQUEST, "COMMON_400", "잘못된 요청입니다."),
     INTERNAL_ERROR(HttpStatus.INTERNAL_SERVER_ERROR, "COMMON_500", "서버 오류가 발생했습니다."),
 
+    // ADMIN
+    ADMIN_FORBIDDEN(HttpStatus.FORBIDDEN, "ADMIN_403", "관리자 권한이 필요합니다."),
+    ADMIN_TARGET_NOT_FOUND(HttpStatus.NOT_FOUND, "ADMIN_404", "관리 대상 정보를 찾을 수 없습니다."),
+
     // AUTH
     AUTH_FAILED(HttpStatus.UNAUTHORIZED, "AUTH_401_1", "이메일 또는 비밀번호가 올바르지 않습니다."),
     TOKEN_EXPIRED(HttpStatus.UNAUTHORIZED, "AUTH_401_2", "로그인이 만료되었습니다."),

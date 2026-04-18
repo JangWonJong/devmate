@@ -12,7 +12,5 @@ public interface InquiryService {
 
     List<InquiryResponse> findMyInquiries(Long memberId);
 
-    void updateStatus(Long inquiryId, InquiryStatus status);
-
     void delete(Long memberId, Long inquiryId);
 }

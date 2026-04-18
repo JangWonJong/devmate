@@ -11,6 +11,7 @@ import {
   getNotificationLabelStyle,
   type NotificationResponse,
 } from "../../api/notifications"
+import { VisitorStats } from "./VisitorStats"
 
 type AppHeaderProps = {
   isAuthenticated: boolean
@@ -88,6 +89,8 @@ export default function AppHeader({
     <header className="sticky top-0 z-50 border-b border-slate-200 bg-white/90 backdrop-blur">
       <div className="mx-auto flex h-16 max-w-7xl items-center justify-between px-6">
         <div className="flex items-center gap-10">
+        <div className="flex items-center gap-3">
+          
           <Link to="/" className="flex items-center">
             <img
               src="/devmine2.png"
@@ -95,7 +98,9 @@ export default function AppHeader({
               className="h-15 w-auto object-contain"
             />
           </Link>
-
+          <VisitorStats compact />
+          </div >
+          
           <nav className="hidden items-center gap-7 md:flex">
             <NavLinkItem to="/posts">커뮤니티</NavLinkItem>
 

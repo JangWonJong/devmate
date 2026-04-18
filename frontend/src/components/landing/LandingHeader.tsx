@@ -36,8 +36,8 @@ export default function LandingHeader({
           />
         </Link>
         <VisitorStats compact />
-
         </div>
+
         <nav className="hidden items-center gap-8 md:flex">
           <Link
             to="/posts"

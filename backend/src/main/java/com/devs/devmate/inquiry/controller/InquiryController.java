@@ -39,16 +39,6 @@ public class InquiryController {
         return ApiResponse.ok(inquiryService.findMyInquiries(memberId));
     }
 
-    @PatchMapping("/{inquiryId}/status")
-    public ApiResponse<Void> updateStatus(
-            @PathVariable Long inquiryId,
-            @RequestBody @Valid InquiryStatusUpdateRequest request
-            ) {
-        inquiryService.updateStatus(inquiryId, request.getStatus());
-
-        return ApiResponse.ok(null);
-    }
-
     @DeleteMapping("/{inquiryId}")
     public ApiResponse<Void> delete(@PathVariable Long inquiryId) {
         Long memberId = SecurityUtil.currentMemberId();
