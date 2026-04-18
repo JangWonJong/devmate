@@ -1,6 +1,6 @@
 import { createBrowserRouter } from "react-router-dom"
-import LandingLayout from "./laytouts/LandingLayout"
-import {AppLayout} from "./laytouts/AppLayout"
+import LandingLayout from "./layouts/LandingLayout"
+import {AppLayout} from "./layouts/AppLayout"
 import { PostsPage } from "./pages/post/PostsPage"
 import { NewPostPage } from "./pages/post/NewPostPage"
 import { LoginPage } from "./pages/auth/LoginPage"
@@ -15,7 +15,11 @@ import { StudyReservationPage } from "./pages/reservation/StudyReservationPage"
 import { MyPage } from "./pages/member/MyPage"
 import { AccountSettingsPage } from "./pages/member/AccountSettingsPage"
 import { MemberProfilePage } from "./pages/member/MemberProfilePage"
-
+import AdminRoute from "./routes/AdminRoute"
+import AdminLayout from "./layouts/AdminLayout"
+import AdminDashboardPage from "./pages/admin/AdminDashboardPage"
+import AdminInquiriesPage from "./pages/admin/AdminInquiriesPage"
+import AdminInquiryDetailPage from "./pages/admin/AdminInquiryDetailPage"
 
 export const router = createBrowserRouter([
     {   
@@ -45,5 +49,23 @@ export const router = createBrowserRouter([
             { path: "/studies/:studyId/reservation", element:  <RequireAuth><StudyReservationPage /></RequireAuth> },
             
         ]
-    }
+    },
+
+    {
+        element: <AdminRoute />,
+        children: [
+        {
+            path: "/admin",
+            element: <AdminLayout />,
+            children: [
+            { index: true, element: <AdminDashboardPage /> },
+            { path: "inquiries", element: <AdminInquiriesPage /> },
+            {
+                path: "inquiries/:inquiryId",
+                element: <AdminInquiryDetailPage />,
+            },
+            ],
+        },
+        ],
+    },
 ])
