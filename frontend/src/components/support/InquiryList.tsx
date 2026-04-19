@@ -1,4 +1,5 @@
 import { useEffect, useState } from "react"
+import { useNavigate } from "react-router-dom"
 import {
   formatInquiryDate,
   getInquiryStatusLabel,
@@ -9,16 +10,25 @@ import {
   type Inquiry,
 } from "../../api/inquiry"
 
-export default function InquiryList() {
-  const [list, setList] = useState<Inquiry[]>([])
+type InquiryListProps = {
+  variant?: "compact" | "full"
+}
+
+export default function InquiryList({
+  variant = "compact",
+}: InquiryListProps) {
+  const nav = useNavigate()
+  const [inquiries, setInquiries] = useState<Inquiry[]>([])
   const [loading, setLoading] = useState(true)
+
+  const isCompact = variant === "compact"
 
   const fetchData = async () => {
     try {
       const data = await listMyInquiries()
-      setList(data)
+      setInquiries(data)
     } catch {
-      setList([])
+      setInquiries([])
     } finally {
       setLoading(false)
     }
@@ -32,69 +42,105 @@ export default function InquiryList() {
     }
 
     window.addEventListener("inquiry-updated", handleUpdated)
-    return () => window.removeEventListener("inquiry-updated", handleUpdated)
+
+    return () => {
+      window.removeEventListener("inquiry-updated", handleUpdated)
+    }
   }, [])
 
   if (loading) {
     return <div className="text-sm text-slate-400">불러오는 중...</div>
   }
 
-  if (list.length === 0) {
+  if (inquiries.length === 0) {
     return <div className="text-sm text-slate-400">등록된 문의가 없습니다.</div>
   }
 
   return (
-    <div className="space-y-2 overflow-y-auto pr-1">
-      {list.map((item) => (
+    <div className={`pr-1 ${isCompact ? "space-y-2 overflow-y-auto" : "space-y-3"}`}>
+      {inquiries.map((inquiry) => (
         <div
-          key={item.id}
-          className="rounded-xl border border-slate-200 bg-white p-3"
+          key={inquiry.id}
+          className={`border border-slate-200 bg-white ${
+            isCompact ? "rounded-xl p-3" : "rounded-2xl p-4"
+          }`}
         >
-          {/* 상단 */}
           <div className="mb-2 flex items-start justify-between gap-3">
             <div className="min-w-0">
               <div className="text-xs font-semibold text-slate-700">
-                {getInquiryTypeLabel(item.type)}{" "}
+                {getInquiryTypeLabel(inquiry.type)}
                 <span className="ml-1 font-normal text-slate-400">
-                  · {formatInquiryDate(item.createdAt)}
+                  · {formatInquiryDate(inquiry.createdAt)}
                 </span>
               </div>
             </div>
 
-            {/* 상태 + 취소 버튼 */}
-            <div className="flex items-center gap-3">
-            <span
-                className={`shrink-0 rounded-full px-2 py-1 text-[11px] font-medium ${getInquiryStatusStyle(item.status)}`}
-            >
-                {getInquiryStatusLabel(item.status)}
-            </span>
+            <div className="flex items-center gap-2">
+              <span
+                className={`shrink-0 rounded-full px-2 py-1 text-[11px] font-medium ${getInquiryStatusStyle(inquiry.status)}`}
+              >
+                {getInquiryStatusLabel(inquiry.status)}
+              </span>
 
-            {item.status === "RECEIVED" && (
+              {inquiry.status === "RECEIVED" && (
                 <button
-                type="button"
-                onClick={async () => {
+                  type="button"
+                  onClick={async () => {
                     const ok = window.confirm("문의 내용을 취소할까요?")
                     if (!ok) return
 
                     try {
-                    await deleteInquiry(item.id)
-                    window.dispatchEvent(new Event("inquiry-updated"))
+                      await deleteInquiry(inquiry.id)
+                      window.dispatchEvent(new Event("inquiry-updated"))
                     } catch {
-                    alert("문의 취소에 실패했습니다.")
+                      alert("문의 취소에 실패했습니다.")
                     }
-                }}
-                className="inline-flex shrink-0 items-center rounded-full border border-slate-200 bg-white px-2.5 py-1 text-[11px] font-medium text-slate-500 transition hover:border-red-200 hover:bg-red-50 hover:text-red-500"
+                  }}
+                  className="inline-flex shrink-0 items-center rounded-full border border-slate-200 bg-white px-2.5 py-1 text-[11px] font-medium text-slate-500 transition hover:border-red-200 hover:bg-red-50 hover:text-red-500"
                 >
-                문의 취소
+                  문의 취소
                 </button>
-            )}
+              )}
             </div>
           </div>
 
-          {/* 내용 */}
-          <div className="whitespace-pre-line break-words text-sm text-slate-700">
-            {item.content}
+          <div
+            className={`break-words text-sm text-slate-700 ${
+              isCompact ? "line-clamp-2" : "whitespace-pre-line"
+            }`}
+          >
+            {inquiry.content}
           </div>
+
+          {inquiry.status === "RESOLVED" && inquiry.adminReply && (
+            <div className="mt-3 rounded-xl bg-slate-50 px-3 py-3">
+              <div className="text-xs font-medium text-slate-500">
+                관리자 답변
+              </div>
+
+              {!isCompact && (
+                <div className="mt-1 whitespace-pre-line text-sm text-slate-700">
+                  {inquiry.adminReply}
+                </div>
+              )}
+
+              {inquiry.processedAt && (
+                <div className="mt-2 text-xs text-slate-400">
+                  답변일 · {formatInquiryDate(inquiry.processedAt)}
+                </div>
+              )}
+
+              {isCompact && (
+                <button
+                  type="button"
+                  onClick={() => nav("/mypage/inquiries")}
+                  className="mt-2 text-xs font-medium text-indigo-600 hover:underline"
+                >
+                  자세한 내용은 내 문의에서 확인하기
+                </button>
+              )}
+            </div>
+          )}
         </div>
       ))}
     </div>

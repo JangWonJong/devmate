@@ -11,7 +11,9 @@ export type Inquiry = {
   type: InquiryType
   content: string
   status: InquiryStatus
+  adminReply: string | null
   createdAt: string
+  processedAt: string | null
 }
 
 export async function createInquiry(req: {

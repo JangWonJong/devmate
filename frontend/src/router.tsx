@@ -15,6 +15,7 @@ import { StudyReservationPage } from "./pages/reservation/StudyReservationPage"
 import { MyPage } from "./pages/member/MyPage"
 import { AccountSettingsPage } from "./pages/member/AccountSettingsPage"
 import { MemberProfilePage } from "./pages/member/MemberProfilePage"
+import { MyInquiriesPage } from "./pages/member/MyInquiriesPage"
 import AdminRoute from "./routes/AdminRoute"
 import AdminLayout from "./layouts/AdminLayout"
 import AdminDashboardPage from "./pages/admin/AdminDashboardPage"
@@ -44,6 +45,7 @@ export const router = createBrowserRouter([
             { path: "/signup", element: <PublicOnlyRoute> <SignupPage /></PublicOnlyRoute> },
             { path: "/mypage", element: <RequireAuth><MyPage /></RequireAuth> },
             { path: "/mypage/settings", element: <RequireAuth><AccountSettingsPage /></RequireAuth> },
+            { path: "/mypage/inquiries", element: <RequireAuth><MyInquiriesPage /></RequireAuth> },
 
             { path: "/mystudies", element:  <RequireAuth><MyStudiesPage /></RequireAuth> },
             { path: "/studies/:studyId/reservation", element:  <RequireAuth><StudyReservationPage /></RequireAuth> },

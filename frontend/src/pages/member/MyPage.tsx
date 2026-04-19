@@ -256,6 +256,14 @@ export function MyPage() {
             내 활동과 계정 정보를 한눈에 확인해보세요.
           </p>
         </div>
+        <div className="flex flex-wrap items-center gap-3">
+        <button
+          type="button"
+          onClick={() => nav("/mypage/inquiries")}
+          className="rounded-xl border border-slate-300 bg-white px-4 py-3 text-sm font-semibold text-slate-700 transition hover:bg-slate-50"
+        >
+          내 문의
+        </button>
 
         <button
           type="button"
@@ -264,6 +272,7 @@ export function MyPage() {
         >
           계정 설정
         </button>
+        </div>
       </section>
 
       {err && (
@@ -275,83 +284,83 @@ export function MyPage() {
       {me && (
         <section className="rounded-2xl border border-slate-200 bg-white p-6 shadow-sm">
           <div className="flex flex-col gap-6 lg:flex-row lg:items-start lg:justify-between">
-  <div className="flex items-center gap-4">
-    <button
-      type="button"
-      onClick={() => {
-        if (me.profileImageUrl) setImageOpen(true)
-      }}
-      className={`h-28 w-28 overflow-hidden rounded-full border border-slate-200 bg-slate-100 transition ${
-        me.profileImageUrl ? "cursor-pointer hover:opacity-90" : "cursor-default"
-      }`}
-    >
-      {me.profileImageUrl ? (
-        <img
-          src={imageUrl(me.profileImageUrl)}
-          alt="프로필 이미지"
-          className="h-full w-full object-cover"
-        />
-      ) : (
-        <div className="flex h-full w-full items-center justify-center text-xs text-slate-400">
-          없음
-        </div>
-      )}
-    </button>
+          <div className="flex items-center gap-4">
+            <button
+              type="button"
+              onClick={() => {
+                if (me.profileImageUrl) setImageOpen(true)
+              }}
+              className={`h-28 w-28 overflow-hidden rounded-full border border-slate-200 bg-slate-100 transition ${
+                me.profileImageUrl ? "cursor-pointer hover:opacity-90" : "cursor-default"
+              }`}
+            >
+              {me.profileImageUrl ? (
+                <img
+                  src={imageUrl(me.profileImageUrl)}
+                  alt="프로필 이미지"
+                  className="h-full w-full object-cover"
+                />
+              ) : (
+                <div className="flex h-full w-full items-center justify-center text-xs text-slate-400">
+                  없음
+                </div>
+              )}
+            </button>
 
-    <div>
-      <div className="flex items-center gap-2">
-        <div className="text-3xl font-bold tracking-tight text-slate-900">
-          {me.nickname}
-        </div>
-        <span className="rounded-md bg-slate-100 px-2 py-0.5 text-[11px] font-medium text-slate-500">
-          닉네임
-        </span>
-      </div>
-      <div className="mt-3 text-sm text-slate-500">
-        {me.email}
-      </div>
-      <div className="mt-3 flex items-center gap-2 text-sm text-slate-600">
-        <span className="font-medium text-slate-700">{me.name}</span>
-        <span className="text-slate-300">•</span>
-        <span
-          className={`inline-flex rounded-full px-2.5 py-1 text-xs font-semibold ${
-            me.status === "ACTIVE"
-              ? "bg-emerald-50 text-emerald-700"
-              : "bg-slate-100 text-slate-500"
-          }`}
-        >
-          {me.status}
-        </span>
-      </div>
-    </div>
-  </div>
+            <div>
+              <div className="flex items-center gap-2">
+                <div className="text-3xl font-bold tracking-tight text-slate-900">
+                  {me.nickname}
+                </div>
+                <span className="rounded-md bg-slate-100 px-2 py-0.5 text-[11px] font-medium text-slate-500">
+                  닉네임
+                </span>
+              </div>
+              <div className="mt-3 text-sm text-slate-500">
+                {me.email}
+              </div>
+              <div className="mt-3 flex items-center gap-2 text-sm text-slate-600">
+                <span className="font-medium text-slate-700">{me.name}</span>
+                <span className="text-slate-300">•</span>
+                <span
+                  className={`inline-flex rounded-full px-2.5 py-1 text-xs font-semibold ${
+                    me.status === "ACTIVE"
+                      ? "bg-emerald-50 text-emerald-700"
+                      : "bg-slate-100 text-slate-500"
+                  }`}
+                >
+                  {me.status}
+                </span>
+              </div>
+            </div>
+          </div>
 
-    <div className="grid grid-cols-3 gap-3 lg:min-w-[360px]">
-      <div className="rounded-2xl border border-slate-200 bg-slate-50 px-4 py-4 text-center">
-        <div className="text-xs font-medium text-slate-500">받은 좋아요❤️</div>
-        <div className="mt-2 text-2xl font-bold tracking-tight text-slate-900">
-          {me.receivedLikeCount ?? 0}
-        </div>
-        <div className="mt-1 text-[11px] text-slate-400">게시글/댓글</div>
-      </div>
+            <div className="grid grid-cols-3 gap-3 lg:min-w-[360px]">
+              <div className="rounded-2xl border border-slate-200 bg-slate-50 px-4 py-4 text-center">
+                <div className="text-xs font-medium text-slate-500">받은 좋아요❤️</div>
+                <div className="mt-2 text-2xl font-bold tracking-tight text-slate-900">
+                  {me.receivedLikeCount ?? 0}
+                </div>
+                <div className="mt-1 text-[11px] text-slate-400">게시글/댓글</div>
+              </div>
 
-      <div className="rounded-2xl border border-slate-200 bg-slate-50 px-4 py-4 text-center">
-        <div className="text-xs font-medium text-slate-500">프로필 좋아요❤️</div>
-        <div className="mt-2 text-2xl font-bold tracking-tight text-slate-900">
-          {me.profileLikeCount ?? 0}
-        </div>
-        <div className="mt-1 text-[11px] text-slate-400">프로필 기준</div>
-      </div>
+              <div className="rounded-2xl border border-slate-200 bg-slate-50 px-4 py-4 text-center">
+                <div className="text-xs font-medium text-slate-500">프로필 좋아요❤️</div>
+                <div className="mt-2 text-2xl font-bold tracking-tight text-slate-900">
+                  {me.profileLikeCount ?? 0}
+                </div>
+                <div className="mt-1 text-[11px] text-slate-400">프로필 기준</div>
+              </div>
 
-      <div className="rounded-2xl border border-indigo-100 bg-indigo-50 px-4 py-4 text-center">
-        <div className="text-xs font-medium text-indigo-600">인기 점수</div>
-        <div className="mt-2 text-2xl font-bold tracking-tight text-slate-900">
-          {me.popularityScore ?? 0}
-        </div>
-        <div className="mt-1 text-[11px] text-indigo-500">총합 점수</div>
-      </div>
-    </div>
-  </div>
+              <div className="rounded-2xl border border-indigo-100 bg-indigo-50 px-4 py-4 text-center">
+                <div className="text-xs font-medium text-indigo-600">인기 점수</div>
+                <div className="mt-2 text-2xl font-bold tracking-tight text-slate-900">
+                  {me.popularityScore ?? 0}
+                </div>
+                <div className="mt-1 text-[11px] text-indigo-500">총합 점수</div>
+              </div>
+            </div>
+          </div>
 
           <div className="mt-4 space-y-2 text-sm text-slate-700">
             {me.phone && (
@@ -441,6 +450,14 @@ export function MyPage() {
               className="rounded-xl border border-slate-300 bg-white px-4 py-2 text-sm font-medium text-slate-700 transition hover:bg-slate-50"
             >
               내 예약 보기
+            </button>
+
+            <button
+              type="button"
+              onClick={() => nav("/mypage/inquiries")}
+              className="rounded-xl border border-slate-300 bg-white px-4 py-2 text-sm font-medium text-slate-700 transition hover:bg-slate-50"
+            >
+              내 문의 보기
             </button>
           </div>
         </div>

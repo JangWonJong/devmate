@@ -16,7 +16,9 @@ public class InquiryResponse {
     private InquiryType type;
     private String content;
     private InquiryStatus status;
+    private String adminReply;
     private LocalDateTime createdAt;
+    private LocalDateTime processedAt;
 
     public static InquiryResponse from(Inquiry inquiry) {
         return new InquiryResponse(
@@ -24,7 +26,9 @@ public class InquiryResponse {
                 inquiry.getType(),
                 inquiry.getContent(),
                 inquiry.getStatus(),
-                inquiry.getCreatedAt()
+                inquiry.getAdminReply(),
+                inquiry.getCreatedAt(),
+                inquiry.getProcessedAt()
         );
     }
 }

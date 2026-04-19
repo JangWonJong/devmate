@@ -3,6 +3,7 @@ package com.devs.devmate.notification.service;
 import com.devs.devmate.global.exception.BusinessException;
 import com.devs.devmate.global.exception.ErrorCode;
 import com.devs.devmate.member.entity.Member;
+import com.devs.devmate.member.entity.Role;
 import com.devs.devmate.member.repository.MemberRepository;
 import com.devs.devmate.notification.dto.NotificationResponse;
 import com.devs.devmate.notification.dto.NotificationUnreadCountResponse;
@@ -254,6 +255,32 @@ public class NotificationServiceImpl implements NotificationService{
                 .content(actor.getNickname() + "님이 [" + studyTitle + "] 스터디 리더를 위임했어요")
                 .targetUrl("/posts/" + postId)
                 .build());
+
+        push(receiver.getId());
+    }
+
+    @Override
+    public void createInquiryAnswered(Long receiverId, Long inquiryId) {
+        Member receiver = memberRepository.findById(receiverId)
+                .orElseThrow(() -> new BusinessException(ErrorCode.MEMBER_NOT_FOUND));
+
+        List<Member> admins = memberRepository.findAllByRole(Role.ADMIN);
+
+        if (admins.isEmpty()) {
+            throw new BusinessException(ErrorCode.MEMBER_NOT_FOUND);
+        }
+
+        Member actor = admins.get(0);
+
+        notificationRepository.save(
+                Notification.builder()
+                        .receiver(receiver)
+                        .actor(actor)
+                        .type(NotificationType.INQUIRY_ANSWERED)
+                        .content("DevMine 운영팀이 문의에 답변을 등록했습니다.")
+                        .targetUrl("/mypage/inquiries")
+                        .build()
+        );
 
         push(receiver.getId());
     }

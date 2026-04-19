@@ -9,6 +9,7 @@ import com.devs.devmate.inquiry.entity.InquiryStatus;
 import com.devs.devmate.inquiry.repository.InquiryRepository;
 import com.devs.devmate.member.entity.Member;
 import com.devs.devmate.member.repository.MemberRepository;
+import com.devs.devmate.notification.service.NotificationService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -22,6 +23,7 @@ public class AdminInquiryServiceImpl implements AdminInquiryService{
 
     private final InquiryRepository inquiryRepository;
     private final MemberRepository memberRepository;
+    private final NotificationService notificationService;
 
     @Override
     public List<AdminInquiryListResponse> findAll() {
@@ -74,5 +76,10 @@ public class AdminInquiryServiceImpl implements AdminInquiryService{
                 .orElseThrow(() -> new BusinessException(ErrorCode.MEMBER_NOT_FOUND));
 
         inquiry.resolve(adminReply.trim(), admin);
+
+        notificationService.createInquiryAnswered(
+                inquiry.getMember().getId(),
+                inquiry.getId()
+        );
     }
 }
