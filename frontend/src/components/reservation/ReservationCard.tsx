@@ -1,5 +1,5 @@
 import { hhmm } from "../../utils/reservationUtils"
-import type { ReservationResponse } from "../../api/reservations"
+import type { ReservationResponse } from "../../api/reservation/reservations"
 
 type Scope = "all" | "mine"
 

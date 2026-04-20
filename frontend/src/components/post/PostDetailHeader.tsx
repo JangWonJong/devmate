@@ -1,6 +1,6 @@
 import { useEffect, useState } from "react"
 import { useNavigate, Link } from "react-router-dom"
-import type { PostResponse } from "../../api/posts"
+import type { PostResponse } from "../../api/post/posts"
 import { actionButtonClass } from "../../utils/button"
 
 

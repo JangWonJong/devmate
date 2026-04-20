@@ -1,6 +1,6 @@
 import { CalendarDays, Clock3 } from "lucide-react"
-import type { RoomResponse } from "../../api/rooms"
-import type { AvailabilityResponse, ReservationResponse } from "../../api/reservations"
+import type { RoomResponse } from "../../api/reservation/rooms"
+import type { AvailabilityResponse, ReservationResponse } from "../../api/reservation/reservations"
 import {
   addHours,
   canSelectDuration,

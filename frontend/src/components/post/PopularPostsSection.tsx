@@ -1,6 +1,6 @@
 import { useEffect, useState } from "react"
 import { Link } from "react-router-dom"
-import { listPopularQuestionPosts, type PostResponse } from "../../api/posts"
+import { listPopularQuestionPosts, type PostResponse } from "../../api/post/posts"
 
 export default function PopularPostsSection() {
   const [posts, setPosts] = useState<PostResponse[]>([])

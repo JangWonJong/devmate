@@ -1,6 +1,6 @@
 import { useNavigate } from "react-router-dom"
-import type { StudyMemberResponse, StudyResponse } from "../../../api/study"
-import type { ReservationResponse } from "../../../api/reservations"
+import type { StudyMemberResponse, StudyResponse } from "../../../api/study/study"
+import type { ReservationResponse } from "../../../api/reservation/reservations"
 import { actionButtonClass } from "../../../utils/button"
 
 function studyStatusLabel(status: string) {

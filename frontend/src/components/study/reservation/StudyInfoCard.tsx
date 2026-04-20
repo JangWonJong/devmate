@@ -1,5 +1,5 @@
 import { Users } from "lucide-react"
-import type { StudyResponse } from "../../../api/study"
+import type { StudyResponse } from "../../../api/study/study"
 import { getStudyStatusText } from "../../../utils/reservationUtils"
 
 function StudyStatusBadge({ status }: { status: string }) {
