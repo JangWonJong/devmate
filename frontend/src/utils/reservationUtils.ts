@@ -1,4 +1,4 @@
-import type { AvailabilitySlot, ReservationResponse } from "../api/reservations"
+import type { AvailabilitySlot, ReservationResponse } from "../api/reservation/reservations"
 
 const TIMELINE_START_HOUR = 9
 const TIMELINE_END_HOUR = 22
