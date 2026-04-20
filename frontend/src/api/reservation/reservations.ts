@@ -1,6 +1,6 @@
-import { http } from "./http"
-import type { PageResponse } from "./page"
-import type { ApiResponse } from "./type"
+import { http } from "../http"
+import type { PageResponse } from "../page"
+import type { ApiResponse } from "../type"
 
 export type ReservationResponse = {
     id: number

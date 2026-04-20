@@ -8,9 +8,9 @@ import {
   typeLabel,
   formatDateTime,
   type AdminInquiryDetail,
-} from "../../api/adminInquiry"
+} from "../../api/admin/support"
 
-export default function AdminInquiryDetailPage() {
+export default function AdminSupportDetailPage() {
   const { inquiryId } = useParams()
   const navigate = useNavigate()
 

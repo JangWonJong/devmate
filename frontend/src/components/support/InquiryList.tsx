@@ -8,7 +8,7 @@ import {
   listMyInquiries,
   deleteInquiry,
   type Inquiry,
-} from "../../api/inquiry"
+} from "../../api/support/inquiry"
 
 type InquiryListProps = {
   variant?: "compact" | "full"

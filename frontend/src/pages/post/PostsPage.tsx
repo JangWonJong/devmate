@@ -1,12 +1,12 @@
 import { useCallback, useEffect, useState } from "react"
-import { listPosts, listPopularQuestionPosts, bookmarkPost, unbookmarkPost, type PostResponse } from "../../api/posts"
+import { listPosts, listPopularQuestionPosts, bookmarkPost, unbookmarkPost, type PostResponse } from "../../api/post/posts"
 import { Link, useNavigate, useSearchParams } from "react-router-dom"
 import { tokenStore } from "../../auth/token"
 import {
   getMeId,
   getPopularMembers,
   type PopularMemberResponse,
-} from "../../api/members"
+} from "../../api/member/members"
 import {
   ChevronLeft,
   ChevronRight,
@@ -15,7 +15,7 @@ import {
 } from "lucide-react"
 import { imageUrl } from "../../utils/image"
 import { apiErrorMessage } from "../../utils/error"
-import { listPopularStudies, joinStudy, type StudyResponse } from "../../api/study"
+import { listPopularStudies, joinStudy, type StudyResponse } from "../../api/study/study"
 
 type PageInfo = {
   totalPages: number

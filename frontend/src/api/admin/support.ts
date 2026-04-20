@@ -1,5 +1,5 @@
-import { http } from "./http"
-import type { ApiResponse } from "./type"
+import { http } from "../http"
+import type { ApiResponse } from "../type"
 
 export type InquiryType = "BUG" | "FEATURE" | "GENERAL"
 export type InquiryStatus = "RECEIVED" | "IN_PROGRESS" | "RESOLVED"

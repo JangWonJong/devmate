@@ -1,6 +1,6 @@
 import { useCallback, useEffect, useMemo, useState } from "react"
 import { useNavigate, useSearchParams } from "react-router-dom"
-import { listRooms, type RoomResponse } from "../../api/rooms"
+import { listRooms, type RoomResponse } from "../../api/reservation/rooms"
 import {
   cancelReservation,
   createReservation,
@@ -9,9 +9,9 @@ import {
   type ReservationResponse,
   type AvailabilityResponse,
   getRoomAvailability,
-} from "../../api/reservations"
+} from "../../api/reservation/reservations"
 import { tokenStore } from "../../auth/token"
-import { getMeId } from "../../api/members"
+import { getMeId } from "../../api/member/members"
 import { apiErrorMessage } from "../../utils/error"
 import { addHours, today } from "../../utils/reservationUtils"
 import ReservationCreateSection from "../../components/reservation/ReservationCreateSection"

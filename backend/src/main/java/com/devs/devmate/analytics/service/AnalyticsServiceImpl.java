@@ -2,12 +2,14 @@ package com.devs.devmate.analytics.service;
 
 import com.devs.devmate.analytics.dto.AnalyticsSummaryResponse;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.data.redis.core.StringRedisTemplate;
 import org.springframework.stereotype.Service;
 
 import java.time.Duration;
 import java.time.LocalDate;
 
+@Slf4j
 @Service
 @RequiredArgsConstructor
 public class AnalyticsServiceImpl implements AnalyticsService{
@@ -37,15 +39,20 @@ public class AnalyticsServiceImpl implements AnalyticsService{
 
     @Override
     public AnalyticsSummaryResponse getSummary() {
+        try{
 
-        String dailyKey = dailyKey();
+            String dailyKey = dailyKey();
 
-        String dailyValue = stringRedisTemplate.opsForValue().get(dailyKey);
-        String totalValue = stringRedisTemplate.opsForValue().get(TOTAL_VISITORS_KEY);
+            String dailyValue = stringRedisTemplate.opsForValue().get(dailyKey);
+            String totalValue = stringRedisTemplate.opsForValue().get(TOTAL_VISITORS_KEY);
 
-        long dailyVisitors = dailyValue == null ? 0L : Long.parseLong(dailyValue);
-        long totalVisitors = totalValue == null ? 0L : Long.parseLong(totalValue);
+            long dailyVisitors = dailyValue == null ? 0L : Long.parseLong(dailyValue);
+            long totalVisitors = totalValue == null ? 0L : Long.parseLong(totalValue);
 
-        return new AnalyticsSummaryResponse(dailyVisitors, totalVisitors);
+            return new AnalyticsSummaryResponse(dailyVisitors, totalVisitors);
+        } catch (Exception e) {
+            log.warn("방문자 통계 조회 실패 - Redis fallback 적용", e);
+            return new AnalyticsSummaryResponse(0L, 0L);
+        }
     }
 }

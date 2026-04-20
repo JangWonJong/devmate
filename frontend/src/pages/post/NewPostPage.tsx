@@ -1,6 +1,6 @@
 import { useRef, useState } from "react"
 import { useLocation, useNavigate } from "react-router-dom"
-import { createPost } from "../../api/posts"
+import { createPost } from "../../api/post/posts"
 
 function validateFiles(files: File[]) {
   const allowedTypes = [

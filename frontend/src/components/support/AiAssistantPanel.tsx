@@ -1,5 +1,5 @@
 import { useState } from "react"
-import { guideQuestion, type AiGuideResponse } from "../../api/ai"
+import { guideQuestion, type AiGuideResponse } from "../../api//ai/ai"
 
 type Props = {
   onMoveToWrite?: (payload: {

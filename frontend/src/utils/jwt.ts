@@ -1,4 +1,10 @@
+import { tokenStore } from "../auth/token"
 
+type JwtPayload = {
+  sub?: string
+  role?: string
+  exp?: number
+}
 
 export function parseJwtPayload<T>(token: string): T | null {
   try {
@@ -9,4 +15,19 @@ export function parseJwtPayload<T>(token: string): T | null {
   } catch {
     return null
   }
+}
+
+export function getAccessTokenPayload() {
+  const accessToken = tokenStore.getAccess()
+  if (!accessToken) return null
+
+  return parseJwtPayload<JwtPayload>(accessToken)
+}
+
+export function getAccessTokenRole() {
+  return getAccessTokenPayload()?.role ?? null
+}
+
+export function isAdminUser() {
+  return getAccessTokenRole() === "ADMIN"
 }

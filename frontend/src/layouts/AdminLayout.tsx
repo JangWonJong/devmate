@@ -1,29 +1,74 @@
-import { Link, NavLink, Outlet } from "react-router-dom"
+import { Link, NavLink, Outlet, useLocation, useNavigate } from "react-router-dom"
+import { LogOut, UserCircle2 } from "lucide-react"
+import AppLogo from "../components/common/AppLogo"
+import { logout } from "../api/auth/auth"
+import { tokenStore } from "../auth/token"
 
 function navClass(isActive: boolean) {
   return [
     "block rounded-xl px-3 py-2 text-sm font-medium transition",
     isActive
       ? "bg-slate-900 text-white"
-      : "text-slate-700 hover:bg-slate-100"
+      : "text-slate-700 hover:bg-slate-100",
   ].join(" ")
 }
 
+function getAdminPageLabel(pathname: string) {
+  if (pathname === "/admin") return "대시보드"
+  if (pathname.startsWith("/admin/inquiries")) return "문의 관리"
+  if (pathname.startsWith("/admin/members")) return "회원 관리"
+  return "관리자"
+}
+
 export default function AdminLayout() {
+  const location = useLocation()
+  const navigate = useNavigate()
+
+  const handleLogout = async () => {
+    try {
+      await logout()
+    } catch {
+      // 무시
+    } finally {
+      tokenStore.clear()
+      navigate("/", { replace: true })
+    }
+  }
+
+  const currentLabel = getAdminPageLabel(location.pathname)
+
   return (
     <div className="min-h-screen bg-slate-50">
       <header className="border-b bg-white">
         <div className="mx-auto flex max-w-6xl items-center justify-between px-4 py-4">
-          <Link to="/admin" className="text-lg font-bold text-slate-900">
-            DevMine Admin
-          </Link>
+          <div className="flex items-center gap-3">
+            <AppLogo showAdminText />
+            <span className="text-sm text-slate-300">/</span>
+            <span className="text-sm font-medium text-slate-500">{currentLabel}</span>
+          </div>
 
-          <Link
-            to="/"
-            className="rounded-xl border px-3 py-2 text-sm text-slate-700 hover:bg-slate-50"
-          >
-            서비스로 돌아가기
-          </Link>
+          <div className="flex items-center gap-3">
+            <div className="hidden items-center gap-2 rounded-xl bg-slate-50 px-3 py-2 md:flex">
+              <UserCircle2 className="h-4 w-4 text-slate-500" />
+              <span className="text-sm text-slate-600">관리자</span>
+            </div>
+
+            <Link
+              to="/posts"
+              className="rounded-xl border border-slate-300 px-3 py-2 text-sm text-slate-700 hover:bg-slate-50"
+            >
+              서비스로 돌아가기
+            </Link>
+
+            <button
+              type="button"
+              onClick={handleLogout}
+              className="inline-flex items-center gap-2 rounded-xl border border-slate-300 px-4 py-2 text-sm font-medium text-slate-700 transition hover:bg-slate-50"
+            >
+              <LogOut className="h-4 w-4" />
+              로그아웃
+            </button>
+          </div>
         </div>
       </header>
 

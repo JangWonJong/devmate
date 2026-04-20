@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react"
-import { getAnalyticsSummary, type AnalyticsSummaryResponse } from "../../api/analytics"
+import { getAnalyticsSummary, type AnalyticsSummaryResponse } from "../../api/analytics/analytics"
 
 type Props = {
   compact?: boolean
@@ -25,10 +25,16 @@ export function VisitorStats({ compact = false }: Props) {
 
   if (compact) {
     return (
-      <div className="hidden rounded-full border border-slate-200 bg-slate-50 px-3 py-1 text-xs text-slate-600 md:flex md:items-center md:gap-2">
-        <span>Today <b className="text-slate-900">{summary.dailyVisitors}</b></span>
+      <div className="flex rounded-full border border-slate-200 bg-slate-50 px-3 py-1 text-xs text-slate-600 items-center gap-2">
+        <span>
+          Today <b className="text-slate-900">{summary.dailyVisitors}</b>
+        </span>
+
         <span className="text-slate-300">·</span>
-        <span>Total <b className="text-slate-900">{summary.totalVisitors}</b></span>
+
+        <span>
+          Total <b className="text-slate-900">{summary.totalVisitors}</b>
+        </span>
       </div>
     )
   }

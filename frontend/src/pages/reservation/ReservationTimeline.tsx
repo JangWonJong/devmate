@@ -1,4 +1,4 @@
-import type { ReservationResponse } from "../../api/reservations"
+import type { ReservationResponse } from "../../api/reservation/reservations"
 import {
   formatTimeRange,
   getRoomReservations,

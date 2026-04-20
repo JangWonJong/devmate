@@ -1,6 +1,6 @@
 import { useState } from "react";
 import { useLocation, useNavigate } from "react-router-dom";
-import { login } from "../../api/auth";
+import { login } from "../../api/auth/auth";
 import { tokenStore } from "../../auth/token";
 import { apiErrorMessage } from "../../utils/error";
 

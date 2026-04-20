@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from "react"
 import { useNavigate } from "react-router-dom"
-import { signup } from "../../api/auth"
+import { signup } from "../../api/auth/auth"
 import { apiErrorMessage } from "../../utils/error"
 
 const inputClassName =

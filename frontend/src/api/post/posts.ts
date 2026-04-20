@@ -1,6 +1,6 @@
-import { http } from "./http"
-import type { ApiResponse } from "./type"
-import type { PageResponse } from "./page"
+import { http } from "../http"
+import type { ApiResponse } from "../type"
+import type { PageResponse } from "../page"
 
 export type PostCreateRequest = { title: string, content: string, type: "QUESTION" | "STUDY"}
 

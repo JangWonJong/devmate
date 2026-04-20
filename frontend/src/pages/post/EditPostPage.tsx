@@ -1,7 +1,7 @@
 import React, { useEffect, useMemo, useState } from "react"
 import { useNavigate, useParams } from "react-router-dom"
-import type { PostAttachmentResponse } from "../../api/posts"
-import { getPost, updatePost } from "../../api/posts"
+import type { PostAttachmentResponse } from "../../api/post/posts"
+import { getPost, updatePost } from "../../api/post/posts"
 
 function validateFiles(files: File[]) {
   const allowedTypes = [

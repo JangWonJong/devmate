@@ -1,15 +1,15 @@
 import { useCallback, useEffect, useState } from "react"
 import { useNavigate, useParams } from "react-router-dom"
 import { ChevronLeft } from "lucide-react"
-import { listRooms, type RoomResponse } from "../../api/rooms"
+import { listRooms, type RoomResponse } from "../../api/reservation/rooms"
 import {
   createStudyReservation,
   getRoomAvailability,
   listReservations,
   type AvailabilityResponse,
   type ReservationResponse,
-} from "../../api/reservations"
-import { getStudy, type StudyResponse } from "../../api/study"
+} from "../../api/reservation/reservations"
+import { getStudy, type StudyResponse } from "../../api/study/study"
 import { apiErrorMessage } from "../../utils/error"
 import {
   addHours,

@@ -11,9 +11,9 @@ import {
   unbookmarkPost,
   getPostBookmarkStatus,
   type PostResponse,
-} from "../../api/posts"
+} from "../../api/post/posts"
 import { tokenStore } from "../../auth/token"
-import { getMeId } from "../../api/members"
+import { getMeId } from "../../api/member/members"
 import {
   listComments,
   createComment,
@@ -23,7 +23,7 @@ import {
   adoptComment,
   unlikeComment,
   likeComment,
-} from "../../api/comments"
+} from "../../api/post/comments"
 import {
   getStudyByPostId,
   getStudyMembers,
@@ -37,11 +37,11 @@ import {
   type StudyMemberResponse,
   type StudyResponse,
   updateStudyNotice,
-} from "../../api/study"
+} from "../../api/study/study"
 import {
   listStudyReservations,
   type ReservationResponse,
-} from "../../api/reservations"
+} from "../../api/reservation/reservations"
 import { apiErrorMessage } from "../../utils/error"
 import PostDetailHeader from "../../components/post/PostDetailHeader"
 import StudyInfoSection from "../../components/study/detail/StudyInfoSection"

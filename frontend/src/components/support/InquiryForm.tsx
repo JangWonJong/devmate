@@ -1,5 +1,5 @@
 import { useState } from "react"
-import { createInquiry } from "../../api/inquiry"
+import { createInquiry } from "../../api/support/inquiry"
 
 export default function InquiryForm() {
   const [type, setType] = useState<"BUG" | "FEATURE" | "GENERAL">("BUG")

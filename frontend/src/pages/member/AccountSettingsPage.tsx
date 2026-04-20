@@ -9,7 +9,7 @@ import {
   type ProfileLinkForm,
   type MeResponse,
   type ProfileLinkType,
-} from "../../api/members"
+} from "../../api/member/members"
 import { tokenStore } from "../../auth/token"
 
 const inputClassName =

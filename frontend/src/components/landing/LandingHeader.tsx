@@ -1,7 +1,9 @@
 import { Link, useNavigate } from "react-router-dom"
-import { logout } from "../../api/auth"
+import { logout } from "../../api/auth/auth"
 import { tokenStore } from "../../auth/token"
 import { VisitorStats } from "../common/VisitorStats"
+import AppLogo from "../common/AppLogo"
+
 
 type LandingHeaderProps = {
   isLoggedIn?: boolean
@@ -28,13 +30,7 @@ export default function LandingHeader({
       <div className="mx-auto flex h-16 max-w-7xl items-center justify-between px-6">
         <div className="flex items-center gap-8">
         <div className="flex items-center gap-3">
-        <Link to="/" className="flex items-center gap-2">
-          <img
-            src="/devmine2.png"
-            alt="DevMine"
-            className="h-15 w-auto object-contain"
-          />
-        </Link>
+        <AppLogo />
         <VisitorStats compact />
         </div>
 

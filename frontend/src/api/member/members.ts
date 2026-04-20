@@ -1,4 +1,4 @@
-import { http } from "./http";
+import { http } from "../http";
 
 
 type ApiError = { code: string; message: string}

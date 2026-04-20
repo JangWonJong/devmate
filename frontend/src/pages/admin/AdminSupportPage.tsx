@@ -7,7 +7,7 @@ import {
   formatDateTime,
   type AdminInquiryListItem,
   type InquiryStatus,
-} from "../../api/adminInquiry"
+} from "../../api/admin/support"
 
 function statusClass(status: InquiryStatus) {
   if (status === "RECEIVED") {
@@ -19,7 +19,7 @@ function statusClass(status: InquiryStatus) {
   return "bg-emerald-100 text-emerald-700"
 }
 
-export default function AdminInquiriesPage() {
+export default function AdminSupportPage() {
   const [inquiries, setInquiries] = useState<AdminInquiryListItem[]>([])
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState("")

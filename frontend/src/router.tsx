@@ -19,8 +19,8 @@ import { MyInquiriesPage } from "./pages/member/MyInquiriesPage"
 import AdminRoute from "./routes/AdminRoute"
 import AdminLayout from "./layouts/AdminLayout"
 import AdminDashboardPage from "./pages/admin/AdminDashboardPage"
-import AdminInquiriesPage from "./pages/admin/AdminInquiriesPage"
-import AdminInquiryDetailPage from "./pages/admin/AdminInquiryDetailPage"
+import AdminSupportPage from "./pages/admin/AdminSupportPage"
+import AdminSupportDetailPage from "./pages/admin/AdminSupportDetailPage"
 
 export const router = createBrowserRouter([
     {   
@@ -61,10 +61,10 @@ export const router = createBrowserRouter([
             element: <AdminLayout />,
             children: [
             { index: true, element: <AdminDashboardPage /> },
-            { path: "inquiries", element: <AdminInquiriesPage /> },
+            { path: "inquiries", element: <AdminSupportPage /> },
             {
                 path: "inquiries/:inquiryId",
-                element: <AdminInquiryDetailPage />,
+                element: <AdminSupportDetailPage />,
             },
             ],
         },

@@ -1,6 +1,6 @@
 import { useEffect, useState } from "react"
 import { useNavigate } from "react-router-dom"
-import { getMyStudies, type StudyResponse } from "../../api/study"
+import { getMyStudies, type StudyResponse } from "../../api/study/study"
 
 function StudyStatusBadge({ status }: { status: string }) {
   const isRecruiting = status === "RECRUITING"

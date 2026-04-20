@@ -5,13 +5,16 @@ import {
   UserCircle2,
   LogOut,
 } from "lucide-react"
-import type { MeResponse } from "../../api/members"
+import type { MeResponse } from "../../api/member/members"
 import {
   getNotificationLabel,
   getNotificationLabelStyle,
   type NotificationResponse,
-} from "../../api/notifications"
-import { VisitorStats } from "./VisitorStats"
+} from "../../api/notification/notifications"
+import AppLogo from "../common/AppLogo"
+import { VisitorStats } from "../common/VisitorStats"
+import { isAdminUser } from "../../utils/jwt"
+
 
 type AppHeaderProps = {
   isAuthenticated: boolean
@@ -85,19 +88,15 @@ export default function AppHeader({
   onGuestWriteClick,
   formatNotificationTime,
 }: AppHeaderProps) {
+  const isAdmin = isAdminUser()
+  const displayName = isAdmin ? "관리자" : `${me?.nickname}님`
+
   return (
     <header className="sticky top-0 z-50 border-b border-slate-200 bg-white/90 backdrop-blur">
       <div className="mx-auto flex h-16 max-w-7xl items-center justify-between px-6">
         <div className="flex items-center gap-10">
-        <div className="flex items-center gap-3">
-          
-          <Link to="/" className="flex items-center">
-            <img
-              src="/devmine2.png"
-              alt="DevMine"
-              className="h-15 w-auto object-contain"
-            />
-          </Link>
+          <div className="flex items-center gap-3">
+          <AppLogo />
           <VisitorStats compact />
           </div >
           
@@ -223,9 +222,18 @@ export default function AppHeader({
               <div className="hidden items-center gap-2 rounded-xl bg-slate-50 px-3 py-2 md:flex">
                 <UserCircle2 className="h-4 w-4 text-slate-500" />
                 <span className="text-sm text-slate-600">
-                  {me?.nickname}님
+                  {displayName}
                 </span>
               </div>
+
+              {isAdmin && (
+                <Link
+                  to="/admin"
+                  className="inline-flex items-center gap-2 rounded-xl border border-slate-300 px-4 py-2 text-sm font-medium text-slate-700 transition hover:bg-slate-50"
+                >
+                  관리자 페이지
+                </Link>
+              )}
 
               <button
                 type="button"

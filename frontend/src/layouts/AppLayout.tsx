@@ -1,16 +1,16 @@
 import { useCallback, useEffect, useRef, useState } from "react"
 import { Outlet, useLocation, useNavigate } from "react-router-dom"
 import { tokenStore } from "../auth/token"
-import { getMe, type MeResponse } from "../api/members"
-import { logout, reissue } from "../api/auth"
-import AppHeader from "../components/common/AppHeader"
+import { getMe, type MeResponse } from "../api/member/members"
+import { logout, reissue } from "../api/auth/auth"
+import AppHeader from "../components/app/AppHeader"
 import {
   getUnreadNotificationCount,
   listNotifications,
   readAllNotifications,
   readNotification,
   type NotificationResponse,
-} from "../api/notifications"
+} from "../api/notification/notifications"
 import SupportFloatingButton from "../components/support/SupportFloatingButton"
 import SupportPanel from "../components/support/SupportPanel"
 
