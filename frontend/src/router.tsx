@@ -21,6 +21,7 @@ import AdminLayout from "./layouts/AdminLayout"
 import AdminDashboardPage from "./pages/admin/AdminDashboardPage"
 import AdminSupportPage from "./pages/admin/AdminSupportPage"
 import AdminSupportDetailPage from "./pages/admin/AdminSupportDetailPage"
+import AdminMembersPage from "./pages/admin/AdminMembersPage"
 
 export const router = createBrowserRouter([
     {   
@@ -62,10 +63,9 @@ export const router = createBrowserRouter([
             children: [
             { index: true, element: <AdminDashboardPage /> },
             { path: "inquiries", element: <AdminSupportPage /> },
-            {
-                path: "inquiries/:inquiryId",
-                element: <AdminSupportDetailPage />,
-            },
+            { path: "inquiries/:inquiryId", element: <AdminSupportDetailPage /> },
+            { path: "members", element: <AdminMembersPage /> },
+
             ],
         },
         ],

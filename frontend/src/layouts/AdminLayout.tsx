@@ -73,7 +73,7 @@ export default function AdminLayout() {
       </header>
 
       <div className="mx-auto grid max-w-6xl grid-cols-1 gap-6 px-4 py-6 lg:grid-cols-[240px_minmax(0,1fr)]">
-        <aside className="rounded-2xl border bg-white p-4">
+        <aside className="self-start rounded-2xl border bg-white p-4">
           <nav className="space-y-2">
             <NavLink to="/admin" end className={({ isActive }) => navClass(isActive)}>
               대시보드
@@ -81,6 +81,9 @@ export default function AdminLayout() {
             <NavLink to="/admin/inquiries" className={({ isActive }) => navClass(isActive)}>
               문의 관리
             </NavLink>
+            <NavLink to="/admin/members" className={({ isActive }) => navClass(isActive)}>
+              회원 관리
+          </NavLink>
           </nav>
         </aside>
 

@@ -1,6 +1,9 @@
 import { useEffect, useState } from "react"
 import { Link } from "react-router-dom"
-import { getAdminDashboardSummary, type AdminDashboardSummary } from "../../api/admin/dashboard"
+import {
+  getAdminDashboardSummary,
+  type AdminDashboardSummary,
+} from "../../api/admin/dashboard"
 
 function SummaryCard({
   label,
@@ -12,11 +15,11 @@ function SummaryCard({
   helper?: string
 }) {
   return (
-    <div className="rounded-2xl border bg-white p-5">
-      <div className="text-sm text-slate-500">{label}</div>
-      <div className="mt-2 text-2xl font-bold text-slate-900">{value}</div>
-      {helper && <div className="mt-1 text-xs text-slate-400">{helper}</div>}
-    </div>
+    <section className="rounded-3xl border border-slate-200 bg-white p-6 shadow-sm">
+      <p className="text-sm font-medium text-slate-500">{label}</p>
+      <p className="mt-3 text-4xl font-bold text-slate-900">{value}</p>
+      {helper && <p className="mt-2 text-xs text-slate-400">{helper}</p>}
+    </section>
   )
 }
 
@@ -33,12 +36,19 @@ export default function AdminDashboardPage() {
         setLoading(true)
         setError("")
         const data = await getAdminDashboardSummary()
-        if (mounted) setSummary(data)
+
+        if (mounted) {
+          setSummary(data)
+        }
       } catch (e) {
         console.error(e)
-        if (mounted) setError("대시보드 정보를 불러오지 못했습니다.")
+        if (mounted) {
+          setError("대시보드 정보를 불러오지 못했습니다.")
+        }
       } finally {
-        if (mounted) setLoading(false)
+        if (mounted) {
+          setLoading(false)
+        }
       }
     })()
 
@@ -49,23 +59,46 @@ export default function AdminDashboardPage() {
 
   return (
     <div className="space-y-6">
-      <div>
+      <section className="rounded-3xl border border-slate-200 bg-white p-6 shadow-sm">
         <h1 className="text-2xl font-bold text-slate-900">관리자 대시보드</h1>
-        <p className="mt-1 text-sm text-slate-500">
+        <p className="mt-2 text-sm text-slate-500">
           DevMine 운영 지표를 한눈에 확인할 수 있습니다.
         </p>
+      </section>
+
+
+      <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-3">
+        <Link
+          to="/admin/inquiries"
+          className="rounded-3xl border border-slate-200 bg-white p-6 shadow-sm transition hover:-translate-y-0.5 hover:shadow-md"
+        >
+          <p className="text-sm font-semibold text-slate-500">문의 관리</p>
+          <p className="mt-3 text-lg font-bold text-slate-900">
+            문의 확인 및 답변
+          </p>
+        </Link>
+
+        <Link
+          to="/admin/members"
+          className="rounded-3xl border border-slate-200 bg-white p-6 shadow-sm transition hover:-translate-y-0.5 hover:shadow-md"
+        >
+          <p className="text-sm font-semibold text-slate-500">회원 관리</p>
+          <p className="mt-3 text-lg font-bold text-slate-900">
+            회원 조회
+          </p>
+        </Link>
       </div>
 
       {loading ? (
-        <div className="rounded-2xl border bg-white p-6 text-sm text-slate-500">
+        <section className="rounded-3xl border border-slate-200 bg-white p-6 shadow-sm text-sm text-slate-500">
           불러오는 중...
-        </div>
+        </section>
       ) : error ? (
-        <div className="rounded-2xl border bg-white p-6 text-sm text-red-500">
+        <section className="rounded-3xl border border-slate-200 bg-white p-6 shadow-sm text-sm text-rose-500">
           {error}
-        </div>
+        </section>
       ) : summary ? (
-        <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 xl:grid-cols-3">
+        <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-3">
           <SummaryCard label="오늘 방문자 수" value={summary.dailyVisitors} />
           <SummaryCard label="누적 방문자 수" value={summary.totalVisitors} />
           <SummaryCard label="전체 회원 수" value={summary.totalMembers} />
@@ -78,18 +111,6 @@ export default function AdminDashboardPage() {
           />
         </div>
       ) : null}
-
-      <div className="grid grid-cols-1 gap-4 md:grid-cols-2 xl:grid-cols-3">
-        <Link
-          to="/admin/inquiries"
-          className="rounded-2xl border bg-white p-6 transition hover:-translate-y-0.5 hover:shadow-sm"
-        >
-          <div className="text-sm text-slate-500">문의 관리</div>
-          <div className="mt-2 text-lg font-semibold text-slate-900">
-            사용자 문의 확인 및 답변
-          </div>
-        </Link>
-      </div>
     </div>
   )
 }

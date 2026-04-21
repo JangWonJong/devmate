@@ -1,6 +1,7 @@
 package com.devs.devmate.admin.service;
 
 import com.devs.devmate.admin.dto.AdminDashboardSummaryResponse;
+import com.devs.devmate.admin.repository.AdminMemberRepository;
 import com.devs.devmate.analytics.dto.AnalyticsSummaryResponse;
 import com.devs.devmate.analytics.service.AnalyticsService;
 import com.devs.devmate.inquiry.entity.InquiryStatus;
@@ -17,7 +18,7 @@ import org.springframework.transaction.annotation.Transactional;
 public class AdminDashboardServiceImpl implements AdminDashboardService{
 
     private final AnalyticsService analyticsService;
-    private final MemberRepository memberRepository;
+    private final AdminMemberRepository adminMemberRepository;
     private final InquiryRepository inquiryRepository;
 
     @Override
@@ -25,9 +26,9 @@ public class AdminDashboardServiceImpl implements AdminDashboardService{
 
         AnalyticsSummaryResponse analytics = analyticsService.getSummary();
 
-        long totalMembers = memberRepository.count();
-        long activeMembers = memberRepository.countByStatus(MemberStatus.ACTIVE);
-        long deletedMembers = memberRepository.countByStatus(MemberStatus.DELETED);
+        long totalMembers = adminMemberRepository.count();
+        long activeMembers = adminMemberRepository.countByStatus(MemberStatus.ACTIVE);
+        long deletedMembers = adminMemberRepository.countByStatus(MemberStatus.DELETED);
         long pendingInquiries = inquiryRepository.countByStatus(InquiryStatus.IN_PROGRESS);
 
         return new AdminDashboardSummaryResponse(
