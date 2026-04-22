@@ -14,6 +14,9 @@ public enum ErrorCode {
     // ADMIN
     ADMIN_FORBIDDEN(HttpStatus.FORBIDDEN, "ADMIN_403", "관리자 권한이 필요합니다."),
     ADMIN_TARGET_NOT_FOUND(HttpStatus.NOT_FOUND, "ADMIN_404", "관리 대상 정보를 찾을 수 없습니다."),
+    INVALID_MEMBER_STATUS_CHANGE(HttpStatus.BAD_REQUEST, "ADMIN_400_1", "회원 상태 변경 요청이 올바르지 않습니다."),
+    INVALID_MEMBER_ROLE_CHANGE(HttpStatus.BAD_REQUEST, "ADMIN_400_2", "회원 권한 변경 요청이 올바르지 않습니다."),
+    SELF_ROLE_CHANGE_NOT_ALLOWED(HttpStatus.BAD_REQUEST, "ADMIN_400_3", "본인 권한은 변경할 수 없습니다."),
 
     // AUTH
     AUTH_FAILED(HttpStatus.UNAUTHORIZED, "AUTH_401_1", "이메일 또는 비밀번호가 올바르지 않습니다."),

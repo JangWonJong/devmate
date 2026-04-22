@@ -113,3 +113,17 @@ export async function updateAdminMemberStatus(
     throw new Error(data.error?.message ?? "회원 상태 변경 실패")
   }
 }
+
+export async function updateAdminMemberRole(
+  memberId: number,
+  role: AdminMemberRole
+): Promise<void> {
+  const { data } = await http.patch<ApiResponse<null>>(
+    `/api/admin/members/${memberId}/role`,
+    { role }
+  )
+
+  if (!data.success) {
+    throw new Error(data.error?.message ?? "회원 권한 변경 실패")
+  }
+}

@@ -3,9 +3,10 @@ package com.devs.devmate.admin.controller;
 
 import com.devs.devmate.admin.dto.AdminMemberDetailResponse;
 import com.devs.devmate.admin.dto.AdminMemberResponse;
-import com.devs.devmate.admin.dto.AdminMemberStatusUpdateRequest;
+import com.devs.devmate.admin.dto.AdminMemberUpdateRequest;
 import com.devs.devmate.admin.service.AdminMemberService;
 import com.devs.devmate.global.common.ApiResponse;
+import com.devs.devmate.global.security.SecurityUtil;
 import com.devs.devmate.member.entity.MemberStatus;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
@@ -38,9 +39,19 @@ public class AdminMemberController {
     @PatchMapping("/{memberId}/status")
     public ApiResponse<Void> updateMemberStatus(
             @PathVariable Long memberId,
-            @RequestBody AdminMemberStatusUpdateRequest request
+            @RequestBody AdminMemberUpdateRequest request
     ) {
         adminMemberService.updateMemberStatus(memberId, request.getStatus());
+        return ApiResponse.ok(null);
+    }
+
+    @PatchMapping("/{memberId}/role")
+    public ApiResponse<Void> updateMemberRole(
+            @PathVariable Long memberId,
+            @RequestBody AdminMemberUpdateRequest request
+    ) {
+        Long actorMemberId = SecurityUtil.currentMemberId();
+        adminMemberService.updateMemberRole(actorMemberId, memberId, request.getRole());
         return ApiResponse.ok(null);
     }
 }

@@ -1,13 +1,16 @@
 package com.devs.devmate.admin.dto;
 
 import com.devs.devmate.member.entity.MemberStatus;
+import com.devs.devmate.member.entity.Role;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 
 @Getter
 @NoArgsConstructor
-public class AdminMemberStatusUpdateRequest {
+public class AdminMemberUpdateRequest {
 
     private MemberStatus status;
+
+    private Role role;
 
 }

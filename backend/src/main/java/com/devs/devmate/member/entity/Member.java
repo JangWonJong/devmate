@@ -74,6 +74,8 @@ public class Member extends BaseEntity {
 
     public void restore() { this.status = MemberStatus.ACTIVE; }
 
+    public void changeRole(Role role) { this.role = role; }
+
     public void addProfileLink(ProfileLink profileLink) {
         this.profileLinks.add(profileLink);
     }

@@ -8,6 +8,7 @@ import com.devs.devmate.global.exception.BusinessException;
 import com.devs.devmate.global.exception.ErrorCode;
 import com.devs.devmate.member.entity.Member;
 import com.devs.devmate.member.entity.MemberStatus;
+import com.devs.devmate.member.entity.Role;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
@@ -58,6 +59,22 @@ public class AdminMemberServiceImpl implements AdminMemberService{
             return;
         }
 
-        throw new BusinessException(ErrorCode.INVALID_REQUEST);
+        throw new BusinessException(ErrorCode.INVALID_MEMBER_STATUS_CHANGE);
+    }
+
+    @Override
+    @Transactional
+    public void updateMemberRole(Long actorMemberId, Long targetMemberId, Role role) {
+        Member member = adminMemberRepository.findById(targetMemberId)
+                .orElseThrow(() -> new BusinessException(ErrorCode.MEMBER_NOT_FOUND));
+
+        if (role == null || member.getRole() == role) {
+            throw new BusinessException(ErrorCode.INVALID_MEMBER_ROLE_CHANGE);
+        }
+
+        if (actorMemberId.equals(targetMemberId) && role == Role.USER) {
+            throw new BusinessException(ErrorCode.SELF_ROLE_CHANGE_NOT_ALLOWED);
+        }
+        member.changeRole(role);
     }
 }
