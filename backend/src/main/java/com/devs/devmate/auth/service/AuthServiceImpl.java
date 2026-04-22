@@ -46,7 +46,8 @@ public class AuthServiceImpl implements AuthService{
     public LoginResponse login(LoginRequest request) {
         String email = request.getEmail().trim().toLowerCase();
 
-        Member member = memberRepository.findByEmailAndStatus(email, MemberStatus.ACTIVE)
+        //Member member = memberRepository.findByEmailAndStatus(email, MemberStatus.ACTIVE)
+        Member member = memberRepository.findByEmail(email)
                 .orElseThrow(() -> new BusinessException(ErrorCode.MEMBER_NOT_EXISTS));
         if (member.getStatus() == MemberStatus.DELETED) {
             throw new BusinessException(ErrorCode.DELETED_MEMBER);

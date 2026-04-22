@@ -1,4 +1,5 @@
 import { useEffect, useState } from "react"
+import { useNavigate } from "react-router-dom"
 import {
   formatAdminMemberDate,
   getAdminMemberStatusLabel,
@@ -9,6 +10,8 @@ import {
 } from "../../api/admin/memberManagement"
 
 export default function AdminMembersPage() {
+  const navigate = useNavigate()
+
   const [members, setMembers] = useState<AdminMember[]>([])
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState("")
@@ -151,7 +154,8 @@ export default function AdminMembersPage() {
                   {members.map((member) => (
                     <tr
                         key={member.id}
-                        className="border-t border-slate-100 text-slate-700 transition hover:bg-slate-50"
+                        onClick={() => navigate(`/admin/members/${member.id}`)}
+                        className="cursor-pointer border-t border-slate-100 text-slate-700 transition hover:bg-slate-50"
                         >
                       <td className="px-5 py-4">{member.id}</td>
                       <td className="px-5 py-4 font-semibold text-slate-900">

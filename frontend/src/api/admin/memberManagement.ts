@@ -14,6 +14,20 @@ export type AdminMember = {
   createdAt: string
 }
 
+export type AdminMemberDetail = {
+  id: number
+  name: string
+  nickname: string
+  email: string
+  phone: string | null
+  bio: string | null
+  profileImageUrl: string | null
+  role: AdminMemberRole
+  status: AdminMemberStatus
+  createdAt: string
+  updatedAt: string
+}
+
 export type ListAdminMembersParams = {
   page?: number
   size?: number
@@ -38,6 +52,20 @@ export async function listAdminMembers(
 
   if (!data.success || !data.data) {
     throw new Error(data.error?.message ?? "회원 목록 조회 실패")
+  }
+
+  return data.data
+}
+
+export async function getAdminMemberDetail(
+  memberId: number
+): Promise<AdminMemberDetail> {
+  const { data } = await http.get<ApiResponse<AdminMemberDetail>>(
+    `/api/admin/members/${memberId}`
+  )
+
+  if (!data.success || !data.data) {
+    throw new Error(data.error?.message ?? "회원 상세 조회 실패")
   }
 
   return data.data
@@ -70,4 +98,18 @@ export function formatAdminMemberDate(value: string) {
   const min = String(date.getMinutes()).padStart(2, "0")
 
   return `${yyyy}.${mm}.${dd} ${hh}:${min}`
+}
+
+export async function updateAdminMemberStatus(
+  memberId: number,
+  status: AdminMemberStatus
+): Promise<void> {
+  const { data } = await http.patch<ApiResponse<null>>(
+    `/api/admin/members/${memberId}/status`,
+    { status }
+  )
+
+  if (!data.success) {
+    throw new Error(data.error?.message ?? "회원 상태 변경 실패")
+  }
 }

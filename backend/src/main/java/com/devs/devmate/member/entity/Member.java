@@ -72,6 +72,8 @@ public class Member extends BaseEntity {
         return this.status == MemberStatus.DELETED;
     }
 
+    public void restore() { this.status = MemberStatus.ACTIVE; }
+
     public void addProfileLink(ProfileLink profileLink) {
         this.profileLinks.add(profileLink);
     }
