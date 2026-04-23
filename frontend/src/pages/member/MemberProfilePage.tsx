@@ -8,7 +8,7 @@ import {
   unlikeMemberProfile,
   type MemberProfileResponse,
 } from "../../api/member/members"
-import { tokenStore } from "../../auth/token"
+import { tokenStore } from "../../api/auth/token"
 import { apiErrorMessage } from "../../utils/error"
 import { imageUrl } from "../../utils/image"
 

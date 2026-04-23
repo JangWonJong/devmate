@@ -5,10 +5,11 @@ import {
   getAdminMemberDetail,
   getAdminMemberStatusLabel,
   getAdminMemberStatusStyle,
-  updateAdminMemberStatus,
   updateAdminMemberRole,
+  updateAdminMemberStatus,
   type AdminMemberDetail,
 } from "../../api/admin/memberManagement"
+import { getCurrentMemberId } from "../../api/auth/currentUser"
 import { imageUrl } from "../../utils/image"
 
 function InfoCard({
@@ -24,6 +25,21 @@ function InfoCard({
       <p className="mt-2 break-all text-sm font-semibold text-slate-900">
         {value}
       </p>
+    </div>
+  )
+}
+
+function StatCard({
+  label,
+  value,
+}: {
+  label: string
+  value: number
+}) {
+  return (
+    <div className="rounded-2xl border border-slate-200 bg-slate-50 px-4 py-4">
+      <p className="text-xs font-medium text-slate-500">{label}</p>
+      <p className="mt-3 text-3xl font-bold text-slate-900">{value}</p>
     </div>
   )
 }
@@ -111,39 +127,6 @@ export default function AdminMemberDetailPage() {
     }
   }
 
-  async function handleToggleRole() {
-    if (!member) return
-
-    const nextRole = member.role === "USER" ? "ADMIN" : "USER"
-
-    const confirmed = window.confirm(
-        nextRole === "ADMIN"
-        ? "해당 회원에게 관리자 권한을 부여하시겠습니까?"
-        : "해당 회원을 일반 회원 권한으로 변경하시겠습니까?"
-    )
-
-    if (!confirmed) return
-
-    try {
-        setSaving(true)
-
-        await updateAdminMemberRole(member.id, nextRole)
-        await fetchMemberDetail(member.id)
-
-        alert(
-        nextRole === "ADMIN"
-            ? "관리자 권한이 부여되었습니다."
-            : "일반 회원 권한으로 변경되었습니다."
-        )
-    } catch (e) {
-        console.error(e)
-        alert("회원 권한 변경에 실패했습니다.")
-    } finally {
-        setSaving(false)
-    }
-    }
-
-
   if (loading) {
     return (
       <section className="rounded-3xl border border-slate-200 bg-white p-6 shadow-sm text-sm text-slate-500">
@@ -160,6 +143,46 @@ export default function AdminMemberDetailPage() {
     )
   }
 
+  const currentMemberId = getCurrentMemberId()
+  const isSelfAdmin = currentMemberId === member.id && member.role === "ADMIN"
+
+  async function handleToggleRole() {
+    if (!member) return
+
+    if (isSelfAdmin) {
+      alert("현재 로그인한 관리자 계정은 권한을 변경할 수 없습니다.")
+      return
+    }
+
+    const nextRole = member.role === "USER" ? "ADMIN" : "USER"
+
+    const confirmed = window.confirm(
+      nextRole === "ADMIN"
+        ? "해당 회원에게 관리자 권한을 부여하시겠습니까?"
+        : "해당 회원을 일반 회원 권한으로 변경하시겠습니까?"
+    )
+
+    if (!confirmed) return
+
+    try {
+      setSaving(true)
+
+      await updateAdminMemberRole(member.id, nextRole)
+      await fetchMemberDetail(member.id)
+
+      alert(
+        nextRole === "ADMIN"
+          ? "관리자 권한이 부여되었습니다."
+          : "일반 회원 권한으로 변경되었습니다."
+      )
+    } catch (e) {
+      console.error(e)
+      alert("회원 권한 변경에 실패했습니다.")
+    } finally {
+      setSaving(false)
+    }
+  }
+
   return (
     <div className="space-y-6">
       <section className="rounded-3xl border border-slate-200 bg-white p-6 shadow-sm">
@@ -168,12 +191,14 @@ export default function AdminMemberDetailPage() {
             <button
               type="button"
               onClick={() => navigate("/admin/members")}
-              className="mb-3 text-sm text-slate-500 transition hover:text-slate-700"
+              className="inline-flex items-center gap-2 rounded-xl border border-slate-200 bg-slate-50 px-4 py-2 text-sm font-medium text-slate-700 transition hover:bg-slate-100"
             >
-              ← 목록으로
+              ← 회원 목록
             </button>
 
-            <h1 className="text-2xl font-bold text-slate-900">회원 상세</h1>
+            <h1 className="mt-4 text-2xl font-bold text-slate-900">
+              회원 상세
+            </h1>
 
             <p className="mt-2 text-sm text-slate-500">
               회원 기본 정보와 상태를 확인할 수 있습니다.
@@ -182,48 +207,50 @@ export default function AdminMemberDetailPage() {
 
           <div className="flex flex-wrap items-center gap-2">
             <button
-                type="button"
-                onClick={handleToggleRole}
-                disabled={saving}
-                className="rounded-2xl border border-slate-200 bg-white px-4 py-2 text-sm font-semibold text-slate-700 transition hover:bg-slate-50 disabled:opacity-50"
+              type="button"
+              onClick={handleToggleRole}
+              disabled={saving || isSelfAdmin}
+              className="rounded-2xl border border-slate-200 bg-white px-4 py-2 text-sm font-semibold text-slate-700 transition hover:bg-slate-50 disabled:cursor-not-allowed disabled:opacity-50"
             >
-                {saving
+              {saving
                 ? "처리 중..."
-                : member.role === "USER"
+                : isSelfAdmin
+                  ? "본인 권한 변경 불가"
+                  : member.role === "USER"
                     ? "관리자 권한 부여"
                     : "일반 회원 권한 변경"}
             </button>
 
             <button
-                type="button"
-                onClick={handleToggleStatus}
-                disabled={saving}
-                className={
+              type="button"
+              onClick={handleToggleStatus}
+              disabled={saving}
+              className={
                 member.status === "ACTIVE"
-                    ? "rounded-2xl border border-rose-200 bg-rose-50 px-4 py-2 text-sm font-semibold text-rose-700 transition hover:bg-rose-100 disabled:opacity-50"
-                    : "rounded-2xl bg-slate-900 px-4 py-2 text-sm font-semibold text-white transition hover:bg-slate-800 disabled:opacity-50"
-                }
+                  ? "rounded-2xl border border-rose-200 bg-rose-50 px-4 py-2 text-sm font-semibold text-rose-700 transition hover:bg-rose-100 disabled:cursor-not-allowed disabled:opacity-50"
+                  : "rounded-2xl bg-slate-900 px-4 py-2 text-sm font-semibold text-white transition hover:bg-slate-800 disabled:cursor-not-allowed disabled:opacity-50"
+              }
             >
-                {saving
+              {saving
                 ? "처리 중..."
                 : member.status === "ACTIVE"
-                    ? "탈퇴 처리"
-                    : "복구 처리"}
+                  ? "탈퇴 처리"
+                  : "복구 처리"}
             </button>
 
             <span className="rounded-full border border-slate-200 bg-slate-100 px-3 py-1 text-xs font-semibold text-slate-700">
-                {member.role}
+              {member.role}
             </span>
 
             <span
-                className={[
+              className={[
                 "rounded-full px-3 py-1 text-xs font-semibold",
                 getAdminMemberStatusStyle(member.status),
-                ].join(" ")}
+              ].join(" ")}
             >
-                {getAdminMemberStatusLabel(member.status)}
+              {getAdminMemberStatusLabel(member.status)}
             </span>
-            </div>
+          </div>
         </div>
       </section>
 
@@ -248,6 +275,22 @@ export default function AdminMemberDetailPage() {
             <p className="text-xl font-bold text-slate-900">{member.nickname}</p>
             <p className="mt-1 text-sm text-slate-500">{member.email}</p>
           </div>
+        </div>
+      </section>
+            
+      <section className="rounded-3xl border border-slate-200 bg-white p-6 shadow-sm">
+        <div className="mb-4">
+            <h2 className="text-lg font-bold text-slate-900">운영 정보</h2>
+            <p className="mt-1 text-sm text-slate-500">
+            회원의 서비스 이용 및 활동 현황입니다.
+            </p>
+        </div>
+
+        <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
+            <StatCard label="작성 게시글 수" value={member.postCount} />
+            <StatCard label="작성 댓글 수" value={member.commentCount} />
+            <StatCard label="문의 수" value={member.inquiryCount} />
+            <StatCard label="예약 수" value={member.reservationCount} />
         </div>
       </section>
 

@@ -1,6 +1,22 @@
 import { http } from "../http"
 import type { ApiResponse } from "../type"
 
+export type AdminRecentMember = {
+  id: number
+  nickname: string
+  email: string
+  createdAt: string
+}
+
+export type AdminRecentInquiry = {
+  id: number
+  memberNickname: string
+  type: "BUG" | "FEATURE" | "GENERAL"
+  status: "RECEIVED" | "IN_PROGRESS" | "RESOLVED"
+  content: string
+  createdAt: string
+}
+
 export type AdminDashboardSummary = {
   dailyVisitors: number
   totalVisitors: number
@@ -8,6 +24,9 @@ export type AdminDashboardSummary = {
   activeMembers: number
   deletedMembers: number
   pendingInquiries: number
+  todaySignups: number
+  recentMembers: AdminRecentMember[]
+  recentInquiries: AdminRecentInquiry[]
 }
 
 export async function getAdminDashboardSummary(): Promise<AdminDashboardSummary> {

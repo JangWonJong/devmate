@@ -2,9 +2,9 @@ import { useEffect, useMemo, useState } from "react"
 import { Link } from "react-router-dom"
 import {
   listAdminInquiries,
-  statusLabel,
-  typeLabel,
-  formatDateTime,
+  getInquiryStatusLabel,
+  getInquiryTypeLabel,
+  formatInquiryDate,
   type AdminInquiryListItem,
   type InquiryStatus,
 } from "../../api/admin/support"
@@ -121,11 +121,11 @@ export default function AdminSupportPage() {
                           statusClass(inquiry.status),
                         ].join(" ")}
                       >
-                        {statusLabel(inquiry.status)}
+                        {getInquiryStatusLabel(inquiry.status)}
                       </span>
 
                       <span className="inline-flex rounded-full border border-slate-200 bg-slate-100 px-2.5 py-1 text-xs font-medium text-slate-600">
-                        {typeLabel(inquiry.type)}
+                        {getInquiryTypeLabel(inquiry.type)}
                       </span>
 
                       <span className="text-xs text-slate-400">
@@ -139,9 +139,9 @@ export default function AdminSupportPage() {
                   </div>
 
                   <div className="shrink-0 text-xs text-slate-400">
-                    <div>등록: {formatDateTime(inquiry.createdAt)}</div>
+                    <div>등록: {formatInquiryDate(inquiry.createdAt)}</div>
                     <div className="mt-1">
-                      처리: {formatDateTime(inquiry.processedAt)}
+                      처리: {formatInquiryDate(inquiry.processedAt)}
                     </div>
                   </div>
                 </div>

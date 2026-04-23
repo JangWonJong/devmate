@@ -1,16 +1,14 @@
-package com.devs.devmate.admin.dto;
+package com.devs.devmate.admin.dto.inquiry;
 
 
 import com.devs.devmate.inquiry.entity.InquiryStatus;
-import jakarta.validation.constraints.NotNull;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 
 @Getter
 @NoArgsConstructor
-public class AdminInquiryStatusUpdateRequest {
+public class AdminInquiryUpdateRequest {
 
-    @NotNull
+    private String adminReply;
     private InquiryStatus status;
-
 }

@@ -1,4 +1,4 @@
-import { tokenStore } from "../auth/token"
+import { tokenStore } from "../api/auth/token"
 
 type JwtPayload = {
   sub?: string

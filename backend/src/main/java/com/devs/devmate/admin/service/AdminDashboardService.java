@@ -1,6 +1,6 @@
 package com.devs.devmate.admin.service;
 
-import com.devs.devmate.admin.dto.AdminDashboardSummaryResponse;
+import com.devs.devmate.admin.dto.dashboard.AdminDashboardSummaryResponse;
 
 public interface AdminDashboardService {
 

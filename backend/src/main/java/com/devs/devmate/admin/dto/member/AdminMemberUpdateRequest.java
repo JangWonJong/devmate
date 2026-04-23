@@ -1,4 +1,4 @@
-package com.devs.devmate.admin.dto;
+package com.devs.devmate.admin.dto.member;
 
 import com.devs.devmate.member.entity.MemberStatus;
 import com.devs.devmate.member.entity.Role;

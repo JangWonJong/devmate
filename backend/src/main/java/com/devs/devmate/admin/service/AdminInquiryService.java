@@ -1,7 +1,7 @@
 package com.devs.devmate.admin.service;
 
-import com.devs.devmate.admin.dto.AdminInquiryDetailResponse;
-import com.devs.devmate.admin.dto.AdminInquiryListResponse;
+import com.devs.devmate.admin.dto.inquiry.AdminInquiryDetailResponse;
+import com.devs.devmate.admin.dto.inquiry.AdminInquiryListResponse;
 import com.devs.devmate.inquiry.entity.InquiryStatus;
 
 import java.util.List;

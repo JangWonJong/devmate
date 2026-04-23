@@ -89,7 +89,8 @@ public enum ErrorCode {
     INQUIRY_NOT_FOUND(HttpStatus.NOT_FOUND, "INQUIRY_404", "문의 내역을 찾을 수 없습니다."),
     FORBIDDEN_INQUIRY(HttpStatus.FORBIDDEN, "INQUIRY_403", "해당 문의에 대한 권한이 없습니다."),
     INQUIRY_CANCEL_NOT_ALLOWED(HttpStatus.BAD_REQUEST, "INQUIRY_400", "해당 문의는 취소할 수 없습니다."),
-
+    INVALID_INQUIRY_STATUS_CHANGE(HttpStatus.BAD_REQUEST, "INQUIRY_400_2", "문의 상태 변경 요청이 올바르지 않습니다."),
+    INVALID_INQUIRY_REPLY(HttpStatus.BAD_REQUEST, "INQUIRY_400_3", "문의 답변 요청이 올바르지 않습니다."),
     // NOTIFICATION
     NOTIFICATION_NOT_FOUND(HttpStatus.NOT_FOUND, "NOTIFICATION_404","알림을 찾을 수 없습니다.");
 

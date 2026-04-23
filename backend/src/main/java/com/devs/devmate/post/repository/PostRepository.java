@@ -26,6 +26,8 @@
 
         Page<Post> findByMemberIdAndSolvedAndType(Long memberId, boolean solved, Post.PostType type, Pageable pageable);
 
+        long countByMemberId(Long memberId);
+
         @Query("""
             select p from Post p
                 where lower(p.title) like lower(concat('%', :keyword, '%'))

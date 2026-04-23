@@ -1,9 +1,9 @@
 package com.devs.devmate.admin.controller;
 
 
-import com.devs.devmate.admin.dto.AdminMemberDetailResponse;
-import com.devs.devmate.admin.dto.AdminMemberResponse;
-import com.devs.devmate.admin.dto.AdminMemberUpdateRequest;
+import com.devs.devmate.admin.dto.member.AdminMemberDetailResponse;
+import com.devs.devmate.admin.dto.member.AdminMemberResponse;
+import com.devs.devmate.admin.dto.member.AdminMemberUpdateRequest;
 import com.devs.devmate.admin.service.AdminMemberService;
 import com.devs.devmate.global.common.ApiResponse;
 import com.devs.devmate.global.security.SecurityUtil;

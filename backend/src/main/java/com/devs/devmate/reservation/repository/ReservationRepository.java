@@ -160,5 +160,5 @@ public interface ReservationRepository extends JpaRepository<Reservation, Long> 
 
     void deleteByStatusAndUpdatedAtBefore(Status status, LocalDateTime cutoff);
 
-
+    long countByMemberId(Long memberId);
 }

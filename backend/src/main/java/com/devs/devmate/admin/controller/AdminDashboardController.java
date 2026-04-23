@@ -1,7 +1,7 @@
 package com.devs.devmate.admin.controller;
 
 
-import com.devs.devmate.admin.dto.AdminDashboardSummaryResponse;
+import com.devs.devmate.admin.dto.dashboard.AdminDashboardSummaryResponse;
 import com.devs.devmate.admin.service.AdminDashboardService;
 import com.devs.devmate.global.common.ApiResponse;
 import lombok.RequiredArgsConstructor;

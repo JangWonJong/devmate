@@ -1,6 +1,6 @@
 import { useCallback, useEffect, useRef, useState } from "react"
 import { Outlet, useLocation, useNavigate } from "react-router-dom"
-import { tokenStore } from "../auth/token"
+import { tokenStore } from "../api/auth/token"
 import { getMe, type MeResponse } from "../api/member/members"
 import { logout, reissue } from "../api/auth/auth"
 import AppHeader from "../components/app/AppHeader"

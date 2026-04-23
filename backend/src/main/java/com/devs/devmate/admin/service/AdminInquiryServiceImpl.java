@@ -1,7 +1,7 @@
 package com.devs.devmate.admin.service;
 
-import com.devs.devmate.admin.dto.AdminInquiryDetailResponse;
-import com.devs.devmate.admin.dto.AdminInquiryListResponse;
+import com.devs.devmate.admin.dto.inquiry.AdminInquiryDetailResponse;
+import com.devs.devmate.admin.dto.inquiry.AdminInquiryListResponse;
 import com.devs.devmate.global.exception.BusinessException;
 import com.devs.devmate.global.exception.ErrorCode;
 import com.devs.devmate.inquiry.entity.Inquiry;
@@ -52,17 +52,24 @@ public class AdminInquiryServiceImpl implements AdminInquiryService{
         Member admin = memberRepository.findById(adminId)
                 .orElseThrow(() -> new BusinessException(ErrorCode.MEMBER_NOT_FOUND));
 
+        if (status == null) {
+            throw new BusinessException(ErrorCode.INVALID_INQUIRY_STATUS_CHANGE);
+        }
+
         if (status == InquiryStatus.RECEIVED) {
-            throw new BusinessException(ErrorCode.INVALID_REQUEST);
+            throw new BusinessException(ErrorCode.INVALID_INQUIRY_STATUS_CHANGE);
         }
 
         if (status == InquiryStatus.RESOLVED) {
-            throw new BusinessException(ErrorCode.INVALID_REQUEST);
+            throw new BusinessException(ErrorCode.INVALID_INQUIRY_STATUS_CHANGE);
         }
 
         if (status == InquiryStatus.IN_PROGRESS) {
             inquiry.markInProgress(admin);
+            return;
         }
+
+        throw new BusinessException(ErrorCode.INVALID_INQUIRY_STATUS_CHANGE);
     }
 
     @Override
@@ -74,6 +81,10 @@ public class AdminInquiryServiceImpl implements AdminInquiryService{
 
         Member admin = memberRepository.findById(adminId)
                 .orElseThrow(() -> new BusinessException(ErrorCode.MEMBER_NOT_FOUND));
+
+        if (adminReply == null || adminReply.isBlank()) {
+            throw new BusinessException(ErrorCode.INVALID_INQUIRY_REPLY);
+        }
 
         inquiry.resolve(adminReply.trim(), admin);
 

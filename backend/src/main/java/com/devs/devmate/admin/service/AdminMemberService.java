@@ -1,7 +1,7 @@
 package com.devs.devmate.admin.service;
 
-import com.devs.devmate.admin.dto.AdminMemberDetailResponse;
-import com.devs.devmate.admin.dto.AdminMemberResponse;
+import com.devs.devmate.admin.dto.member.AdminMemberDetailResponse;
+import com.devs.devmate.admin.dto.member.AdminMemberResponse;
 import com.devs.devmate.member.entity.MemberStatus;
 import com.devs.devmate.member.entity.Role;
 import org.springframework.data.domain.Page;

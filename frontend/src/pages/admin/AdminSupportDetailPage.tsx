@@ -4,9 +4,9 @@ import {
   getAdminInquiryDetail,
   replyAdminInquiry,
   updateAdminInquiryStatus,
-  statusLabel,
-  typeLabel,
-  formatDateTime,
+  getInquiryStatusLabel,
+  getInquiryTypeLabel,
+  formatInquiryDate,
   type AdminInquiryDetail,
 } from "../../api/admin/support"
 
@@ -179,7 +179,7 @@ export default function AdminSupportDetailPage() {
           <div className="rounded-2xl border border-slate-200 bg-slate-50 px-4 py-4">
             <p className="text-xs font-medium text-slate-500">문의 유형</p>
             <p className="mt-2 text-sm font-semibold text-slate-900">
-              {typeLabel(inquiry.type)}
+              {getInquiryTypeLabel(inquiry.type)}
             </p>
           </div>
 
@@ -192,7 +192,7 @@ export default function AdminSupportDetailPage() {
                   getStatusBadgeClass(inquiry.status),
                 ].join(" ")}
               >
-                {statusLabel(inquiry.status)}
+                {getInquiryStatusLabel(inquiry.status)}
               </span>
             </div>
           </div>
@@ -207,14 +207,14 @@ export default function AdminSupportDetailPage() {
           <div className="rounded-2xl border border-slate-200 bg-slate-50 px-4 py-4">
             <p className="text-xs font-medium text-slate-500">등록일</p>
             <p className="mt-2 text-sm font-semibold text-slate-900">
-              {formatDateTime(inquiry.createdAt)}
+              {formatInquiryDate(inquiry.createdAt)}
             </p>
           </div>
 
           <div className="rounded-2xl border border-slate-200 bg-slate-50 px-4 py-4">
             <p className="text-xs font-medium text-slate-500">처리일</p>
             <p className="mt-2 text-sm font-semibold text-slate-900">
-              {formatDateTime(inquiry.processedAt)}
+              {formatInquiryDate(inquiry.processedAt)}
             </p>
           </div>
         </div>

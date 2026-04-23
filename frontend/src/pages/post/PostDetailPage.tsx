@@ -12,7 +12,7 @@ import {
   getPostBookmarkStatus,
   type PostResponse,
 } from "../../api/post/posts"
-import { tokenStore } from "../../auth/token"
+import { tokenStore } from "../../api/auth/token"
 import { getMeId } from "../../api/member/members"
 import {
   listComments,

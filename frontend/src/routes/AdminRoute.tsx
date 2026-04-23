@@ -1,5 +1,5 @@
 import { Navigate, Outlet, useLocation } from "react-router-dom"
-import { tokenStore } from "../auth/token"
+import { tokenStore } from "../api/auth/token"
 import { isAdminUser } from "../utils/jwt"
 
 export default function AdminRoute() {

@@ -1,7 +1,7 @@
 import { useCallback, useEffect, useState } from "react"
 import { listPosts, listPopularQuestionPosts, bookmarkPost, unbookmarkPost, type PostResponse } from "../../api/post/posts"
 import { Link, useNavigate, useSearchParams } from "react-router-dom"
-import { tokenStore } from "../../auth/token"
+import { tokenStore } from "../../api/auth/token"
 import {
   getMeId,
   getPopularMembers,

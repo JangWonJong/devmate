@@ -1,8 +1,10 @@
+import { useEffect, useState } from "react"
 import { Link, NavLink, Outlet, useLocation, useNavigate } from "react-router-dom"
 import { LogOut, UserCircle2 } from "lucide-react"
 import AppLogo from "../components/common/AppLogo"
 import { logout } from "../api/auth/auth"
-import { tokenStore } from "../auth/token"
+import { tokenStore } from "../api/auth/token"
+import { getAdminDashboardSummary } from "../api/admin/dashboard"
 
 function navClass(isActive: boolean) {
   return [
@@ -24,6 +26,8 @@ export default function AdminLayout() {
   const location = useLocation()
   const navigate = useNavigate()
 
+  const [pendingInquiryCount, setPendingInquiryCount] = useState(0)
+
   const handleLogout = async () => {
     try {
       await logout()
@@ -36,6 +40,26 @@ export default function AdminLayout() {
   }
 
   const currentLabel = getAdminPageLabel(location.pathname)
+
+  useEffect(() => {
+    let mounted = true
+
+    ;(async () => {
+      try {
+        const data = await getAdminDashboardSummary()
+        if (mounted) {
+          setPendingInquiryCount(data.pendingInquiries ?? 0)
+        }
+      } catch (e) {
+        console.error(e)
+      }
+    })()
+
+    return () => {
+      mounted = false
+    }
+  }, [])
+
 
   return (
     <div className="min-h-screen bg-slate-50">
@@ -78,12 +102,38 @@ export default function AdminLayout() {
             <NavLink to="/admin" end className={({ isActive }) => navClass(isActive)}>
               대시보드
             </NavLink>
-            <NavLink to="/admin/inquiries" className={({ isActive }) => navClass(isActive)}>
-              문의 관리
+            
+            <NavLink to="/admin/inquiries"
+                  className={({ isActive }) =>
+                    [ "flex items-center justify-between rounded-xl px-3 py-2 text-sm font-medium transition",
+                      isActive
+                        ? "bg-slate-900 text-white"
+                        : "text-slate-700 hover:bg-slate-100",
+                    ].join(" ")
+                  }>
+              {({ isActive }) => (
+                <>
+                  <span>문의 관리</span>
+
+                  {pendingInquiryCount > 0 && (
+                  <span
+                    className={[
+                      "ml-2 inline-flex h-5 min-w-[20px] items-center justify-center rounded-full px-1.5 text-[11px] font-semibold",
+                      isActive
+                        ? "bg-white/20 text-white border border-white/10"
+                        : "bg-blue-100 text-blue-700 border border-blue-200",
+                    ].join(" ")}
+                  >
+                    {pendingInquiryCount}
+                  </span>
+                )}
+                </>
+              )}
             </NavLink>
             <NavLink to="/admin/members" className={({ isActive }) => navClass(isActive)}>
               회원 관리
-          </NavLink>
+            </NavLink>
+            
           </nav>
         </aside>
 

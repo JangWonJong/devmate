@@ -26,6 +26,10 @@ export type AdminMemberDetail = {
   status: AdminMemberStatus
   createdAt: string
   updatedAt: string
+  postCount: number
+  commentCount: number
+  inquiryCount: number
+  reservationCount: number
 }
 
 export type ListAdminMembersParams = {

@@ -1,6 +1,6 @@
 import type React from "react"
 import { Navigate, useLocation } from "react-router-dom"
-import { tokenStore } from "../auth/token"
+import { tokenStore } from "../api/auth/token"
 
 
 type Props = {

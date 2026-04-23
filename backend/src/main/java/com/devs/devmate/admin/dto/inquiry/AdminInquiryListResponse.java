@@ -1,4 +1,4 @@
-package com.devs.devmate.admin.dto;
+package com.devs.devmate.admin.dto.inquiry;
 
 
 import com.devs.devmate.inquiry.entity.Inquiry;
@@ -11,36 +11,25 @@ import java.time.LocalDateTime;
 
 @Getter
 @Builder
-public class AdminInquiryDetailResponse {
+public class AdminInquiryListResponse {
 
     private Long id;
-    private Long memberId;
     private String memberNickname;
     private InquiryType type;
     private InquiryStatus status;
     private String content;
-    private String adminReply;
-    private String processedByNickname;
     private LocalDateTime createdAt;
     private LocalDateTime processedAt;
-    private LocalDateTime updatedAt;
 
-    public static AdminInquiryDetailResponse from(Inquiry inquiry) {
-        return AdminInquiryDetailResponse.builder()
+    public static AdminInquiryListResponse from(Inquiry inquiry) {
+        return AdminInquiryListResponse.builder()
                 .id(inquiry.getId())
-                .memberId(inquiry.getMember().getId())
                 .memberNickname(inquiry.getMember().getNickname())
                 .type(inquiry.getType())
                 .status(inquiry.getStatus())
                 .content(inquiry.getContent())
-                .adminReply(inquiry.getAdminReply())
-                .processedByNickname(
-                        inquiry.getProcessedBy() != null ? inquiry.getProcessedBy().getNickname() : null
-                )
                 .createdAt(inquiry.getCreatedAt())
                 .processedAt(inquiry.getProcessedAt())
-                .updatedAt(inquiry.getUpdatedAt())
                 .build();
     }
-
 }

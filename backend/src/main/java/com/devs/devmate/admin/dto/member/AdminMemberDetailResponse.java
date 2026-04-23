@@ -1,4 +1,4 @@
-package com.devs.devmate.admin.dto;
+package com.devs.devmate.admin.dto.member;
 
 
 import com.devs.devmate.member.entity.Member;
@@ -25,7 +25,18 @@ public class AdminMemberDetailResponse {
     private LocalDateTime createdAt;
     private LocalDateTime updatedAt;
 
-    public static AdminMemberDetailResponse from(Member member) {
+    private long postCount;
+    private long commentCount;
+    private long inquiryCount;
+    private long reservationCount;
+
+    public static AdminMemberDetailResponse from(
+            Member member,
+            long postCount,
+            long commentCount,
+            long inquiryCount,
+            long reservationCount
+            ) {
         return AdminMemberDetailResponse.builder()
                 .id(member.getId())
                 .name(member.getName())
@@ -38,6 +49,10 @@ public class AdminMemberDetailResponse {
                 .status(member.getStatus())
                 .createdAt(member.getCreatedAt())
                 .updatedAt(member.getUpdatedAt())
+                .postCount(postCount)
+                .commentCount(commentCount)
+                .inquiryCount(inquiryCount)
+                .reservationCount(reservationCount)
                 .build();
     }
 

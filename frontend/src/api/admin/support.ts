@@ -28,30 +28,13 @@ export type AdminInquiryDetail = {
   updatedAt: string
 }
 
-export function statusLabel(status: InquiryStatus) {
-  if (status === "RECEIVED") return "접수됨"
-  if (status === "IN_PROGRESS") return "처리중"
-  return "완료됨"
-}
-
-export function typeLabel(type: string) {
-  if (type === "BUG") return "버그"
-  if (type === "FEATURE") return "기능 요청"
-  return "기타"
-}
-
-export function formatDateTime(value: string | null) {
-  if (!value) return "-"
-  return new Date(value).toLocaleString()
-}
-
 export async function listAdminInquiries(): Promise<AdminInquiryListItem[]> {
   const { data } = await http.get<ApiResponse<AdminInquiryListItem[]>>(
     "/api/admin/inquiries"
   )
 
   if (!data.success || !data.data) {
-    throw new Error("load fail")
+    throw new Error(data.error?.message ?? "문의 목록 조회 실패")
   }
 
   return data.data
@@ -65,7 +48,7 @@ export async function getAdminInquiryDetail(
   )
 
   if (!data.success || !data.data) {
-    throw new Error("detail load fail")
+    throw new Error(data.error?.message ?? "문의 상세 조회 실패")
   }
 
   return data.data
@@ -74,28 +57,28 @@ export async function getAdminInquiryDetail(
 export async function updateAdminInquiryStatus(req: {
   inquiryId: number
   status: InquiryStatus
-}) {
-  const { data } = await http.patch<ApiResponse<void>>(
+}): Promise<void> {
+  const { data } = await http.patch<ApiResponse<null>>(
     `/api/admin/inquiries/${req.inquiryId}/status`,
     { status: req.status }
   )
 
   if (!data.success) {
-    throw new Error(data.error.message)
+    throw new Error(data.error?.message ?? "문의 상태 변경 실패")
   }
 }
 
 export async function replyAdminInquiry(req: {
   inquiryId: number
   adminReply: string
-}) {
-  const { data } = await http.patch<ApiResponse<void>>(
+}): Promise<void> {
+  const { data } = await http.patch<ApiResponse<null>>(
     `/api/admin/inquiries/${req.inquiryId}/reply`,
     { adminReply: req.adminReply }
   )
 
   if (!data.success) {
-    throw new Error(data.error.message)
+    throw new Error(data.error?.message ?? "문의 답변 등록 실패")
   }
 }
 
@@ -124,12 +107,12 @@ export function getInquiryStatusStyle(status: InquiryStatus) {
 }
 
 export function formatInquiryDate(value: string | null) {
-  if (!value) return ""
+  if (!value) return "-"
 
   const date = new Date(value)
 
   if (Number.isNaN(date.getTime())) {
-    return ""
+    return "-"
   }
 
   const yyyy = date.getFullYear()

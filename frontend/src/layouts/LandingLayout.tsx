@@ -7,7 +7,7 @@ import FlowSection from "../components/landing/FlowSection"
 import PreviewSection from "../components/landing/PreviewSection"
 import CtaSection from "../components/landing/CtaSection"
 import LandingFooter from "../components/landing/LandingFooter"
-import { tokenStore } from "../auth/token"
+import { tokenStore } from "../api/auth/token"
 import SupportFloatingButton from "../components/support/SupportFloatingButton"
 import SupportPanel from "../components/support/SupportPanel"
 

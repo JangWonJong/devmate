@@ -1,6 +1,6 @@
 import { Link, useNavigate } from "react-router-dom"
 import { logout } from "../../api/auth/auth"
-import { tokenStore } from "../../auth/token"
+import { tokenStore } from "../../api/auth/token"
 import { VisitorStats } from "../common/VisitorStats"
 import AppLogo from "../common/AppLogo"
 

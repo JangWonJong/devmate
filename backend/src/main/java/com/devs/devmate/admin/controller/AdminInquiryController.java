@@ -1,10 +1,7 @@
 package com.devs.devmate.admin.controller;
 
 
-import com.devs.devmate.admin.dto.AdminInquiryDetailResponse;
-import com.devs.devmate.admin.dto.AdminInquiryListResponse;
-import com.devs.devmate.admin.dto.AdminInquiryReplyRequest;
-import com.devs.devmate.admin.dto.AdminInquiryStatusUpdateRequest;
+import com.devs.devmate.admin.dto.inquiry.*;
 import com.devs.devmate.admin.service.AdminInquiryService;
 import com.devs.devmate.global.common.ApiResponse;
 import com.devs.devmate.global.security.SecurityUtil;
@@ -36,7 +33,7 @@ public class AdminInquiryController {
     @PatchMapping("/{inquiryId}/status")
     public ApiResponse<Void> updateStatus(
             @PathVariable Long inquiryId,
-            @RequestBody @Valid AdminInquiryStatusUpdateRequest request
+            @RequestBody AdminInquiryUpdateRequest request
     ) {
         Long adminId = SecurityUtil.currentMemberId();
 
@@ -52,7 +49,7 @@ public class AdminInquiryController {
     @PatchMapping("/{inquiryId}/reply")
     public ApiResponse<Void> reply(
             @PathVariable Long inquiryId,
-            @RequestBody @Valid AdminInquiryReplyRequest request
+            @RequestBody AdminInquiryUpdateRequest request
     ) {
         Long adminId = SecurityUtil.currentMemberId();
 

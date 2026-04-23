@@ -10,7 +10,7 @@ import {
   type AvailabilityResponse,
   getRoomAvailability,
 } from "../../api/reservation/reservations"
-import { tokenStore } from "../../auth/token"
+import { tokenStore } from "../../api/auth/token"
 import { getMeId } from "../../api/member/members"
 import { apiErrorMessage } from "../../utils/error"
 import { addHours, today } from "../../utils/reservationUtils"

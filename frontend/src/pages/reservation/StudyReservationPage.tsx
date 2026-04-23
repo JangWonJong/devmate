@@ -17,7 +17,7 @@ import {
 } from "../../utils/reservationUtils"
 import StudyInfoCard from "../../components/study/reservation/StudyInfoCard"
 import StudyReservationCreateSection from "../../components/study/reservation/StudyReservationCreateSection"
-import { tokenStore } from "../../auth/token"
+import { tokenStore } from "../../api/auth/token"
 
 export function StudyReservationPage() {
   const nav = useNavigate()
