@@ -174,6 +174,13 @@ export default function AdminSupportDetailPage() {
             <p className="mt-2 text-sm font-semibold text-slate-900">
               {inquiry.memberNickname}
             </p>
+            <button
+              type="button"
+              onClick={() => navigate(`/admin/members/${inquiry.memberId}`)}
+              className="mt-2 text-xs font-medium text-blue-600 hover:underline"
+            >
+              회원 상세 보기
+            </button>
           </div>
 
           <div className="rounded-2xl border border-slate-200 bg-slate-50 px-4 py-4">
@@ -235,6 +242,9 @@ export default function AdminSupportDetailPage() {
             className="mt-2 w-full rounded-2xl border border-slate-200 px-4 py-3 text-sm outline-none transition focus:border-slate-400"
             placeholder="문의 답변을 입력해주세요."
           />
+          <div className="mt-2 text-right text-xs text-slate-400">
+            {reply.length} / 2000
+          </div>
         </div>
       </section>
     </div>

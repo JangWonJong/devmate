@@ -54,4 +54,14 @@ public class AdminMemberController {
         adminMemberService.updateMemberRole(actorMemberId, memberId, request.getRole());
         return ApiResponse.ok(null);
     }
+
+    @PatchMapping("/{memberId}/memo")
+    public ApiResponse<Void> updateAdminMemo(
+            @PathVariable Long memberId,
+            @RequestBody AdminMemberUpdateRequest request
+    ) {
+        Long adminId = SecurityUtil.currentMemberId();
+        adminMemberService.updateAdminMemo(adminId, memberId, request.getAdminMemo());
+        return ApiResponse.ok(null);
+    }
 }

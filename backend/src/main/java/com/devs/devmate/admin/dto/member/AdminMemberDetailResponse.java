@@ -24,6 +24,7 @@ public class AdminMemberDetailResponse {
     private MemberStatus status;
     private LocalDateTime createdAt;
     private LocalDateTime updatedAt;
+    private String adminMemo;
 
     private long postCount;
     private long commentCount;
@@ -32,6 +33,7 @@ public class AdminMemberDetailResponse {
 
     public static AdminMemberDetailResponse from(
             Member member,
+            String adminMemo,
             long postCount,
             long commentCount,
             long inquiryCount,
@@ -49,6 +51,7 @@ public class AdminMemberDetailResponse {
                 .status(member.getStatus())
                 .createdAt(member.getCreatedAt())
                 .updatedAt(member.getUpdatedAt())
+                .adminMemo(adminMemo)
                 .postCount(postCount)
                 .commentCount(commentCount)
                 .inquiryCount(inquiryCount)

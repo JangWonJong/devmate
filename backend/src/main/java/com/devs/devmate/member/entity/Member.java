@@ -84,4 +84,5 @@ public class Member extends BaseEntity {
         this.profileImageUrl = profileImageUrl;
     }
 
+
 }

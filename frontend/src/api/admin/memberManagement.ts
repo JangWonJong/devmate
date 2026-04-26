@@ -26,6 +26,7 @@ export type AdminMemberDetail = {
   status: AdminMemberStatus
   createdAt: string
   updatedAt: string
+  adminMemo: string | null
   postCount: number
   commentCount: number
   inquiryCount: number
@@ -76,7 +77,7 @@ export async function getAdminMemberDetail(
 }
 
 export function getAdminMemberStatusLabel(status: AdminMemberStatus) {
-  if (status === "ACTIVE") return "활성"
+  if (status === "ACTIVE") return "ACTIVE"
   return "탈퇴"
 }
 
@@ -129,5 +130,20 @@ export async function updateAdminMemberRole(
 
   if (!data.success) {
     throw new Error(data.error?.message ?? "회원 권한 변경 실패")
+  }
+}
+
+
+export async function updateAdminMemberMemo(
+  memberId: number,
+  adminMemo: string
+) {
+  const { data } = await http.patch<ApiResponse<null>>(
+    `/api/admin/members/${memberId}/memo`,
+    { adminMemo }
+  )
+
+  if (!data.success) {
+    throw new Error(data.error?.message ?? "관리자 메모 저장 실패")
   }
 }

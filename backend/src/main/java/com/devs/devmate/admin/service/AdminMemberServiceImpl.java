@@ -2,6 +2,8 @@ package com.devs.devmate.admin.service;
 
 import com.devs.devmate.admin.dto.member.AdminMemberDetailResponse;
 import com.devs.devmate.admin.dto.member.AdminMemberResponse;
+import com.devs.devmate.admin.entity.AdminMemberManagement;
+import com.devs.devmate.admin.repository.AdminMemberManagementRepository;
 import com.devs.devmate.admin.repository.AdminMemberQueryRepository;
 import com.devs.devmate.admin.repository.AdminMemberRepository;
 import com.devs.devmate.comment.repository.CommentRepository;
@@ -31,7 +33,7 @@ public class AdminMemberServiceImpl implements AdminMemberService{
     private final CommentRepository commentRepository;
     private final ReservationRepository reservationRepository;
     private final InquiryRepository inquiryRepository;
-
+    private final AdminMemberManagementRepository adminMemberManagementRepository;
 
     @Override
     public Page<AdminMemberResponse> getMembers(MemberStatus status, String keyword, Pageable pageable) {
@@ -48,8 +50,13 @@ public class AdminMemberServiceImpl implements AdminMemberService{
         long inquiryCount = inquiryRepository.countByMemberId(memberId);
         long reservationCount = reservationRepository.countByMemberId(memberId);
 
+        String adminMemo = adminMemberManagementRepository.findByMemberId(memberId)
+                .map(AdminMemberManagement::getMemo)
+                .orElse("");
+
         return AdminMemberDetailResponse.from(
                 member,
+                adminMemo,
                 postCount,
                 commentCount,
                 inquiryCount,
@@ -94,5 +101,38 @@ public class AdminMemberServiceImpl implements AdminMemberService{
             throw new BusinessException(ErrorCode.SELF_ROLE_CHANGE_NOT_ALLOWED);
         }
         member.changeRole(role);
+    }
+
+    @Override
+    @Transactional
+    public void updateAdminMemo(Long adminId, Long memberId, String adminMemo) {
+
+        Member member = adminMemberRepository.findById(memberId)
+                .orElseThrow(() -> new BusinessException(ErrorCode.MEMBER_NOT_FOUND));
+
+        Member admin = adminMemberRepository.findById(adminId)
+                .orElseThrow(() -> new BusinessException(ErrorCode.MEMBER_NOT_FOUND));
+
+        if (admin.getRole() != Role.ADMIN) {
+            throw new BusinessException(ErrorCode.ADMIN_FORBIDDEN);
+        }
+
+        String memo = adminMemo == null ? "" : adminMemo.trim();
+
+        if (memo.length() > 500) {
+            throw new BusinessException(ErrorCode.INVALID_ADMIN_MEMO_LENGTH);
+        }
+
+        AdminMemberManagement management = adminMemberManagementRepository
+                .findByMemberId(memberId)
+                .orElseGet(() -> AdminMemberManagement.builder()
+                        .member(member)
+                        .admin(admin)
+                        .memo("")
+                        .build());
+
+        management.updateAdminMemo(memo, admin);
+
+        adminMemberManagementRepository.save(management);
     }
 }

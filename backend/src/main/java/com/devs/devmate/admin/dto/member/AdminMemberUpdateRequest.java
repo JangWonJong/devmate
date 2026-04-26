@@ -13,4 +13,6 @@ public class AdminMemberUpdateRequest {
 
     private Role role;
 
+    private String adminMemo;
+
 }

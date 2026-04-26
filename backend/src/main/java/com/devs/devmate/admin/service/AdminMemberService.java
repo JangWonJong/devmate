@@ -16,4 +16,6 @@ public interface AdminMemberService {
     void updateMemberStatus(Long memberId, MemberStatus status);
 
     void updateMemberRole(Long actorMemberId, Long targetMemberId, Role role);
+
+    void updateAdminMemo(Long adminId, Long memberId, String adminMemo);
 }
