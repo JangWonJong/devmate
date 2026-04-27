@@ -5,21 +5,15 @@ import {
   getAdminMemberDetail,
   getAdminMemberStatusLabel,
   getAdminMemberStatusStyle,
+  updateAdminMemberMemo,
   updateAdminMemberRole,
   updateAdminMemberStatus,
-  updateAdminMemberMemo,
   type AdminMemberDetail,
 } from "../../api/admin/memberManagement"
 import { getCurrentMemberId } from "../../api/auth/currentUser"
 import { imageUrl } from "../../utils/image"
 
-function InfoCard({
-  label,
-  value,
-}: {
-  label: string
-  value: string
-}) {
+function InfoCard({ label, value }: { label: string; value: string }) {
   return (
     <div className="rounded-2xl border border-slate-200 bg-slate-50 px-4 py-4">
       <p className="text-xs font-medium text-slate-500">{label}</p>
@@ -30,18 +24,20 @@ function InfoCard({
   )
 }
 
-function StatCard({
-  label,
-  value,
-}: {
-  label: string
-  value: number
-}) {
+function StatCard({ label, value }: { label: string; value: number }) {
   return (
     <div className="rounded-2xl border border-slate-200 bg-slate-50 px-4 py-4">
       <p className="text-xs font-medium text-slate-500">{label}</p>
       <p className="mt-3 text-3xl font-bold text-slate-900">{value}</p>
     </div>
+  )
+}
+
+function ActivityEmpty({ text }: { text: string }) {
+  return (
+    <p className="rounded-2xl border border-dashed border-slate-200 bg-slate-50 px-4 py-6 text-center text-sm text-slate-400">
+      {text}
+    </p>
   )
 }
 
@@ -115,7 +111,6 @@ export default function AdminMemberDetailPage() {
 
     try {
       setSaving(true)
-
       await updateAdminMemberStatus(member.id, nextStatus)
       await fetchMemberDetail(member.id)
 
@@ -171,7 +166,6 @@ export default function AdminMemberDetailPage() {
 
     try {
       setSaving(true)
-
       await updateAdminMemberRole(member.id, nextRole)
       await fetchMemberDetail(member.id)
 
@@ -193,7 +187,6 @@ export default function AdminMemberDetailPage() {
 
     try {
       setSaving(true)
-
       await updateAdminMemberMemo(member.id, adminMemo.trim())
       await fetchMemberDetail(member.id)
 
@@ -356,6 +349,115 @@ export default function AdminMemberDetailPage() {
           <p className="text-xs font-medium text-slate-500">소개</p>
           <div className="mt-2 whitespace-pre-wrap rounded-2xl border border-slate-200 bg-slate-50 p-4 text-sm text-slate-700">
             {member.bio?.trim() ? member.bio : "등록된 소개가 없습니다."}
+          </div>
+        </div>
+      </section>
+
+      <section className="rounded-3xl border border-slate-200 bg-white p-6 shadow-sm">
+        <div className="mb-4">
+          <h2 className="text-lg font-bold text-slate-900">최근 활동</h2>
+          <p className="mt-1 text-sm text-slate-500">
+            회원의 최근 서비스 이용 내역입니다.
+          </p>
+        </div>
+
+        <div className="grid gap-6 xl:grid-cols-3">
+          <div>
+            <h3 className="mb-3 text-sm font-semibold text-slate-700">
+              최근 게시글
+            </h3>
+
+            <div className="space-y-3">
+              {member.recentPosts.length === 0 ? (
+                <ActivityEmpty text="최근 게시글이 없습니다." />
+              ) : (
+                member.recentPosts.map((post) => (
+                  <button
+                    key={post.id}
+                    type="button"
+                    onClick={() => navigate(`/posts/${post.id}`)}
+                    className="min-h-[76px] w-full rounded-2xl border border-slate-200 bg-slate-50 px-4 py-3 text-left transition hover:bg-white hover:shadow-sm"
+                  >
+                    <p className="line-clamp-1 text-sm font-semibold text-slate-900">
+                      {post.title}
+                    </p>
+                    <p className="mt-2 text-xs text-slate-400">
+                      {formatAdminMemberDate(post.createdAt)}
+                    </p>
+                  </button>
+                ))
+              )}
+            </div>
+          </div>
+
+          <div>
+            <h3 className="mb-3 text-sm font-semibold text-slate-700">
+              최근 문의
+            </h3>
+
+            <div className="space-y-3">
+              {member.recentInquiries.length === 0 ? (
+                <ActivityEmpty text="최근 문의가 없습니다." />
+              ) : (
+                member.recentInquiries.map((inquiry) => (
+                  <button
+                    key={inquiry.id}
+                    type="button"
+                    onClick={() => navigate(`/admin/inquiries/${inquiry.id}`)}
+                    className="min-h-[76px] w-full rounded-2xl border border-slate-200 bg-slate-50 px-4 py-3 text-left transition hover:bg-white hover:shadow-sm"
+                  >
+                    <p className="line-clamp-2 text-sm text-slate-700">
+                      {inquiry.content}
+                    </p>
+                    <p className="mt-2 text-xs text-slate-400">
+                      {formatAdminMemberDate(inquiry.createdAt)}
+                    </p>
+                  </button>
+                ))
+              )}
+            </div>
+          </div>
+
+          <div>
+            <h3 className="mb-3 text-sm font-semibold text-slate-700">
+              최근 예약
+            </h3>
+
+            <div className="space-y-3">
+              {member.recentReservations.length === 0 ? (
+                <ActivityEmpty text="최근 예약이 없습니다." />
+              ) : (
+                member.recentReservations.map((reservation) => (
+                  <div
+                    key={reservation.id}
+                    className="min-h-[76px] rounded-2xl border border-slate-200 bg-slate-50 px-4 py-3"
+                  >
+                    <p className="line-clamp-2 text-sm font-semibold text-slate-900">
+                      {reservation.title}
+                    </p>
+
+                    <p className="mt-2 text-xs text-slate-500">
+                      {reservation.roomName} · {reservation.date}
+                    </p>
+
+                    <p className="mt-1 text-xs text-slate-400">
+                      {reservation.startTime.slice(0, 5)} ~{" "}
+                      {reservation.endTime.slice(0, 5)}
+                    </p>
+                    <span
+                      className={[
+                        "mt-2 inline-flex rounded-full px-2 py-0.5 text-[11px] font-semibold",
+                        reservation.status === "ACTIVE"
+                          ? "border border-emerald-200 bg-emerald-50 text-emerald-700"
+                          : "border border-slate-200 bg-white text-slate-500",
+                      ].join(" ")}
+                    >
+                      {reservation.status === "ACTIVE" ? "예약중" : "취소됨"}
+                    </span>
+                  </div>
+                ))
+              )}
+            </div>
           </div>
         </div>
       </section>

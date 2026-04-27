@@ -8,6 +8,7 @@ import lombok.Builder;
 import lombok.Getter;
 
 import java.time.LocalDateTime;
+import java.util.List;
 
 @Getter
 @Builder
@@ -31,13 +32,20 @@ public class AdminMemberDetailResponse {
     private long inquiryCount;
     private long reservationCount;
 
+    private List<AdminMemberRecentPostResponse> recentPosts;
+    private List<AdminMemberRecentInquiryResponse> recentInquiries;
+    private List<AdminMemberRecentReservationResponse> recentReservations;
+
     public static AdminMemberDetailResponse from(
             Member member,
             String adminMemo,
             long postCount,
             long commentCount,
             long inquiryCount,
-            long reservationCount
+            long reservationCount,
+            List<AdminMemberRecentPostResponse> recentPosts,
+            List<AdminMemberRecentInquiryResponse> recentInquiries,
+            List<AdminMemberRecentReservationResponse> recentReservations
             ) {
         return AdminMemberDetailResponse.builder()
                 .id(member.getId())
@@ -56,6 +64,9 @@ public class AdminMemberDetailResponse {
                 .commentCount(commentCount)
                 .inquiryCount(inquiryCount)
                 .reservationCount(reservationCount)
+                .recentPosts(recentPosts)
+                .recentInquiries(recentInquiries)
+                .recentReservations(recentReservations)
                 .build();
     }
 

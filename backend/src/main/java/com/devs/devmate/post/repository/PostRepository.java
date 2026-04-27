@@ -28,6 +28,8 @@
 
         long countByMemberId(Long memberId);
 
+        List<Post> findAllByMemberIdOrderByCreatedAtDesc(Long memberId, Pageable pageable);
+
         @Query("""
             select p from Post p
                 where lower(p.title) like lower(concat('%', :keyword, '%'))

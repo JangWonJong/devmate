@@ -18,4 +18,6 @@ public interface InquiryRepository extends JpaRepository<Inquiry, Long> {
     long countByMemberId(Long memberId);
 
     List<Inquiry> findAllByOrderByCreatedAtDesc(Pageable pageable);
+
+    List<Inquiry> findAllByMemberIdOrderByCreatedAtDesc(Long memberId, Pageable pageable);
 }

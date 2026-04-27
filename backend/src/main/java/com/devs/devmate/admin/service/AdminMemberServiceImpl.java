@@ -1,7 +1,6 @@
 package com.devs.devmate.admin.service;
 
-import com.devs.devmate.admin.dto.member.AdminMemberDetailResponse;
-import com.devs.devmate.admin.dto.member.AdminMemberResponse;
+import com.devs.devmate.admin.dto.member.*;
 import com.devs.devmate.admin.entity.AdminMemberManagement;
 import com.devs.devmate.admin.repository.AdminMemberManagementRepository;
 import com.devs.devmate.admin.repository.AdminMemberQueryRepository;
@@ -17,9 +16,12 @@ import com.devs.devmate.post.repository.PostRepository;
 import com.devs.devmate.reservation.repository.ReservationRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+
+import java.util.List;
 
 
 @Service
@@ -54,13 +56,37 @@ public class AdminMemberServiceImpl implements AdminMemberService{
                 .map(AdminMemberManagement::getMemo)
                 .orElse("");
 
+        PageRequest recentLimit = PageRequest.of(0, 3);
+
+        List<AdminMemberRecentPostResponse> recentPosts = postRepository
+                .findAllByMemberIdOrderByCreatedAtDesc(memberId, recentLimit)
+                .stream()
+                .map(AdminMemberRecentPostResponse::from)
+                .toList();
+
+        List<AdminMemberRecentInquiryResponse> recentInquiries = inquiryRepository
+                .findAllByMemberIdOrderByCreatedAtDesc(memberId, recentLimit)
+                .stream()
+                .map(AdminMemberRecentInquiryResponse::from)
+                .toList();
+
+        List<AdminMemberRecentReservationResponse> recentReservations = reservationRepository
+                .findAllByMemberIdOrderByCreatedAtDesc(memberId, recentLimit)
+                .stream()
+                .map(AdminMemberRecentReservationResponse::from)
+                .toList();
+
         return AdminMemberDetailResponse.from(
                 member,
                 adminMemo,
                 postCount,
                 commentCount,
                 inquiryCount,
-                reservationCount);
+                reservationCount,
+                recentPosts,
+                recentInquiries,
+                recentReservations
+                );
     }
 
     @Override

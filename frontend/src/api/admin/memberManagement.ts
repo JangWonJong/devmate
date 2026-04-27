@@ -31,6 +31,9 @@ export type AdminMemberDetail = {
   commentCount: number
   inquiryCount: number
   reservationCount: number
+  recentPosts: AdminMemberRecentPost[]
+  recentInquiries: AdminMemberRecentInquiry[]
+  recentReservations: AdminMemberRecentReservation[]
 }
 
 export type ListAdminMembersParams = {
@@ -38,6 +41,28 @@ export type ListAdminMembersParams = {
   size?: number
   status?: AdminMemberStatus | ""
   keyword?: string
+}
+
+export type AdminMemberRecentPost = {
+  id: number
+  title: string
+  createdAt: string
+}
+
+export type AdminMemberRecentInquiry = {
+  id: number
+  content: string
+  createdAt: string
+}
+
+export type AdminMemberRecentReservation = {
+  id: number
+  title: string
+  roomName: string
+  date: string
+  startTime: string
+  endTime: string
+  status: "ACTIVE" | "CANCELED"
 }
 
 export async function listAdminMembers(
