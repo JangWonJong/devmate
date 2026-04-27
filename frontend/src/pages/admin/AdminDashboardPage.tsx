@@ -10,18 +10,37 @@ function SummaryCard({
   label,
   value,
   helper,
+  to,
 }: {
   label: string
   value: string | number
   helper?: string
+  to?: string
 }) {
-  return (
-    <section className="rounded-3xl border border-slate-200 bg-white px-6 py-5 shadow-sm">
+  const content = (
+    <>
       <p className="text-sm font-medium text-slate-500">{label}</p>
       <p className="mt-4 text-3xl font-bold tracking-tight text-slate-900">
         {value}
       </p>
       {helper && <p className="mt-2 text-xs text-slate-400">{helper}</p>}
+    </>
+  )
+
+  if (to) {
+    return (
+      <Link
+        to={to}
+        className="block rounded-3xl border border-slate-200 bg-white px-6 py-5 shadow-sm transition hover:-translate-y-0.5 hover:border-slate-300 hover:shadow-md"
+      >
+        {content}
+      </Link>
+    )
+  }
+
+  return (
+    <section className="rounded-3xl border border-slate-200 bg-white px-6 py-5 shadow-sm">
+      {content}
     </section>
   )
 }
@@ -154,15 +173,37 @@ export default function AdminDashboardPage() {
           <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-4">
             <SummaryCard label="오늘 방문자 수" value={summary.dailyVisitors} />
             <SummaryCard label="누적 방문자 수" value={summary.totalVisitors} />
-            <SummaryCard label="전체 회원 수" value={summary.totalMembers} />
-            <SummaryCard label="ACTIVE 회원 수" value={summary.activeMembers} />
-            <SummaryCard label="탈퇴 회원 수" value={summary.deletedMembers} />
+
+            <SummaryCard
+              label="전체 회원 수"
+              value={summary.totalMembers}
+              to="/admin/members?status=ALL"
+            />
+
+            <SummaryCard
+              label="ACTIVE 회원 수"
+              value={summary.activeMembers}
+              to="/admin/members?status=ACTIVE"
+            />
+
+            <SummaryCard
+              label="탈퇴 회원 수"
+              value={summary.deletedMembers}
+              to="/admin/members?status=DELETED"
+            />
+
             <SummaryCard
               label="미처리 문의 수"
               value={summary.pendingInquiries}
               helper="접수됨 + 처리중"
+              to="/admin/inquiries?status=UNRESOLVED"
             />
-            <SummaryCard label="오늘 가입자 수" value={summary.todaySignups ?? 0} />
+
+            <SummaryCard
+              label="오늘 가입자 수"
+              value={summary.todaySignups}
+              to="/admin/members"
+            />
           </div>
 
           <div className="grid gap-6 xl:grid-cols-2">
@@ -179,24 +220,21 @@ export default function AdminDashboardPage() {
                   <div className="space-y-4">
                   {(summary.recentMembers ?? []).map((member) => (
                     <Link
-                      key={member.id}
                       to={`/admin/members/${member.id}`}
-                      className="block rounded-2xl transition hover:bg-slate-50"
+                      key={member.id}
+                      className="block rounded-2xl border border-slate-200 bg-slate-50 px-4 py-4 transition hover:-translate-y-0.5 hover:border-slate-300 hover:bg-white hover:shadow-sm"
                     >
-                      <div className="flex items-center justify-between border-b border-slate-100 px-2 py-3 last:border-0">
-                        <div className="min-w-0">
-                          <p className="font-semibold text-slate-900">
-                            {member.nickname}
-                          </p>
-                          <p className="truncate text-sm text-slate-500">
-                            {member.email}
-                          </p>
-                        </div>
+                      <p className="text-sm font-semibold text-slate-900">
+                        {member.nickname}
+                      </p>
 
-                        <p className="shrink-0 text-xs text-slate-400">
-                          {formatInquiryDate(member.createdAt)}
-                        </p>
-                      </div>
+                      <p className="mt-1 text-xs text-slate-500">
+                        {member.email}
+                      </p>
+
+                      <p className="mt-3 text-xs text-slate-400">
+                        가입일 : {formatInquiryDate(member.createdAt)}
+                      </p>
                     </Link>
                   ))}
                 </div>
@@ -215,29 +253,57 @@ export default function AdminDashboardPage() {
                   />
                 ) : (
                   <div className="space-y-4">
-                    {(summary.recentInquiries ?? []).map((inquiry) => (
-                      <Link
-                        key={inquiry.id}
-                        to={`/admin/inquiries/${inquiry.id}`}
-                        className="block rounded-2xl transition hover:bg-slate-50"
-                      >
-                        <div className="border-b border-slate-100 px-2 py-3 last:border-0">
-                          <div className="flex items-center justify-between gap-3">
-                            <p className="font-semibold text-slate-900">
-                              {inquiry.memberNickname}
+                    {[...(summary.recentInquiries ?? [])]
+                      .sort((a, b) => {
+                        const order = {
+                          RECEIVED: 0,
+                          IN_PROGRESS: 1,
+                          RESOLVED: 2,
+                        }
+
+                        const statusDiff = order[a.status] - order[b.status]
+                        if (statusDiff !== 0) return statusDiff
+
+                        return new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime()
+                      })
+                      .map((inquiry) => (
+                        <Link
+                          to={`/admin/inquiries/${inquiry.id}`}
+                          key={inquiry.id}
+                          className="block rounded-2xl border border-slate-200 bg-slate-50 px-4 py-4 transition hover:-translate-y-0.5 hover:border-slate-300 hover:bg-white hover:shadow-sm"
+                        >
+                          <div className="flex items-start justify-between gap-3">
+                            <p className="line-clamp-1 text-sm font-semibold text-slate-900">
+                              {inquiry.content}
                             </p>
 
-                            <p className="shrink-0 text-xs text-slate-400">
-                              {formatInquiryDate(inquiry.createdAt)}
-                            </p>
+                            <span
+                              className={[
+                                "shrink-0 rounded-full px-2 py-0.5 text-[11px] font-semibold",
+                                inquiry.status === "RECEIVED"
+                                  ? "border border-slate-200 bg-slate-100 text-slate-700"
+                                  : inquiry.status === "IN_PROGRESS"
+                                    ? "border border-amber-200 bg-amber-50 text-amber-700"
+                                    : "border border-emerald-200 bg-emerald-50 text-emerald-700",
+                              ].join(" ")}
+                            >
+                              {inquiry.status === "RECEIVED"
+                                ? "접수됨"
+                                : inquiry.status === "IN_PROGRESS"
+                                  ? "처리중"
+                                  : "완료됨"}
+                            </span>
                           </div>
 
-                          <p className="mt-2 line-clamp-2 text-sm text-slate-500">
-                            {inquiry.content}
+                          <p className="mt-2 text-xs text-slate-500">
+                            닉네임 : {inquiry.memberNickname}
                           </p>
-                        </div>
-                      </Link>
-                    ))}
+
+                          <p className="mt-2 text-xs text-slate-400">
+                            등록일 : {formatInquiryDate(inquiry.createdAt)}
+                          </p>
+                        </Link>
+                      ))}
                   </div>
                 )}
               </div>
