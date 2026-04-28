@@ -26,7 +26,8 @@ public enum ErrorCode {
     TOKEN_EXPIRED(HttpStatus.UNAUTHORIZED, "AUTH_401_2", "로그인이 만료되었습니다."),
     TOKEN_INVALID(HttpStatus.UNAUTHORIZED, "AUTH_401_3", "유효하지 않은 토큰입니다."),
     MEMBER_NOT_EXISTS(HttpStatus.UNAUTHORIZED, "AUTH_401_4", "계정이 존재하지 않습니다."),
-    DELETED_MEMBER(HttpStatus.UNAUTHORIZED, "AUTH_401_4", "탈퇴한 계정입니다."),
+    DELETED_MEMBER(HttpStatus.UNAUTHORIZED, "AUTH_401_5", "탈퇴한 계정입니다."),
+    SUSPENDED_MEMBER(HttpStatus.UNAUTHORIZED, "AUTH_401_6", "정지된 계정입니다."),
 
     // MEMBER
     PASSWORD_CONFIRM_MISMATCH(HttpStatus.BAD_REQUEST, "MEMBER_400", "비밀번호가 일치하지 않습니다."),
@@ -94,6 +95,7 @@ public enum ErrorCode {
     INQUIRY_CANCEL_NOT_ALLOWED(HttpStatus.BAD_REQUEST, "INQUIRY_400", "해당 문의는 취소할 수 없습니다."),
     INVALID_INQUIRY_STATUS_CHANGE(HttpStatus.BAD_REQUEST, "INQUIRY_400_2", "문의 상태 변경 요청이 올바르지 않습니다."),
     INVALID_INQUIRY_REPLY(HttpStatus.BAD_REQUEST, "INQUIRY_400_3", "문의 답변 요청이 올바르지 않습니다."),
+
     // NOTIFICATION
     NOTIFICATION_NOT_FOUND(HttpStatus.NOT_FOUND, "NOTIFICATION_404","알림을 찾을 수 없습니다.");
 

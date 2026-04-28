@@ -144,6 +144,8 @@ public class AdminMemberServiceImpl implements AdminMemberService{
             member.restore();
         } else if (status == MemberStatus.DELETED) {
             member.withdraw();
+        } else if (status == MemberStatus.SUSPENDED) {
+            member.suspend();
         } else {
             throw new BusinessException(ErrorCode.INVALID_MEMBER_STATUS_CHANGE);
         }

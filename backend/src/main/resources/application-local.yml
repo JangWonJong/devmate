@@ -24,6 +24,11 @@ spring:
       port: 6379
       timeout: 2s
 
+  flyway:
+    enabled: true
+    baseline-on-migrate: true
+    locations: classpath:db/migration
+
 jwt:
   secret: "devmate-secret-key-change-this-in-real"
   access-exp-min: 15

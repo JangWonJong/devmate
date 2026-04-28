@@ -2,7 +2,7 @@ import { http } from "../http"
 import type { PageResponse } from "../page"
 import type { ApiResponse } from "../type"
 
-export type AdminMemberStatus = "ACTIVE" | "DELETED"
+export type AdminMemberStatus = "ACTIVE" | "DELETED" | "SUSPENDED"
 export type AdminMemberRole = "USER" | "ADMIN"
 
 export type AdminMember = {
@@ -111,7 +111,8 @@ export async function getAdminMemberDetail(
 }
 
 export function getAdminMemberStatusLabel(status: AdminMemberStatus) {
-  if (status === "ACTIVE") return "ACTIVE"
+  if (status === "ACTIVE") return "이용중"
+  if (status === "SUSPENDED") return "이용정지"
   return "탈퇴"
 }
 
@@ -119,7 +120,9 @@ export function getAdminMemberStatusStyle(status: AdminMemberStatus) {
   if (status === "ACTIVE") {
     return "bg-emerald-50 text-emerald-700 border border-emerald-200"
   }
-
+  if (status === "SUSPENDED") {
+    return "bg-amber-50 text-amber-700 border border-amber-200"
+  }
   return "bg-slate-100 text-slate-600 border border-slate-200"
 }
 

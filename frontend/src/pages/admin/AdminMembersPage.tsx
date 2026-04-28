@@ -15,6 +15,7 @@ function isMemberFilter(value: string | null): value is MemberFilter {
   return (
     value === "ALL" ||
     value === "ACTIVE" ||
+    value === "SUSPENDED" ||
     value === "DELETED" ||
     value === "ADMIN"
   )
@@ -96,7 +97,7 @@ export default function AdminMembersPage() {
   const [keyword, setKeyword] = useState("")
 
   const requestStatus: AdminMemberStatus | "" =
-    filter === "ACTIVE" || filter === "DELETED" ? filter : ""
+    filter === "ACTIVE" || filter === "DELETED" || filter === "SUSPENDED" ? filter : ""
 
   const visibleMembers =
     filter === "ADMIN"
@@ -108,6 +109,8 @@ export default function AdminMembersPage() {
     active: summaryMembers.filter((member) => member.status === "ACTIVE")
       .length,
     deleted: summaryMembers.filter((member) => member.status === "DELETED")
+      .length,
+    suspended: summaryMembers.filter((member) => member.status === "SUSPENDED")
       .length,
     admin: summaryMembers.filter((member) => member.role === "ADMIN").length,
   }
@@ -209,9 +212,10 @@ export default function AdminMembersPage() {
         </p>
       </section>
 
-      <div className="grid grid-cols-2 gap-4 xl:grid-cols-4">
+      <div className="grid grid-cols-2 gap-4 xl:grid-cols-5">
         <MemberSummaryCard label="조회 회원 수" value={summary.total} />
         <MemberSummaryCard label="이용중 회원" value={summary.active} />
+        <MemberSummaryCard label="정지된 회원" value={summary.suspended} />
         <MemberSummaryCard label="탈퇴 회원" value={summary.deleted} />
         <MemberSummaryCard label="관리자 계정" value={summary.admin} />
       </div>
@@ -249,6 +253,12 @@ export default function AdminMembersPage() {
               label="이용중"
               count={summary.active}
               onClick={() => handleFilterChange("ACTIVE")}
+            />
+            <MemberFilterButton
+              active={filter === "SUSPENDED"}
+              label="정지"
+              count={summary.suspended}
+              onClick={() => handleFilterChange("SUSPENDED")}
             />
             <MemberFilterButton
               active={filter === "DELETED"}

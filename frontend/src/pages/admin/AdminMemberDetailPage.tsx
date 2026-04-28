@@ -160,6 +160,8 @@ export default function AdminMemberDetailPage() {
   const isSelfAdmin = currentMemberId === member.id && member.role === "ADMIN"
   const isActionDisabled = saving
   const isDeletedMember = member.status === "DELETED"
+  const isSuspendedMember = member.status === "SUSPENDED"
+
 
   async function handleToggleRole() {
     if (!member) return
@@ -197,6 +199,38 @@ export default function AdminMemberDetailPage() {
     } catch (e) {
       console.error(e)
       alert("회원 권한 변경에 실패했습니다.")
+    } finally {
+      setSaving(false)
+    }
+  }
+
+  async function handleSuspendMember() {
+    if (!member) return
+
+    const nextStatus = member.status === "SUSPENDED" ? "ACTIVE" : "SUSPENDED"
+
+    const confirmed = window.confirm(
+      nextStatus === "SUSPENDED"
+        ? "해당 회원을 정지 처리하시겠습니까?"
+        : "해당 회원의 정지를 해제하시겠습니까?"
+    )
+
+    if (!confirmed) return
+
+    try {
+      setSaving(true)
+
+      await updateAdminMemberStatus(member.id, nextStatus)
+      await fetchMemberDetail(member.id)
+
+      alert(
+        nextStatus === "SUSPENDED"
+          ? "회원이 정지 처리되었습니다."
+          : "회원 정지가 해제되었습니다."
+      )
+    } catch (e) {
+      console.error(e)
+      alert("회원 정지 상태 변경에 실패했습니다.")
     } finally {
       setSaving(false)
     }
@@ -245,7 +279,7 @@ export default function AdminMemberDetailPage() {
             <button
               type="button"
               onClick={handleToggleRole}
-              disabled={isActionDisabled || isSelfAdmin || isDeletedMember}
+              disabled={isActionDisabled || isSelfAdmin || isDeletedMember || isSuspendedMember}
               className="rounded-2xl border border-slate-200 bg-white px-4 py-2 text-sm font-semibold text-slate-700 transition hover:bg-slate-50 disabled:cursor-not-allowed disabled:opacity-50"
             >
               {saving
@@ -254,9 +288,11 @@ export default function AdminMemberDetailPage() {
                   ? "본인 권한 변경 불가"
                   : isDeletedMember
                     ? "탈퇴 회원 권한 변경 불가"
-                      : member.role === "USER"
-                        ? "관리자 권한 부여"
-                        : "일반 회원 권한 변경"}
+                      : isSuspendedMember
+                        ? "정지 회원 권한 변경 불가"
+                          : member.role === "USER"
+                            ? "관리자 권한 부여"
+                            : "일반 회원 권한 변경"}
             </button>
 
             <button
@@ -266,6 +302,25 @@ export default function AdminMemberDetailPage() {
             >
               서비스 프로필 보기
             </button>
+            
+            {!isDeletedMember && (
+              <button
+                type="button"
+                onClick={handleSuspendMember}
+                disabled={saving}
+                className={
+                  isSuspendedMember
+                    ? "rounded-2xl border border-emerald-200 bg-emerald-50 px-4 py-2 text-sm font-semibold text-emerald-700 transition hover:bg-emerald-100 disabled:cursor-not-allowed disabled:opacity-50"
+                    : "rounded-2xl border border-amber-200 bg-amber-50 px-4 py-2 text-sm font-semibold text-amber-700 transition hover:bg-amber-100 disabled:cursor-not-allowed disabled:opacity-50"
+                }
+              >
+                {saving
+                  ? "처리 중..."
+                  : isSuspendedMember
+                    ? "정지 해제"
+                    : "정지 처리"}
+              </button>
+            )}
 
             <button
               type="button"

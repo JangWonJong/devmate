@@ -44,11 +44,16 @@ public class AuthServiceImpl implements AuthService{
 
     @Override
     public LoginResponse login(LoginRequest request) {
+
         String email = request.getEmail().trim().toLowerCase();
 
-        //Member member = memberRepository.findByEmailAndStatus(email, MemberStatus.ACTIVE)
         Member member = memberRepository.findByEmail(email)
                 .orElseThrow(() -> new BusinessException(ErrorCode.MEMBER_NOT_EXISTS));
+
+        if (member.getStatus() == MemberStatus.SUSPENDED) {
+            throw new BusinessException(ErrorCode.SUSPENDED_MEMBER);
+        }
+
         if (member.getStatus() == MemberStatus.DELETED) {
             throw new BusinessException(ErrorCode.DELETED_MEMBER);
         }
