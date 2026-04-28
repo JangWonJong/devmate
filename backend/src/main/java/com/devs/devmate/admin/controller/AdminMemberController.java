@@ -41,7 +41,8 @@ public class AdminMemberController {
             @PathVariable Long memberId,
             @RequestBody AdminMemberUpdateRequest request
     ) {
-        adminMemberService.updateMemberStatus(memberId, request.getStatus());
+        Long adminId = SecurityUtil.currentMemberId();
+        adminMemberService.updateMemberStatus(adminId, memberId, request.getStatus());
         return ApiResponse.ok(null);
     }
 

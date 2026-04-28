@@ -19,6 +19,7 @@ public enum ErrorCode {
     SELF_ROLE_CHANGE_NOT_ALLOWED(HttpStatus.BAD_REQUEST, "ADMIN_400_3", "본인 권한은 변경할 수 없습니다."),
     INVALID_ADMIN_MEMO(HttpStatus.BAD_REQUEST, "ADMIN_400_4", "관리자 메모 요청이 올바르지 않습니다."),
     INVALID_ADMIN_MEMO_LENGTH(HttpStatus.BAD_REQUEST, "ADMIN_400_5", "관리자 메모는 500자 이하로 입력해주세요."),
+    DELETED_MEMBER_ROLE_CHANGE_NOT_ALLOWED(HttpStatus.BAD_REQUEST, "ADMIN_400_6", "탈퇴한 회원의 권한은 변경할 수 없습니다."),
 
     // AUTH
     AUTH_FAILED(HttpStatus.UNAUTHORIZED, "AUTH_401_1", "이메일 또는 비밀번호가 올바르지 않습니다."),

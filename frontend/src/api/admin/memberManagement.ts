@@ -14,6 +14,14 @@ export type AdminMember = {
   createdAt: string
 }
 
+export type AdminActionLog = {
+  id: number
+  actionType: string
+  description: string
+  adminNickname: string
+  createdAt: string
+}
+
 export type AdminMemberDetail = {
   id: number
   name: string
@@ -34,6 +42,7 @@ export type AdminMemberDetail = {
   recentPosts: AdminMemberRecentPost[]
   recentInquiries: AdminMemberRecentInquiry[]
   recentReservations: AdminMemberRecentReservation[]
+  actionLogs: AdminActionLog[]
 }
 
 export type ListAdminMembersParams = {

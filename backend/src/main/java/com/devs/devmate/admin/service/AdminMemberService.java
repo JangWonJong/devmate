@@ -13,7 +13,7 @@ public interface AdminMemberService {
 
     AdminMemberDetailResponse getMemberDetail(Long memberId);
 
-    void updateMemberStatus(Long memberId, MemberStatus status);
+    void updateMemberStatus(Long adminId, Long memberId, MemberStatus status);
 
     void updateMemberRole(Long actorMemberId, Long targetMemberId, Role role);
 

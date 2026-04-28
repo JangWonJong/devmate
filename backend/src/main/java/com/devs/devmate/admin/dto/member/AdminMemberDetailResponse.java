@@ -1,6 +1,7 @@
 package com.devs.devmate.admin.dto.member;
 
 
+import com.devs.devmate.admin.dto.log.AdminActionLogResponse;
 import com.devs.devmate.member.entity.Member;
 import com.devs.devmate.member.entity.MemberStatus;
 import com.devs.devmate.member.entity.Role;
@@ -35,7 +36,7 @@ public class AdminMemberDetailResponse {
     private List<AdminMemberRecentPostResponse> recentPosts;
     private List<AdminMemberRecentInquiryResponse> recentInquiries;
     private List<AdminMemberRecentReservationResponse> recentReservations;
-
+    private List<AdminActionLogResponse> actionLogs;
     public static AdminMemberDetailResponse from(
             Member member,
             String adminMemo,
@@ -45,8 +46,9 @@ public class AdminMemberDetailResponse {
             long reservationCount,
             List<AdminMemberRecentPostResponse> recentPosts,
             List<AdminMemberRecentInquiryResponse> recentInquiries,
-            List<AdminMemberRecentReservationResponse> recentReservations
-            ) {
+            List<AdminMemberRecentReservationResponse> recentReservations,
+            List<AdminActionLogResponse> actionLogs) {
+
         return AdminMemberDetailResponse.builder()
                 .id(member.getId())
                 .name(member.getName())
@@ -67,6 +69,7 @@ public class AdminMemberDetailResponse {
                 .recentPosts(recentPosts)
                 .recentInquiries(recentInquiries)
                 .recentReservations(recentReservations)
+                .actionLogs(actionLogs)
                 .build();
     }
 

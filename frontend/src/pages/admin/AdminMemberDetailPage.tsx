@@ -41,6 +41,19 @@ function ActivityEmpty({ text }: { text: string }) {
   )
 }
 
+function getActionTypeLabel(type: string) {
+  switch (type) {
+    case "MEMBER_STATUS_CHANGE":
+      return "상태 변경"
+    case "MEMBER_ROLE_CHANGE":
+      return "권한 변경"
+    case "ADMIN_MEMO_UPDATE":
+      return "메모 수정"
+    default:
+      return type
+  }
+}
+
 export default function AdminMemberDetailPage() {
   const { memberId } = useParams()
   const navigate = useNavigate()
@@ -145,12 +158,19 @@ export default function AdminMemberDetailPage() {
 
   const currentMemberId = getCurrentMemberId()
   const isSelfAdmin = currentMemberId === member.id && member.role === "ADMIN"
+  const isActionDisabled = saving
+  const isDeletedMember = member.status === "DELETED"
 
   async function handleToggleRole() {
     if (!member) return
 
-    if (isSelfAdmin) {
+    if (isSelfAdmin) {  
       alert("현재 로그인한 관리자 계정은 권한을 변경할 수 없습니다.")
+      return
+    }
+
+    if (member.status === "DELETED") {
+      alert("탈퇴한 회원의 권한은 변경할 수 없습니다.")
       return
     }
 
@@ -225,16 +245,18 @@ export default function AdminMemberDetailPage() {
             <button
               type="button"
               onClick={handleToggleRole}
-              disabled={saving || isSelfAdmin}
+              disabled={isActionDisabled || isSelfAdmin || isDeletedMember}
               className="rounded-2xl border border-slate-200 bg-white px-4 py-2 text-sm font-semibold text-slate-700 transition hover:bg-slate-50 disabled:cursor-not-allowed disabled:opacity-50"
             >
               {saving
                 ? "처리 중..."
                 : isSelfAdmin
                   ? "본인 권한 변경 불가"
-                  : member.role === "USER"
-                    ? "관리자 권한 부여"
-                    : "일반 회원 권한 변경"}
+                  : isDeletedMember
+                    ? "탈퇴 회원 권한 변경 불가"
+                      : member.role === "USER"
+                        ? "관리자 권한 부여"
+                        : "일반 회원 권한 변경"}
             </button>
 
             <button
@@ -492,6 +514,42 @@ export default function AdminMemberDetailPage() {
         <div className="mt-2 text-right text-xs text-slate-400">
           {adminMemo.length} / 500
         </div>
+      </section>
+
+      <section className="rounded-3xl border border-slate-200 bg-white p-6 shadow-sm">
+        <div className="mb-4">
+          <h2 className="text-lg font-bold text-slate-900">관리 이력</h2>
+          <p className="mt-1 text-sm text-slate-500">
+            관리자에 의해 처리된 회원 관리 기록입니다.
+          </p>
+        </div>
+
+        {member.actionLogs.length === 0 ? (
+          <ActivityEmpty text="관리 이력이 없습니다." />
+        ) : (
+          <div className="space-y-3">
+            {member.actionLogs.map((log) => (
+              <div
+                key={log.id}
+                className="rounded-2xl border border-slate-200 bg-slate-50 px-4 py-3"
+              >
+                <div className="flex items-center justify-between">
+                  <p className="text-sm font-semibold text-slate-900">
+                    {log.description}
+                  </p>
+
+                  <span className="rounded-full border border-slate-200 bg-white px-2.5 py-1 text-[11px] font-semibold text-slate-500">
+                    {getActionTypeLabel(log.actionType)}
+                  </span>
+                </div>
+
+                <p className="mt-2 text-xs text-slate-400">
+                  처리자: {log.adminNickname} · {formatAdminMemberDate(log.createdAt)}
+                </p>
+              </div>
+            ))}
+          </div>
+        )}
       </section>
     </div>
   )

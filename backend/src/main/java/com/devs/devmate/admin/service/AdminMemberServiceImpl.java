@@ -1,7 +1,10 @@
 package com.devs.devmate.admin.service;
 
+import com.devs.devmate.admin.dto.log.AdminActionLogResponse;
 import com.devs.devmate.admin.dto.member.*;
+import com.devs.devmate.admin.entity.ActionType;
 import com.devs.devmate.admin.entity.AdminMemberManagement;
+import com.devs.devmate.admin.repository.AdminActionLogRepository;
 import com.devs.devmate.admin.repository.AdminMemberManagementRepository;
 import com.devs.devmate.admin.repository.AdminMemberQueryRepository;
 import com.devs.devmate.admin.repository.AdminMemberRepository;
@@ -18,6 +21,7 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
+import org.springframework.data.domain.Sort;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -31,11 +35,27 @@ public class AdminMemberServiceImpl implements AdminMemberService{
 
     private final AdminMemberQueryRepository adminMemberQueryRepository;
     private final AdminMemberRepository adminMemberRepository;
+    private final AdminMemberManagementRepository adminMemberManagementRepository;
+    private final AdminActionLogRepository adminActionLogRepository;
     private final PostRepository postRepository;
     private final CommentRepository commentRepository;
     private final ReservationRepository reservationRepository;
     private final InquiryRepository inquiryRepository;
-    private final AdminMemberManagementRepository adminMemberManagementRepository;
+    private final AdminActionLogService adminActionLogService;
+
+    private Member findAdminId(Long adminId){
+        Member admin = adminMemberRepository.findById(adminId)
+                .orElseThrow(() -> new BusinessException(ErrorCode.MEMBER_NOT_FOUND));
+        if (admin.getRole() != Role.ADMIN) {
+            throw new BusinessException(ErrorCode.ADMIN_FORBIDDEN);
+        }
+        return  admin;
+    }
+
+    private Member findMemberId(Long memberId){
+        return adminMemberRepository.findById(memberId)
+                .orElseThrow(() -> new BusinessException(ErrorCode.MEMBER_NOT_FOUND));
+    }
 
     @Override
     public Page<AdminMemberResponse> getMembers(MemberStatus status, String keyword, Pageable pageable) {
@@ -57,6 +77,18 @@ public class AdminMemberServiceImpl implements AdminMemberService{
                 .orElse("");
 
         PageRequest recentLimit = PageRequest.of(0, 3);
+
+        PageRequest logLimit = PageRequest.of(
+                0,
+                10,
+                Sort.by(Sort.Direction.DESC, "createdAt")
+        );
+
+        List<AdminActionLogResponse> actionLogs = adminActionLogRepository
+                .findByTargetMemberId(memberId, logLimit)
+                .stream()
+                .map(AdminActionLogResponse::from)
+                .toList();
 
         List<AdminMemberRecentPostResponse> recentPosts = postRepository
                 .findAllByMemberIdOrderByCreatedAtDesc(memberId, recentLimit)
@@ -85,16 +117,24 @@ public class AdminMemberServiceImpl implements AdminMemberService{
                 reservationCount,
                 recentPosts,
                 recentInquiries,
-                recentReservations
+                recentReservations,
+                actionLogs
                 );
     }
 
     @Override
     @Transactional
-    public void updateMemberStatus(Long memberId, MemberStatus status) {
+    public void updateMemberStatus(Long adminId, Long memberId, MemberStatus status) {
 
-        Member member = adminMemberRepository.findById(memberId)
-                .orElseThrow(() -> new BusinessException(ErrorCode.MEMBER_NOT_FOUND));
+        Member admin = findAdminId(adminId);
+
+        Member member = findMemberId(memberId);
+
+        MemberStatus beforeStatus = member.getStatus();
+
+        if (status == null || beforeStatus == status) {
+            throw new BusinessException(ErrorCode.INVALID_MEMBER_STATUS_CHANGE);
+        }
 
         if (status == MemberStatus.DELETED && member.isDeleted()) {
             throw new BusinessException(ErrorCode.MEMBER_ALREADY_DELETED);
@@ -102,22 +142,31 @@ public class AdminMemberServiceImpl implements AdminMemberService{
 
         if (status == MemberStatus.ACTIVE) {
             member.restore();
-            return;
-        }
-
-        if (status == MemberStatus.DELETED) {
+        } else if (status == MemberStatus.DELETED) {
             member.withdraw();
-            return;
+        } else {
+            throw new BusinessException(ErrorCode.INVALID_MEMBER_STATUS_CHANGE);
         }
 
-        throw new BusinessException(ErrorCode.INVALID_MEMBER_STATUS_CHANGE);
+        adminActionLogService.save(
+                admin,
+                member,
+                ActionType.MEMBER_STATUS_CHANGE,
+                "회원 상태 변경: " + beforeStatus.name() + " → " + status);
+
     }
 
     @Override
     @Transactional
     public void updateMemberRole(Long actorMemberId, Long targetMemberId, Role role) {
-        Member member = adminMemberRepository.findById(targetMemberId)
-                .orElseThrow(() -> new BusinessException(ErrorCode.MEMBER_NOT_FOUND));
+
+        Member admin = findAdminId(actorMemberId);
+
+        Member member = findMemberId(targetMemberId);
+
+        if (member.isDeleted()) {
+            throw new BusinessException(ErrorCode.DELETED_MEMBER_ROLE_CHANGE_NOT_ALLOWED);
+        }
 
         if (role == null || member.getRole() == role) {
             throw new BusinessException(ErrorCode.INVALID_MEMBER_ROLE_CHANGE);
@@ -126,22 +175,27 @@ public class AdminMemberServiceImpl implements AdminMemberService{
         if (actorMemberId.equals(targetMemberId) && role == Role.USER) {
             throw new BusinessException(ErrorCode.SELF_ROLE_CHANGE_NOT_ALLOWED);
         }
+
+        Role beforeRole = member.getRole();
+
         member.changeRole(role);
+
+        adminActionLogService.save(
+                admin,
+                member,
+                ActionType.MEMBER_ROLE_CHANGE,
+                "회원 권한 변경: " + beforeRole + " → " + role
+        );
+
     }
 
     @Override
     @Transactional
     public void updateAdminMemo(Long adminId, Long memberId, String adminMemo) {
 
-        Member member = adminMemberRepository.findById(memberId)
-                .orElseThrow(() -> new BusinessException(ErrorCode.MEMBER_NOT_FOUND));
+        Member admin = findAdminId(adminId);
 
-        Member admin = adminMemberRepository.findById(adminId)
-                .orElseThrow(() -> new BusinessException(ErrorCode.MEMBER_NOT_FOUND));
-
-        if (admin.getRole() != Role.ADMIN) {
-            throw new BusinessException(ErrorCode.ADMIN_FORBIDDEN);
-        }
+        Member member = findMemberId(memberId);
 
         String memo = adminMemo == null ? "" : adminMemo.trim();
 
@@ -158,6 +212,13 @@ public class AdminMemberServiceImpl implements AdminMemberService{
                         .build());
 
         management.updateAdminMemo(memo, admin);
+
+        adminActionLogService.save(
+                admin,
+                member,
+                ActionType.ADMIN_MEMO_UPDATE,
+                "관리자 메모 수정"
+        );
 
         adminMemberManagementRepository.save(management);
     }
