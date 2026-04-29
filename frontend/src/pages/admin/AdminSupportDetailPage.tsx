@@ -244,16 +244,39 @@ export default function AdminSupportDetailPage() {
         <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-3">
           <div className="rounded-2xl border border-slate-200 bg-slate-50 px-4 py-4">
             <p className="text-xs font-medium text-slate-500">작성자</p>
-            <p className="mt-2 text-sm font-semibold text-slate-900">
-              {inquiry.memberNickname}
+
+            <div className="mt-2 flex items-center gap-2">
+              <p className="text-sm font-semibold text-slate-900">
+                {inquiry.member
+                  ? inquiry.memberNickname ?? "-"
+                  : inquiry.guestName || "비회원"}
+              </p>
+
+              <span
+                className={[
+                  "rounded-full px-2 py-0.5 text-[11px] font-semibold",
+                  inquiry.member
+                    ? "border border-blue-200 bg-blue-50 text-blue-700"
+                    : "border border-slate-200 bg-white text-slate-500",
+                ].join(" ")}
+              >
+                {inquiry.member ? "회원" : "비회원"}
+              </span>
+            </div>
+
+            <p className="mt-1 text-xs text-slate-500">
+              {inquiry.member ? "회원 문의" : inquiry.guestEmail || "-"}
             </p>
-            <button
-              type="button"
-              onClick={() => navigate(`/admin/members/${inquiry.memberId}`)}
-              className="mt-2 text-xs font-medium text-blue-600 hover:underline"
-            >
-              회원 상세 보기
-            </button>
+
+            {inquiry.member && inquiry.memberId && (
+              <button
+                type="button"
+                onClick={() => navigate(`/admin/members/${inquiry.memberId}`)}
+                className="mt-2 text-xs font-medium text-blue-600 hover:underline"
+              >
+                회원 상세 보기
+              </button>
+            )}
           </div>
 
           <div className="rounded-2xl border border-slate-200 bg-slate-50 px-4 py-4">
@@ -307,10 +330,13 @@ export default function AdminSupportDetailPage() {
         <div className="mt-2 whitespace-pre-wrap rounded-2xl border border-slate-200 bg-slate-50 p-4 text-sm text-slate-700">
           {inquiry.content}
         </div>
+
         {inquiry.status === "RESOLVED" && inquiry.adminReply && (
           <div className="mt-6 rounded-2xl border border-emerald-200 bg-emerald-50 px-4 py-4">
             <div className="flex flex-wrap items-center justify-between gap-2">
-              <p className="text-sm font-bold text-emerald-800">등록된 관리자 답변</p>
+              <p className="text-sm font-bold text-emerald-800">
+                등록된 관리자 답변
+              </p>
 
               <span className="rounded-full border border-emerald-200 bg-white px-2.5 py-1 text-xs font-semibold text-emerald-700">
                 답변 완료
@@ -325,11 +351,14 @@ export default function AdminSupportDetailPage() {
               <span>담당자: {inquiry.processedByNickname || "-"}</span>
               <span>
                 처리일:{" "}
-                {inquiry.processedAt ? formatInquiryDate(inquiry.processedAt) : "-"}
+                {inquiry.processedAt
+                  ? formatInquiryDate(inquiry.processedAt)
+                  : "-"}
               </span>
             </div>
           </div>
-        )}        
+        )}
+
         <div className="mt-6">
           <div className="mb-2 flex items-center justify-between">
             <p className="text-xs font-medium text-slate-500">

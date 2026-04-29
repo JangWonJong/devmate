@@ -33,13 +33,7 @@ function statusClass(status: InquiryStatus) {
   return "border border-emerald-200 bg-emerald-50 text-emerald-700"
 }
 
-function SummaryCard({
-  label,
-  value,
-}: {
-  label: string
-  value: number
-}) {
+function SummaryCard({ label, value }: { label: string; value: number }) {
   return (
     <section className="rounded-3xl border border-slate-200 bg-white p-6 shadow-sm">
       <p className="text-sm font-medium text-slate-500">{label}</p>
@@ -157,10 +151,15 @@ export default function AdminSupportPage() {
           (inquiry.status === "RECEIVED" ||
             inquiry.status === "IN_PROGRESS"))
 
+      const writerName = inquiry.member
+        ? inquiry.memberNickname ?? ""
+        : inquiry.guestName ?? ""
+
       const matchesKeyword =
         !normalizedKeyword ||
         inquiry.content.toLowerCase().includes(normalizedKeyword) ||
-        inquiry.memberNickname.toLowerCase().includes(normalizedKeyword) ||
+        writerName.toLowerCase().includes(normalizedKeyword) ||
+        (inquiry.guestEmail ?? "").toLowerCase().includes(normalizedKeyword) ||
         getInquiryTypeLabel(inquiry.type)
           .toLowerCase()
           .includes(normalizedKeyword) ||
@@ -297,7 +296,11 @@ export default function AdminSupportPage() {
                       </span>
 
                       <span className="text-xs text-slate-400">
-                        {inquiry.memberNickname}
+                        {inquiry.member
+                          ? inquiry.memberNickname ?? "-"
+                          : `${inquiry.guestName ?? "비회원"} · ${
+                              inquiry.guestEmail ?? "-"
+                            }`}
                       </span>
                     </div>
 
@@ -306,9 +309,21 @@ export default function AdminSupportPage() {
                     </p>
                   </div>
 
-                  <div className="shrink-0 text-xs text-slate-400">
+                  <div className="shrink-0 space-y-1 text-right text-xs text-slate-400">
+                    <div className="pt-1">
+                      <span
+                        className={[
+                          "inline-flex rounded-full px-2.5 py-1 text-xs font-medium",
+                          inquiry.member
+                            ? "border border-blue-200 bg-blue-50 text-blue-700"
+                            : "border border-slate-200 bg-white text-slate-500",
+                        ].join(" ")}
+                      >
+                        {inquiry.member ? "회원 문의" : "비회원 문의"}
+                      </span>
+                    </div>
                     <div>등록: {formatInquiryDate(inquiry.createdAt)}</div>
-                    <div className="mt-1">
+                    <div>
                       처리:{" "}
                       {inquiry.processedAt
                         ? formatInquiryDate(inquiry.processedAt)

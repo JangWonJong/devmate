@@ -25,11 +25,18 @@ public class AdminInquiryDetailResponse {
     private LocalDateTime processedAt;
     private LocalDateTime updatedAt;
 
+    private String guestName;
+    private String guestEmail;
+    private boolean member;
+
     public static AdminInquiryDetailResponse from(Inquiry inquiry) {
         return AdminInquiryDetailResponse.builder()
                 .id(inquiry.getId())
-                .memberId(inquiry.getMember().getId())
-                .memberNickname(inquiry.getMember().getNickname())
+                .memberId(inquiry.getMember() != null ? inquiry.getMember().getId() : null)
+                .memberNickname(inquiry.getMember() != null ? inquiry.getMember().getNickname() : null)
+                .guestName(inquiry.getGuestName())
+                .guestEmail(inquiry.getGuestEmail())
+                .member(inquiry.getMember() != null)
                 .type(inquiry.getType())
                 .status(inquiry.getStatus())
                 .content(inquiry.getContent())

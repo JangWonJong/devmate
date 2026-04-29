@@ -20,6 +20,12 @@ public class InquiryResponse {
     private LocalDateTime createdAt;
     private LocalDateTime processedAt;
 
+    private String guestName;
+    private String guestEmail;
+    private String memberNickname;
+    private boolean isMember;
+
+
     public static InquiryResponse from(Inquiry inquiry) {
         return new InquiryResponse(
                 inquiry.getId(),
@@ -28,7 +34,11 @@ public class InquiryResponse {
                 inquiry.getStatus(),
                 inquiry.getAdminReply(),
                 inquiry.getCreatedAt(),
-                inquiry.getProcessedAt()
+                inquiry.getProcessedAt(),
+                inquiry.getGuestName(),
+                inquiry.getGuestEmail(),
+                inquiry.getMember() != null ? inquiry.getMember().getNickname() : null,
+                inquiry.getMember() != null
         );
     }
 }

@@ -23,7 +23,7 @@ public class InquiryController {
     @PostMapping
     public ApiResponse<Void> create(@RequestBody @Valid InquiryCreateRequest request) {
 
-        Long memberId = SecurityUtil.currentMemberId();
+        Long memberId = SecurityUtil.currentMemberIdOrNull();
 
         inquiryService.create(memberId, request);
 

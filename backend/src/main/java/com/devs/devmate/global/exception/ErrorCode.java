@@ -95,6 +95,10 @@ public enum ErrorCode {
     INQUIRY_CANCEL_NOT_ALLOWED(HttpStatus.BAD_REQUEST, "INQUIRY_400", "해당 문의는 취소할 수 없습니다."),
     INVALID_INQUIRY_STATUS_CHANGE(HttpStatus.BAD_REQUEST, "INQUIRY_400_2", "문의 상태 변경 요청이 올바르지 않습니다."),
     INVALID_INQUIRY_REPLY(HttpStatus.BAD_REQUEST, "INQUIRY_400_3", "문의 답변 요청이 올바르지 않습니다."),
+    INVALID_GUEST_INQUIRY_NAME(HttpStatus.BAD_REQUEST, "INQUIRY_400_4", "비회원 문의 이름을 입력해주세요."),
+    INVALID_GUEST_INQUIRY_EMAIL(HttpStatus.BAD_REQUEST, "INQUIRY_400_5", "비회원 문의 이메일을 입력해주세요."),
+    INVALID_GUEST_INQUIRY_EMAIL_FORMAT(HttpStatus.BAD_REQUEST, "INQUIRY_400_6", "올바른 이메일 형식으로 입력해주세요."),
+
 
     // NOTIFICATION
     NOTIFICATION_NOT_FOUND(HttpStatus.NOT_FOUND, "NOTIFICATION_404","알림을 찾을 수 없습니다.");

@@ -294,9 +294,9 @@ export default function AdminDashboardPage() {
                                   : "완료됨"}
                             </span>
                           </div>
-
+                          
                           <p className="mt-2 text-xs text-slate-500">
-                            닉네임 : {inquiry.memberNickname}
+                            닉네임 : {inquiry.memberNickname ?? "비회원"}
                           </p>
 
                           <p className="mt-2 text-xs text-slate-400">

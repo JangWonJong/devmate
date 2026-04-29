@@ -19,7 +19,7 @@ public class Inquiry extends ProcessableEntity {
     private Long id;
 
     @ManyToOne(fetch = FetchType.LAZY, optional = false)
-    @JoinColumn(name = "member_id")
+    @JoinColumn(name = "member_id", nullable = true)
     private Member member;
 
     @Enumerated(EnumType.STRING)
@@ -40,6 +40,9 @@ public class Inquiry extends ProcessableEntity {
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "processed_by")
     private Member processedBy;
+
+    private String guestName;
+    private String guestEmail;
 
     public void markInProgress(Member admin) {
         this.status = InquiryStatus.IN_PROGRESS;

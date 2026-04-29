@@ -27,14 +27,34 @@ public class InquiryServiceImpl implements InquiryService{
     @Override
     @Transactional
     public void create(Long memberId, InquiryCreateRequest request) {
-        Member member = memberRepository.findById(memberId)
-                .orElseThrow(() -> new BusinessException(ErrorCode.MEMBER_NOT_FOUND));
 
-        Inquiry inquiry = Inquiry.builder()
-                .member(member)
-                .type(request.getType())
-                .content(request.getContent().trim())
-                .build();
+        Inquiry inquiry;
+
+        if (memberId != null) {
+
+            Member member = memberRepository.findById(memberId)
+                    .orElseThrow(() -> new BusinessException(ErrorCode.MEMBER_NOT_FOUND));
+
+            inquiry = Inquiry.builder()
+                    .member(member)
+                    .type(request.getType())
+                    .content(request.getContent().trim())
+                    .build();
+        } else {
+            if (request.getGuestName() == null || request.getGuestName().isBlank()) {
+                throw new BusinessException(ErrorCode.INVALID_GUEST_INQUIRY_NAME);
+            }
+
+            if (request.getGuestEmail() == null || request.getGuestEmail().isBlank()) {
+                throw new BusinessException(ErrorCode.INVALID_GUEST_INQUIRY_EMAIL);
+            }
+            inquiry = Inquiry.builder()
+                    .guestName(request.getGuestName())
+                    .guestEmail(request.getGuestEmail())
+                    .type(request.getType())
+                    .content(request.getContent().trim())
+                    .build();
+        }
 
         inquiryRepository.save(inquiry);
     }
@@ -53,7 +73,7 @@ public class InquiryServiceImpl implements InquiryService{
         Inquiry inquiry = inquiryRepository.findById(inquiryId)
                 .orElseThrow(() -> new BusinessException(ErrorCode.INQUIRY_NOT_FOUND));
 
-        if (!inquiry.getMember().getId().equals(memberId)) {
+        if (inquiry.getMember() == null || !inquiry.getMember().getId().equals(memberId)) {
             throw new BusinessException(ErrorCode.FORBIDDEN_INQUIRY);
         }
 

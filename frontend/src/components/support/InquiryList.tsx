@@ -9,6 +9,7 @@ import {
   deleteInquiry,
   type Inquiry,
 } from "../../api/support/inquiry"
+import { tokenStore } from "../../api/auth/token"
 
 type InquiryListProps = {
   variant?: "compact" | "full"
@@ -20,11 +21,19 @@ export default function InquiryList({
   const nav = useNavigate()
   const [inquiries, setInquiries] = useState<Inquiry[]>([])
   const [loading, setLoading] = useState(true)
+  const [loggedIn, setLoggedIn] = useState(tokenStore.isLoggedIn())
 
   const isCompact = variant === "compact"
 
   const fetchData = async () => {
+    if (!tokenStore.isLoggedIn()) {
+      setInquiries([])
+      setLoading(false)
+      return
+    }
+
     try {
+      setLoading(true)
       const data = await listMyInquiries()
       setInquiries(data)
     } catch {
@@ -35,7 +44,14 @@ export default function InquiryList({
   }
 
   useEffect(() => {
-    void fetchData()
+    const sync = () => {
+      setLoggedIn(tokenStore.isLoggedIn())
+      void fetchData()
+    }
+
+    sync()
+
+    const unsubscribe = tokenStore.subscribe(sync)
 
     const handleUpdated = () => {
       void fetchData()
@@ -44,9 +60,18 @@ export default function InquiryList({
     window.addEventListener("inquiry-updated", handleUpdated)
 
     return () => {
+      unsubscribe()
       window.removeEventListener("inquiry-updated", handleUpdated)
     }
   }, [])
+
+  if (!loggedIn) {
+    return (
+      <div className="rounded-xl border border-dashed border-slate-200 bg-slate-50 px-4 py-5 text-center text-sm text-slate-400">
+        비회원 문의는 접수 후 이메일로 확인해주세요.
+      </div>
+    )
+  }
 
   if (loading) {
     return <div className="text-sm text-slate-400">불러오는 중...</div>

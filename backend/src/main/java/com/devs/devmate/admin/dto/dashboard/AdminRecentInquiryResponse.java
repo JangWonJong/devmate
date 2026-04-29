@@ -19,10 +19,21 @@ public class AdminRecentInquiryResponse {
     private String content;
     private LocalDateTime createdAt;
 
+    private String guestName;
+    private String guestEmail;
+    private boolean member;
+
     public static AdminRecentInquiryResponse from(Inquiry inquiry) {
         return AdminRecentInquiryResponse.builder()
                 .id(inquiry.getId())
-                .memberNickname(inquiry.getMember().getNickname())
+                .memberNickname(
+                        inquiry.getMember() != null
+                                ? inquiry.getMember().getNickname()
+                                : null
+                )
+                .guestName(inquiry.getGuestName())
+                .guestEmail(inquiry.getGuestEmail())
+                .member(inquiry.getMember() != null)
                 .type(inquiry.getType())
                 .status(inquiry.getStatus())
                 .content(inquiry.getContent())

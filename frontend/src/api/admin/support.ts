@@ -6,7 +6,10 @@ export type InquiryStatus = "RECEIVED" | "IN_PROGRESS" | "RESOLVED"
 
 export type AdminInquiryListItem = {
   id: number
-  memberNickname: string
+  memberNickname: string | null
+  guestName: string | null
+  guestEmail: string | null
+  member: boolean
   type: InquiryType
   status: InquiryStatus
   content: string
@@ -16,8 +19,11 @@ export type AdminInquiryListItem = {
 
 export type AdminInquiryDetail = {
   id: number
-  memberId: number
-  memberNickname: string
+  memberId: number | null
+  memberNickname: string | null
+  guestName: string | null
+  guestEmail: string | null
+  member: boolean
   type: InquiryType
   status: InquiryStatus
   content: string

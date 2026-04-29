@@ -1,9 +1,7 @@
 import { http } from "../http"
 import type { ApiResponse } from "../type"
 
-
 export type InquiryType = "BUG" | "FEATURE" | "GENERAL"
-
 export type InquiryStatus = "RECEIVED" | "IN_PROGRESS" | "RESOLVED"
 
 export type Inquiry = {
@@ -14,32 +12,36 @@ export type Inquiry = {
   adminReply: string | null
   createdAt: string
   processedAt: string | null
+  guestName: string | null
+  guestEmail: string | null
+  memberNickname: string | null
+  member: boolean
 }
 
-export async function createInquiry(req: {
-  type: "BUG" | "FEATURE" | "GENERAL"
+export type InquiryCreateRequest = {
+  type: InquiryType
   content: string
-}) {
-  const { data } = await http.post<ApiResponse<void>>(
-    "/api/inquiries",
-    req
-  )
+  guestName?: string
+  guestEmail?: string
+}
+
+export async function createInquiry(req: InquiryCreateRequest) {
+  const { data } = await http.post<ApiResponse<void>>("/api/inquiries", req)
 
   if (!data.success) throw new Error(data.error.message)
 }
 
 export function getInquiryTypeLabel(type: InquiryType) {
-    if (type === "BUG") return "버그"
-    if (type === "FEATURE") return "기능 요청"
-    return "기타"
+  if (type === "BUG") return "버그"
+  if (type === "FEATURE") return "기능 요청"
+  return "기타"
 }
 
 export function getInquiryStatusLabel(status: InquiryStatus) {
-    if (status === "IN_PROGRESS") return "처리 중"
-    if (status === "RESOLVED") return "처리 완료"
-    return "접수됨"
+  if (status === "IN_PROGRESS") return "처리 중"
+  if (status === "RESOLVED") return "처리 완료"
+  return "접수됨"
 }
-
 
 export function getInquiryStatusStyle(status: InquiryStatus) {
   if (status === "IN_PROGRESS") {
@@ -69,14 +71,12 @@ export function formatInquiryDate(value: string) {
   return `${yyyy}.${mm}.${dd} ${hh}:${min}`
 }
 
-
 export async function listMyInquiries(): Promise<Inquiry[]> {
-  const { data } = await http.get<ApiResponse<Inquiry[]>>(
-    "/api/inquiries/me"
-  )
+  const { data } = await http.get<ApiResponse<Inquiry[]>>("/api/inquiries/me")
 
-  if (!data.success || !data.data)
+  if (!data.success || !data.data) {
     throw new Error("load fail")
+  }
 
   return data.data
 }
@@ -90,4 +90,3 @@ export async function deleteInquiry(id: number) {
     throw new Error(data.error.message)
   }
 }
-

@@ -61,6 +61,8 @@ public class SecurityConfig {
 
                     .requestMatchers(HttpMethod.GET, "/api/notifications/subscribe").permitAll()
 
+                    .requestMatchers(HttpMethod.POST, "/api/inquiries").permitAll()
+
                     .requestMatchers(HttpMethod.POST, "/api/ai/guide").permitAll()
 
                     .anyRequest().authenticated()
