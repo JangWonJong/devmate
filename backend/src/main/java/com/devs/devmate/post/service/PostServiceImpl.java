@@ -7,6 +7,7 @@ import com.devs.devmate.global.exception.ErrorCode;
 import com.devs.devmate.like.repository.CommentLikeRepository;
 import com.devs.devmate.like.repository.PostLikeRepository;
 import com.devs.devmate.member.entity.Member;
+import com.devs.devmate.member.entity.MemberStatus;
 import com.devs.devmate.member.repository.MemberRepository;
 import com.devs.devmate.post.dto.PostCreateRequest;
 import com.devs.devmate.post.dto.PostResponse;
@@ -165,6 +166,14 @@ public class PostServiceImpl implements PostService {
     public Long create(Long memberId, PostCreateRequest request, List<MultipartFile> files) {
         Member member = memberRepository.findById(memberId)
                 .orElseThrow(() -> new BusinessException(ErrorCode.MEMBER_NOT_FOUND));
+
+        if (member.getStatus() == MemberStatus.SUSPENDED) {
+            throw new BusinessException(ErrorCode.SUSPENDED_MEMBER);
+        }
+
+        if (member.getStatus() == MemberStatus.DELETED) {
+            throw new BusinessException(ErrorCode.DELETED_MEMBER);
+        }
 
         Post post = Post.builder()
                 .title(request.getTitle())

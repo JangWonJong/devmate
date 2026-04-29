@@ -109,10 +109,37 @@ export default function AdminMemberDetailPage() {
     }
   }, [memberId])
 
+  if (loading) {
+    return (
+      <section className="rounded-3xl border border-slate-200 bg-white p-6 text-sm text-slate-500 shadow-sm">
+        불러오는 중...
+      </section>
+    )
+  }
+
+  if (error || !member) {
+    return (
+      <section className="rounded-3xl border border-slate-200 bg-white p-6 text-sm text-rose-500 shadow-sm">
+        {error || "회원 정보가 없습니다."}
+      </section>
+    )
+  }
+
+  const currentMemberId = getCurrentMemberId()
+  const isSelfAdmin = currentMemberId === member.id && member.role === "ADMIN"
+  const isDeletedMember = member.status === "DELETED"
+  const isSuspendedMember = member.status === "SUSPENDED"
+  const isActionDisabled = saving
+
   async function handleToggleStatus() {
     if (!member) return
 
-    const nextStatus = member.status === "ACTIVE" ? "DELETED" : "ACTIVE"
+    if (member.status === "SUSPENDED") {
+      alert("정지 상태에서는 탈퇴 처리를 할 수 없습니다. 먼저 정지를 해제해주세요.")
+      return
+    }
+
+    const nextStatus = member.status === "DELETED" ? "ACTIVE" : "DELETED"
 
     const confirmed = window.confirm(
       nextStatus === "DELETED"
@@ -140,39 +167,21 @@ export default function AdminMemberDetailPage() {
     }
   }
 
-  if (loading) {
-    return (
-      <section className="rounded-3xl border border-slate-200 bg-white p-6 shadow-sm text-sm text-slate-500">
-        불러오는 중...
-      </section>
-    )
-  }
-
-  if (error || !member) {
-    return (
-      <section className="rounded-3xl border border-slate-200 bg-white p-6 shadow-sm text-sm text-rose-500">
-        {error || "회원 정보가 없습니다."}
-      </section>
-    )
-  }
-
-  const currentMemberId = getCurrentMemberId()
-  const isSelfAdmin = currentMemberId === member.id && member.role === "ADMIN"
-  const isActionDisabled = saving
-  const isDeletedMember = member.status === "DELETED"
-  const isSuspendedMember = member.status === "SUSPENDED"
-
-
   async function handleToggleRole() {
     if (!member) return
 
-    if (isSelfAdmin) {  
+    if (isSelfAdmin) {
       alert("현재 로그인한 관리자 계정은 권한을 변경할 수 없습니다.")
       return
     }
 
-    if (member.status === "DELETED") {
+    if (isDeletedMember) {
       alert("탈퇴한 회원의 권한은 변경할 수 없습니다.")
+      return
+    }
+
+    if (isSuspendedMember) {
+      alert("정지된 회원의 권한은 변경할 수 없습니다.")
       return
     }
 
@@ -256,8 +265,8 @@ export default function AdminMemberDetailPage() {
   return (
     <div className="space-y-6">
       <section className="rounded-3xl border border-slate-200 bg-white p-6 shadow-sm">
-        <div className="flex flex-wrap items-start justify-between gap-4">
-          <div>
+        <div className="flex flex-col gap-4 lg:flex-row lg:items-start lg:justify-between">
+          <div className="min-w-0 lg:max-w-[360px]">
             <button
               type="button"
               onClick={() => navigate("/admin/members")}
@@ -275,12 +284,17 @@ export default function AdminMemberDetailPage() {
             </p>
           </div>
 
-          <div className="flex flex-wrap items-center gap-2">
+          <div className="flex w-full items-center gap-2 overflow-x-auto lg:w-auto lg:justify-end">
             <button
               type="button"
               onClick={handleToggleRole}
-              disabled={isActionDisabled || isSelfAdmin || isDeletedMember || isSuspendedMember}
-              className="rounded-2xl border border-slate-200 bg-white px-4 py-2 text-sm font-semibold text-slate-700 transition hover:bg-slate-50 disabled:cursor-not-allowed disabled:opacity-50"
+              disabled={
+                isActionDisabled ||
+                isSelfAdmin ||
+                isDeletedMember ||
+                isSuspendedMember
+              }
+              className="whitespace-nowrap rounded-2xl border border-slate-200 bg-white px-4 py-2 text-sm font-semibold text-slate-700 transition hover:bg-slate-50 disabled:cursor-not-allowed disabled:opacity-50"
             >
               {saving
                 ? "처리 중..."
@@ -288,21 +302,21 @@ export default function AdminMemberDetailPage() {
                   ? "본인 권한 변경 불가"
                   : isDeletedMember
                     ? "탈퇴 회원 권한 변경 불가"
-                      : isSuspendedMember
-                        ? "정지 회원 권한 변경 불가"
-                          : member.role === "USER"
-                            ? "관리자 권한 부여"
-                            : "일반 회원 권한 변경"}
+                    : isSuspendedMember
+                      ? "정지 회원 변경 불가"
+                      : member.role === "USER"
+                        ? "관리자 권한 부여"
+                        : "일반 회원 권한 변경"}
             </button>
 
             <button
               type="button"
               onClick={() => navigate(`/members/${member.id}`)}
-              className="rounded-2xl border border-blue-200 bg-blue-50 px-4 py-2 text-sm font-semibold text-blue-700 transition hover:bg-blue-100"
+              className="whitespace-nowrap rounded-2xl border border-blue-200 bg-blue-50 px-4 py-2 text-sm font-semibold text-blue-700 transition hover:bg-blue-100"
             >
-              서비스 프로필 보기
+              프로필 보기
             </button>
-            
+
             {!isDeletedMember && (
               <button
                 type="button"
@@ -310,8 +324,8 @@ export default function AdminMemberDetailPage() {
                 disabled={saving}
                 className={
                   isSuspendedMember
-                    ? "rounded-2xl border border-emerald-200 bg-emerald-50 px-4 py-2 text-sm font-semibold text-emerald-700 transition hover:bg-emerald-100 disabled:cursor-not-allowed disabled:opacity-50"
-                    : "rounded-2xl border border-amber-200 bg-amber-50 px-4 py-2 text-sm font-semibold text-amber-700 transition hover:bg-amber-100 disabled:cursor-not-allowed disabled:opacity-50"
+                    ? "whitespace-nowrap rounded-2xl border border-emerald-200 bg-emerald-50 px-4 py-2 text-sm font-semibold text-emerald-700 transition hover:bg-emerald-100 disabled:cursor-not-allowed disabled:opacity-50"
+                    : "whitespace-nowrap rounded-2xl border border-amber-200 bg-amber-50 px-4 py-2 text-sm font-semibold text-amber-700 transition hover:bg-amber-100 disabled:cursor-not-allowed disabled:opacity-50"
                 }
               >
                 {saving
@@ -325,18 +339,22 @@ export default function AdminMemberDetailPage() {
             <button
               type="button"
               onClick={handleToggleStatus}
-              disabled={saving}
+              disabled={saving || isSuspendedMember}
               className={
-                member.status === "ACTIVE"
-                  ? "rounded-2xl border border-rose-200 bg-rose-50 px-4 py-2 text-sm font-semibold text-rose-700 transition hover:bg-rose-100 disabled:cursor-not-allowed disabled:opacity-50"
-                  : "rounded-2xl bg-slate-900 px-4 py-2 text-sm font-semibold text-white transition hover:bg-slate-800 disabled:cursor-not-allowed disabled:opacity-50"
+                isSuspendedMember
+                  ? "whitespace-nowrap rounded-2xl border border-slate-200 bg-slate-50 px-4 py-2 text-sm font-semibold text-slate-400 disabled:cursor-not-allowed disabled:opacity-70"
+                  : member.status === "DELETED"
+                    ? "whitespace-nowrap rounded-2xl bg-slate-900 px-4 py-2 text-sm font-semibold text-white transition hover:bg-slate-800 disabled:cursor-not-allowed disabled:opacity-50"
+                    : "whitespace-nowrap rounded-2xl border border-rose-200 bg-rose-50 px-4 py-2 text-sm font-semibold text-rose-700 transition hover:bg-rose-100 disabled:cursor-not-allowed disabled:opacity-50"
               }
             >
               {saving
                 ? "처리 중..."
-                : member.status === "ACTIVE"
-                  ? "탈퇴 처리"
-                  : "복구 처리"}
+                : isSuspendedMember
+                  ? "탈퇴 불가"
+                  : member.status === "DELETED"
+                    ? "복구 처리"
+                    : "탈퇴 처리"}
             </button>
           </div>
         </div>
@@ -521,6 +539,7 @@ export default function AdminMemberDetailPage() {
                       {reservation.startTime.slice(0, 5)} ~{" "}
                       {reservation.endTime.slice(0, 5)}
                     </p>
+
                     <span
                       className={[
                         "mt-2 inline-flex rounded-full px-2 py-0.5 text-[11px] font-semibold",
@@ -599,7 +618,8 @@ export default function AdminMemberDetailPage() {
                 </div>
 
                 <p className="mt-2 text-xs text-slate-400">
-                  처리자: {log.adminNickname} · {formatAdminMemberDate(log.createdAt)}
+                  처리자: {log.adminNickname} ·{" "}
+                  {formatAdminMemberDate(log.createdAt)}
                 </p>
               </div>
             ))}

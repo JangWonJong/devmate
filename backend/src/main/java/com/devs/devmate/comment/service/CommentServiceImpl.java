@@ -10,6 +10,7 @@ import com.devs.devmate.global.exception.BusinessException;
 import com.devs.devmate.global.exception.ErrorCode;
 import com.devs.devmate.like.repository.CommentLikeRepository;
 import com.devs.devmate.member.entity.Member;
+import com.devs.devmate.member.entity.MemberStatus;
 import com.devs.devmate.member.repository.MemberRepository;
 import com.devs.devmate.notification.service.NotificationService;
 import com.devs.devmate.post.entity.Post;
@@ -38,6 +39,14 @@ public class CommentServiceImpl implements CommentService{
     public Long create(Long memberId, Long postId, CommentCreateRequest request) {
         Member member = memberRepository.findById(memberId)
                 .orElseThrow(() -> new BusinessException(ErrorCode.MEMBER_NOT_FOUND));
+
+        if (member.getStatus() == MemberStatus.SUSPENDED) {
+            throw new BusinessException(ErrorCode.SUSPENDED_MEMBER);
+        }
+
+        if (member.getStatus() == MemberStatus.DELETED) {
+            throw new BusinessException(ErrorCode.DELETED_MEMBER);
+        }
 
         Post post = postRepository.findById(postId)
                 .orElseThrow(() -> new BusinessException(ErrorCode.POST_NOT_FOUND));

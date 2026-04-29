@@ -1,6 +1,7 @@
 import { useRef, useState } from "react"
 import { useLocation, useNavigate } from "react-router-dom"
 import { createPost } from "../../api/post/posts"
+import AiAssistantPanel from "../../components/support/AiAssistantPanel"
 
 function validateFiles(files: File[]) {
   const allowedTypes = [
@@ -49,6 +50,8 @@ export function NewPostPage() {
   const [loading, setLoading] = useState(false)
   const [files, setFiles] = useState<File[]>([])
 
+  const [showAiGuide, setShowAiGuide] = useState(false)
+
   const addFiles = (selected: File[]) => {
     setFiles((prev) => {
       const merged = [...prev, ...selected]
@@ -66,6 +69,17 @@ export function NewPostPage() {
 
       return unique.slice(0, 5)
     })
+  }
+
+  const handleApplyAiGuide = (payload: {
+    title: string
+    content: string
+    type: "QUESTION" | "STUDY"
+  }) => {
+    setTitle(payload.title)
+    setContent(payload.content)
+    setType(payload.type)
+    setShowAiGuide(false)
   }
 
   const onSubmit = async () => {
@@ -146,6 +160,38 @@ export function NewPostPage() {
             </p>
           </div>
 
+          {type === "QUESTION" && (
+            <section className="rounded-3xl border border-blue-100 bg-blue-50/50 p-5">
+              <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+                <div>
+                  <h2 className="text-base font-bold text-slate-900">
+                    질문 작성이 어렵다면 AI 도움을 받아보세요
+                  </h2>
+                  <p className="mt-1 text-sm text-slate-500">
+                    문제 상황을 입력하면 제목과 본문 초안을 정리해드립니다.
+                  </p>
+                </div>
+
+                <button
+                  type="button"
+                  onClick={() => setShowAiGuide((prev) => !prev)}
+                  className="rounded-2xl bg-blue-600 px-4 py-2.5 text-sm font-semibold text-white transition hover:bg-blue-500"
+                >
+                  {showAiGuide ? "AI 도우미 닫기" : "🤖 AI 질문 도우미"}
+                </button>
+              </div>
+
+              {showAiGuide && (
+                <div className="mt-5">
+                  <AiAssistantPanel
+                    variant="inline"
+                    onMoveToWrite={handleApplyAiGuide}
+                  />
+                </div>
+              )}
+            </section>
+          )}      
+        
           <div className="space-y-2">
             <label className="text-sm font-semibold text-slate-700">제목</label>
             <input
@@ -169,7 +215,7 @@ export function NewPostPage() {
               className="min-h-[280px] w-full resize-y rounded-2xl border border-slate-300 bg-white px-4 py-4 text-sm leading-7 text-slate-900 outline-none transition placeholder:text-slate-400 focus:border-slate-400"
             />
           </div>
-
+          
           <div className="space-y-3">
             <div className="flex items-center justify-between gap-3">
               <label className="text-sm font-semibold text-slate-700">

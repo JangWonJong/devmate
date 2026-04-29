@@ -222,6 +222,11 @@ public class ReservationServiceImpl implements ReservationService{
 
         Member member = memberRepository.findById(memberId)
                 .orElseThrow(() -> new BusinessException(ErrorCode.MEMBER_NOT_FOUND));
+
+        if (member.getStatus() == MemberStatus.SUSPENDED) {
+            throw new BusinessException(ErrorCode.SUSPENDED_MEMBER);
+        }
+
         if (member.getStatus() == MemberStatus.DELETED) {
             throw new BusinessException(ErrorCode.DELETED_MEMBER);
         }

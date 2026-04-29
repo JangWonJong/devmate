@@ -52,6 +52,15 @@ http.interceptors.response.use(
   (res) => res,
   async (err) => {
     const status = err?.response?.status;
+    const errorCode = err?.response?.data?.error?.code;
+    const errorMessage = err?.response?.data?.error?.message;
+
+    if (errorCode === "AUTH_401_6" || errorCode === "AUTH_401_5") {
+      alert(errorMessage ?? "계정 상태를 확인해주세요.");
+      logoutToLogin();
+      return Promise.reject(err);
+    }
+
     const originalRequest = err?.config;
     const url = originalRequest?.url ?? "";
     const method = (originalRequest?.method ?? "").toUpperCase();
@@ -128,9 +137,17 @@ http.interceptors.response.use(
       originalRequest.headers = originalRequest.headers ?? {};
       originalRequest.headers.Authorization = `Bearer ${newAccessToken}`;
       return http(originalRequest);
-    } catch {
+    } catch (e: any){
       notifyAll(null);
 
+      const errorCode = e?.response?.data?.error?.code;
+      const errorMessage = e?.response?.data?.error?.message;
+
+      if (errorCode === "AUTH_401_6" || errorCode === "AUTH_401_5") {
+        alert(errorMessage ?? "계정 상태를 확인해주세요.");
+        logoutToLogin();
+        return Promise.reject(e);
+      }
       if (isPublicGet) {
         return Promise.reject(err);
       }

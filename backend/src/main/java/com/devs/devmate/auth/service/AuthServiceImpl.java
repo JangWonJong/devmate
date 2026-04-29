@@ -106,6 +106,18 @@ public class AuthServiceImpl implements AuthService{
             throw new BusinessException(ErrorCode.TOKEN_INVALID);
         }
 
+        Member member = saved.getMember();
+
+        if (member.getStatus() == MemberStatus.SUSPENDED) {
+            saved.revoke();
+            throw new BusinessException(ErrorCode.SUSPENDED_MEMBER);
+        }
+
+        if (member.getStatus() == MemberStatus.DELETED) {
+            saved.revoke();
+            throw new BusinessException(ErrorCode.DELETED_MEMBER);
+        }
+
         String role = saved.getMember().getRole().name();
         String newAccessToken = jwtProvider.createAccessToken(memberId, role);
         return new ReissueResponse(newAccessToken);
