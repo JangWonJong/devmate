@@ -10,6 +10,7 @@ import {
 } from "../../api/admin/support"
 
 type InquiryFilter = "ALL" | InquiryStatus | "UNRESOLVED"
+type WriterFilter = "ALL" | "MEMBER" | "GUEST"
 
 function isInquiryFilter(value: string | null): value is InquiryFilter {
   return (
@@ -88,6 +89,7 @@ export default function AdminSupportPage() {
   const [inquiries, setInquiries] = useState<AdminInquiryListItem[]>([])
   const [loading, setLoading] = useState(true)
   const [filter, setFilter] = useState<InquiryFilter>(initialFilter)
+  const [writerFilter, setWriterFilter] = useState<WriterFilter>("ALL")
   const [keyword, setKeyword] = useState("")
   const [error, setError] = useState("")
 
@@ -138,10 +140,8 @@ export default function AdminSupportPage() {
     }
   }, [inquiries])
 
-  const unresolvedCount = summary.received + summary.inProgress
-
   const filteredInquiries = useMemo(() => {
-    const normalizedKeyword = keyword.trim().toLowerCase()
+  const normalizedKeyword = keyword.trim().toLowerCase()
 
     return inquiries.filter((inquiry) => {
       const matchesStatus =
@@ -167,9 +167,14 @@ export default function AdminSupportPage() {
           .toLowerCase()
           .includes(normalizedKeyword)
 
-      return matchesStatus && matchesKeyword
+      const matchesWriter =
+        writerFilter === "ALL" ||
+        (writerFilter === "MEMBER" && inquiry.member) ||
+        (writerFilter === "GUEST" && !inquiry.member)
+
+      return matchesStatus && matchesWriter && matchesKeyword
     })
-  }, [filter, inquiries, keyword])
+  }, [filter, writerFilter ,inquiries, keyword])
 
   function handleFilterChange(nextFilter: InquiryFilter) {
     setFilter(nextFilter)
@@ -202,41 +207,66 @@ export default function AdminSupportPage() {
 
       <section className="overflow-hidden rounded-3xl border border-slate-200 bg-white shadow-sm">
         <div className="border-b border-slate-200 px-6 py-5">
-          <div className="flex flex-col gap-4">
-            <div className="flex flex-col gap-4 lg:flex-row lg:items-center lg:justify-between">
-              <h2 className="text-xl font-bold text-slate-900">전체 문의</h2>
+          <div className="space-y-4">
+            <h2 className="text-xl font-bold text-slate-900">전체 문의</h2>
 
-              <div className="flex flex-wrap gap-2">
-                <FilterButton
-                  active={filter === "ALL"}
-                  label="전체"
-                  count={inquiries.length}
-                  onClick={() => handleFilterChange("ALL")}
-                />
-                <FilterButton
-                  active={filter === "UNRESOLVED"}
-                  label="미처리"
-                  count={unresolvedCount}
-                  onClick={() => handleFilterChange("UNRESOLVED")}
-                />
-                <FilterButton
-                  active={filter === "RECEIVED"}
-                  label="접수됨"
-                  count={summary.received}
-                  onClick={() => handleFilterChange("RECEIVED")}
-                />
-                <FilterButton
-                  active={filter === "IN_PROGRESS"}
-                  label="처리중"
-                  count={summary.inProgress}
-                  onClick={() => handleFilterChange("IN_PROGRESS")}
-                />
-                <FilterButton
-                  active={filter === "RESOLVED"}
-                  label="완료됨"
-                  count={summary.resolved}
-                  onClick={() => handleFilterChange("RESOLVED")}
-                />
+            <div className="space-y-3 rounded-2xl bg-slate-50 px-4 py-4">
+              <div className="flex items-center">
+               <span className="mr-3 w-14 text-sm font-semibold text-slate-500">
+                  상태
+                </span>
+                  <div className="ml-auto flex flex-wrap gap-2">
+                  <FilterButton
+                    active={filter === "ALL"}
+                    label="전체"
+                    count={inquiries.length}
+                    onClick={() => handleFilterChange("ALL")}
+                  />
+                  <FilterButton
+                    active={filter === "RECEIVED"}
+                    label="접수됨"
+                    count={summary.received}
+                    onClick={() => handleFilterChange("RECEIVED")}
+                  />
+                  <FilterButton
+                    active={filter === "IN_PROGRESS"}
+                    label="처리중"
+                    count={summary.inProgress}
+                    onClick={() => handleFilterChange("IN_PROGRESS")}
+                  />
+                  <FilterButton
+                    active={filter === "RESOLVED"}
+                    label="완료됨"
+                    count={summary.resolved}
+                    onClick={() => handleFilterChange("RESOLVED")}
+                  />
+                </div>
+              </div>
+
+              <div className="flex items-center">
+                <span className="mr-3 w-14 text-sm font-semibold text-slate-500">
+                  작성자
+                </span>
+                <div className="ml-auto flex flex-wrap gap-2">
+                  <FilterButton
+                    active={writerFilter === "ALL"}
+                    label="전체"
+                    count={inquiries.length}
+                    onClick={() => setWriterFilter("ALL")}
+                  />
+                  <FilterButton
+                    active={writerFilter === "MEMBER"}
+                    label="회원"
+                    count={inquiries.filter((i) => i.member).length}
+                    onClick={() => setWriterFilter("MEMBER")}
+                  />
+                  <FilterButton
+                    active={writerFilter === "GUEST"}
+                    label="비회원"
+                    count={inquiries.filter((i) => !i.member).length}
+                    onClick={() => setWriterFilter("GUEST")}
+                  />
+                </div>
               </div>
             </div>
 

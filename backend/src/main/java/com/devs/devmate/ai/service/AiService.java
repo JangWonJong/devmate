@@ -120,6 +120,7 @@ public class AiService {
                 - 구체적인 상황을 가정하지 마라.
                 - details와 hints는 최소한의 일반적인 안내만 작성하라.
                 - question도 과하게 구체적으로 만들지 마라.
+                - 사용자가 바로 게시글 본문에 붙여도 어색하지 않도록, 부족한 정보를 채우라는 안내형 문장으로 작성하라.
                 """;
 
         String topicRule = switch (topic) {

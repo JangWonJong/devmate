@@ -46,26 +46,30 @@ export default function AiAssistantPanel({
   }
 
   const handleMoveToWrite = () => {
-    if (!result || !onMoveToWrite) return
+  if (!result || !onMoveToWrite) return
 
-    const sections: string[] = [result.question]
+  const sections: string[] = []
 
-    sections.push(`현재 상황:\n${message.trim()}`)
+  const trimmedMessage = message.trim()
 
-    if (result.details.trim()) {
-      sections.push(`확인해보면 좋은 내용:\n${result.details}`)
-    }
-
-    if (result.hints.trim()) {
-      sections.push(`점검 포인트:\n${result.hints}`)
-    }
-
-    onMoveToWrite({
-      title: result.question,
-      type: "QUESTION",
-      content: sections.join("\n\n"),
-    })
+  if (trimmedMessage) {
+    sections.push(`현재 상황:\n${trimmedMessage}`)
   }
+
+  if (result.details.trim()) {
+    sections.push(`확인해보면 좋은 내용:\n${result.details}`)
+  }
+
+  if (result.hints.trim()) {
+    sections.push(`점검 포인트:\n${result.hints}`)
+  }
+
+  onMoveToWrite({
+    title: result.question,
+    type: "QUESTION",
+    content: sections.join("\n\n"),
+  })
+}
 
   return (
     <div className="flex h-full flex-col">

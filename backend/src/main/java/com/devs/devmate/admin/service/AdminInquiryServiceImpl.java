@@ -87,10 +87,11 @@ public class AdminInquiryServiceImpl implements AdminInquiryService{
         }
 
         inquiry.resolve(adminReply.trim(), admin);
-
-        notificationService.createInquiryAnswered(
-                inquiry.getMember().getId(),
-                inquiry.getId()
-        );
+        if (inquiry.getMember() != null) {
+            notificationService.createInquiryAnswered(
+                    inquiry.getMember().getId(),
+                    inquiry.getId()
+            );
+        }
     }
 }

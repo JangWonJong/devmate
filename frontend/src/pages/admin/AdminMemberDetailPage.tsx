@@ -62,6 +62,9 @@ export default function AdminMemberDetailPage() {
   const [loading, setLoading] = useState(true)
   const [saving, setSaving] = useState(false)
   const [adminMemo, setAdminMemo] = useState("")
+  const [actionFilter, setActionFilter] = useState<"ALL" | "STATUS" | "ROLE" | "MEMO">("ALL")
+  const [searchKeyword, setSearchKeyword] = useState("")
+
   const [error, setError] = useState("")
   const [imageError, setImageError] = useState(false)
 
@@ -130,6 +133,24 @@ export default function AdminMemberDetailPage() {
   const isDeletedMember = member.status === "DELETED"
   const isSuspendedMember = member.status === "SUSPENDED"
   const isActionDisabled = saving
+
+  const filteredLogs = member.actionLogs.filter((log) => {
+    if (actionFilter !== "ALL") {
+      if (actionFilter === "STATUS" && log.actionType !== "MEMBER_STATUS_CHANGE") return false
+      if (actionFilter === "ROLE" && log.actionType !== "MEMBER_ROLE_CHANGE") return false
+      if (actionFilter === "MEMO" && log.actionType !== "ADMIN_MEMO_UPDATE") return false
+    }
+
+    if (searchKeyword) {
+      const keyword = searchKeyword.toLowerCase()
+      return (
+        log.description.toLowerCase().includes(keyword) ||
+        log.adminNickname.toLowerCase().includes(keyword)
+      )
+    }
+
+    return true
+  })
 
   async function handleToggleStatus() {
     if (!member) return
@@ -593,16 +614,46 @@ export default function AdminMemberDetailPage() {
       <section className="rounded-3xl border border-slate-200 bg-white p-6 shadow-sm">
         <div className="mb-4">
           <h2 className="text-lg font-bold text-slate-900">관리 이력</h2>
+          <div className="mb-4 flex flex-wrap items-center justify-between gap-3">
+            <div className="flex flex-wrap gap-2">
+              {[
+                { key: "ALL", label: "전체" },
+                { key: "STATUS", label: "상태 변경" },
+                { key: "ROLE", label: "권한 변경" },
+                { key: "MEMO", label: "메모 수정" },
+              ].map((item) => (
+                <button
+                  key={item.key}
+                  onClick={() => setActionFilter(item.key as any)}
+                  className={[
+                    "rounded-full px-3 py-1 text-xs font-semibold",
+                    actionFilter === item.key
+                      ? "bg-slate-900 text-white"
+                      : "border border-slate-200 bg-white text-slate-500 hover:bg-slate-50",
+                  ].join(" ")}
+                >
+                  {item.label}
+                </button>
+              ))}
+            </div>
+            <input
+              type="text"
+              placeholder="관리 이력 검색"
+              value={searchKeyword}
+              onChange={(e) => setSearchKeyword(e.target.value)}
+              className="w-full max-w-[240px] rounded-xl border border-slate-200 px-3 py-2 text-xs outline-none focus:border-slate-400"
+            />
+          </div>
           <p className="mt-1 text-sm text-slate-500">
             관리자에 의해 처리된 회원 관리 기록입니다.
           </p>
         </div>
 
-        {member.actionLogs.length === 0 ? (
+        {filteredLogs.length === 0 ? (
           <ActivityEmpty text="관리 이력이 없습니다." />
         ) : (
           <div className="space-y-3">
-            {member.actionLogs.map((log) => (
+            {filteredLogs.map((log) => (
               <div
                 key={log.id}
                 className="rounded-2xl border border-slate-200 bg-slate-50 px-4 py-3"
