@@ -19,6 +19,7 @@ function getAdminPageLabel(pathname: string) {
   if (pathname === "/admin") return "대시보드"
   if (pathname.startsWith("/admin/inquiries")) return "문의 관리"
   if (pathname.startsWith("/admin/members")) return "회원 관리"
+  if (pathname.startsWith("/admin/logs")) return "관리 이력"
   return "관리자"
 }
 
@@ -130,8 +131,13 @@ export default function AdminLayout() {
                 </>
               )}
             </NavLink>
+            
             <NavLink to="/admin/members" className={({ isActive }) => navClass(isActive)}>
               회원 관리
+            </NavLink>
+
+            <NavLink to="/admin/logs" className={({ isActive }) => navClass(isActive)}>
+              관리 이력
             </NavLink>
             
           </nav>
