@@ -28,6 +28,7 @@ import { DevLogListPage } from "./pages/devlog/DevLogListPage"
 import { NewDevLogPage } from "./pages/devlog/NewDevLogPage"
 import { DevLogDetailPage } from "./pages/devlog/DevLogDetailPage"
 import { DevLogEditPage } from "./pages/devlog/DevLogEditPage"
+import { MemberDevLogPage } from "./pages/devlog/MemberDevLogPage"
 
 
 export const router = createBrowserRouter([
@@ -51,7 +52,7 @@ export const router = createBrowserRouter([
             { path: "/devlogs/new", element: <RequireAuth><NewDevLogPage /></RequireAuth> },
             { path: "/devlogs/:devLogId", element: <DevLogDetailPage /> },
             { path: "/devlogs/:devLogId/edit", element: <RequireAuth><DevLogEditPage /></RequireAuth> },
-
+            { path: "/members/:memberId/devlogs", element: <MemberDevLogPage /> },
 
             { path: "/reservations", element: <ReservationsPage /> },
 

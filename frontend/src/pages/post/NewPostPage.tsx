@@ -2,31 +2,7 @@ import { useRef, useState } from "react"
 import { useLocation, useNavigate } from "react-router-dom"
 import { createPost } from "../../api/post/posts"
 import AiAssistantPanel from "../../components/support/AiAssistantPanel"
-
-function validateFiles(files: File[]) {
-  const allowedTypes = [
-    "image/png",
-    "image/jpeg",
-    "image/jpg",
-    "image/webp",
-  ]
-
-  if (files.length > 5) {
-    return "이미지는 최대 5장까지 업로드할 수 있어요."
-  }
-
-  for (const file of files) {
-    if (!allowedTypes.includes(file.type)) {
-      return "PNG, JPG, JPEG, WEBP 파일만 업로드할 수 있어요."
-    }
-
-    if (file.size > 5 * 1024 * 1024) {
-      return "파일은 최대 5MB까지 업로드할 수 있어요."
-    }
-  }
-
-  return null
-}
+import { validateFiles } from "../../utils/file"
 
 export function NewPostPage() {
   const nav = useNavigate()
@@ -51,6 +27,9 @@ export function NewPostPage() {
   const [files, setFiles] = useState<File[]>([])
 
   const [showAiGuide, setShowAiGuide] = useState(false)
+
+  const isFromDevLog = Boolean(state?.prefilledTitle) || Boolean(state?.prefilledContent)
+
 
   const addFiles = (selected: File[]) => {
     setFiles((prev) => {
@@ -114,6 +93,12 @@ export function NewPostPage() {
         <p className="text-lg leading-8 text-slate-600">
           개발 고민이나 스터디 모집 글을 작성해보세요.
         </p>
+
+        {isFromDevLog && (
+          <div className="rounded-2xl border border-blue-100 bg-blue-50 px-4 py-3 text-sm text-blue-700">
+            DevLog 내용을 바탕으로 게시글 초안이 자동 입력되었어요. 필요한 부분만 다듬어서 등록해 주세요.
+          </div>
+        )}
       </section>
 
       <section className="rounded-[28px] border border-slate-200 bg-white p-8 shadow-sm">
@@ -201,7 +186,7 @@ export function NewPostPage() {
               className="h-13 w-full rounded-2xl border border-slate-300 bg-white px-4 text-sm text-slate-900 outline-none transition placeholder:text-slate-400 focus:border-slate-400"
             />
           </div>
-
+            
           <div className="space-y-2">
             <label className="text-sm font-semibold text-slate-700">내용</label>
             <textarea

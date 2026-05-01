@@ -202,6 +202,14 @@ export function MemberProfilePage() {
 
               <button
                 type="button"
+                onClick={() => nav(`/members/${profile.id}/devlogs`)}
+                className="rounded-xl border border-blue-200 bg-blue-50 px-4 py-2 text-sm font-medium text-blue-700 transition hover:bg-blue-100"
+              >
+                DevLog 보러가기
+              </button>
+
+              <button
+                type="button"
                 onClick={() => nav(-1)}
                 className="rounded-xl border border-slate-300 bg-white px-4 py-2 text-sm font-medium text-slate-700 transition hover:bg-slate-50"
               >
@@ -209,6 +217,7 @@ export function MemberProfilePage() {
               </button>
             </div>
           </div>
+          
 
           <div className="mt-6 grid gap-4 sm:grid-cols-2">
             <div className="rounded-2xl border border-slate-200 bg-slate-50 p-5">
@@ -269,8 +278,11 @@ export function MemberProfilePage() {
                 ))}
               </div>
             </div>
+
+            
           )}
         </section>
+        
       </div>
 
       {imageOpen && profile.profileImageUrl && (

@@ -6,18 +6,12 @@ import {
   type DevLogAttachmentResponse,
 } from "../../api/devlog/devlog"
 import { apiErrorMessage } from "../../utils/error"
+import { Puzzle, Wrench, BookOpen, Lightbulb } from "lucide-react"
 
 function validateFiles(files: File[]) {
-  const allowedTypes = [
-    "image/png",
-    "image/jpeg",
-    "image/jpg",
-    "image/webp",
-  ]
+  const allowedTypes = ["image/png", "image/jpeg", "image/jpg", "image/webp"]
 
-  if (files.length > 5) {
-    return "이미지는 최대 5장까지 업로드할 수 있어요."
-  }
+  if (files.length > 5) return "이미지는 최대 5장까지 업로드할 수 있어요."
 
   for (const file of files) {
     if (!allowedTypes.includes(file.type)) {
@@ -36,6 +30,15 @@ function makeFileKey(file: File) {
   return `${file.name}-${file.size}-${file.lastModified}`
 }
 
+function insertCodeBlock(
+  value: string,
+  setValue: (value: string) => void,
+  language = "tsx"
+) {
+  const codeBlock = `\n\`\`\`${language}\n// 여기에 코드를 입력하세요.\n\`\`\`\n`
+  setValue(value ? `${value}${codeBlock}` : codeBlock.trimStart())
+}
+
 export function DevLogEditPage() {
   const nav = useNavigate()
   const { devLogId } = useParams()
@@ -51,9 +54,10 @@ export function DevLogEditPage() {
   const [saving, setSaving] = useState(false)
 
   const [files, setFiles] = useState<File[]>([])
-  const [existingFiles, setExistingFiles] = useState<DevLogAttachmentResponse[]>([])
+  const [existingFiles, setExistingFiles] = useState<
+    DevLogAttachmentResponse[]
+  >([])
   const [removedFileIds, setRemovedFileIds] = useState<number[]>([])
-
   const [dragging, setDragging] = useState(false)
 
   useEffect(() => {
@@ -113,20 +117,6 @@ export function DevLogEditPage() {
 
     addFiles(selected)
     e.currentTarget.value = ""
-  }
-
-  const handleDragOver = (e: React.DragEvent<HTMLDivElement>) => {
-    e.preventDefault()
-  }
-
-  const handleDragEnter = (e: React.DragEvent<HTMLDivElement>) => {
-    e.preventDefault()
-    setDragging(true)
-  }
-
-  const handleDragLeave = (e: React.DragEvent<HTMLDivElement>) => {
-    e.preventDefault()
-    setDragging(false)
   }
 
   const handleDrop = (e: React.DragEvent<HTMLDivElement>) => {
@@ -203,7 +193,7 @@ export function DevLogEditPage() {
     <div className="mx-auto max-w-3xl space-y-8">
       <section className="space-y-3">
         <h1 className="text-4xl font-bold tracking-tight text-slate-900">
-          DevLog 수정
+          ✏️ DevLog 수정
         </h1>
         <p className="text-lg leading-8 text-slate-600">
           개발 기록 내용과 첨부 이미지를 함께 수정할 수 있어요.
@@ -213,7 +203,9 @@ export function DevLogEditPage() {
       <section className="rounded-[28px] border border-slate-200 bg-white p-8 shadow-sm">
         <div className="space-y-8">
           <div className="space-y-2">
-            <label className="text-sm font-semibold text-slate-700">제목</label>
+            <label className="text-sm font-semibold text-slate-700">
+              🏷 제목
+            </label>
             <input
               placeholder="제목을 입력해 주세요"
               value={title}
@@ -223,55 +215,111 @@ export function DevLogEditPage() {
           </div>
 
           <div className="space-y-2">
-            <label className="text-sm font-semibold text-slate-700">
-              문제 상황
-            </label>
+            <div className="flex items-center justify-between gap-2">
+              <div className="flex items-center gap-2">
+                <Puzzle size={18} className="text-blue-500" />
+                <span className="text-sm font-semibold text-slate-700">
+                  문제 상황
+                </span>
+              </div>
+              <button
+                type="button"
+                onClick={() => insertCodeBlock(problem, setProblem)}
+                className="rounded-xl border border-slate-300 px-3 py-1.5 text-xs font-semibold text-slate-600 hover:bg-slate-50"
+              >
+                코드블럭 추가
+              </button>
+            </div>
+
             <textarea
-              placeholder="어떤 문제가 발생했는지 작성해 주세요."
               value={problem}
               onChange={(e) => setProblem(e.target.value)}
-              className="min-h-[180px] w-full resize-y rounded-2xl border border-slate-300 bg-white px-4 py-4 text-sm leading-7 text-slate-900 outline-none transition placeholder:text-slate-400 focus:border-slate-400"
+              placeholder="어떤 문제가 발생했는지 작성해 주세요."
+              className="min-h-[180px] w-full resize-y rounded-2xl border border-slate-300 px-4 py-4 text-sm leading-7 outline-none focus:border-slate-400"
             />
           </div>
 
           <div className="space-y-2">
-            <label className="text-sm font-semibold text-slate-700">
-              해결 과정
-            </label>
+            <div className="flex items-center justify-between gap-2">
+              <div className="flex items-center gap-2">
+                <Wrench size={18} className="text-green-500" />
+                <span className="text-sm font-semibold text-slate-700">
+                  해결 과정
+                </span>
+              </div>
+              <button
+                type="button"
+                onClick={() => insertCodeBlock(solution, setSolution)}
+                className="rounded-xl border border-slate-300 px-3 py-1.5 text-xs font-semibold text-slate-600 hover:bg-slate-50"
+              >
+                코드블럭 추가
+              </button>
+            </div>
+
             <textarea
-              placeholder="어떻게 해결했는지 작성해 주세요."
               value={solution}
               onChange={(e) => setSolution(e.target.value)}
-              className="min-h-[220px] w-full resize-y rounded-2xl border border-slate-300 bg-white px-4 py-4 text-sm leading-7 text-slate-900 outline-none transition placeholder:text-slate-400 focus:border-slate-400"
+              placeholder="어떻게 해결했는지 작성해 주세요."
+              className="min-h-[220px] w-full resize-y rounded-2xl border border-slate-300 px-4 py-4 text-sm leading-7 outline-none focus:border-slate-400"
             />
           </div>
 
           <div className="space-y-2">
-            <label className="text-sm font-semibold text-slate-700">
-              참고 코드 / 개념
-            </label>
+            <div className="flex items-center justify-between gap-2">
+              <div className="flex items-center gap-2">
+                <BookOpen size={18} className="text-purple-500" />
+                <span className="text-sm font-semibold text-slate-700">
+                  참고 코드 / 개념
+                </span>
+              </div>
+              <button
+                type="button"
+                onClick={() => insertCodeBlock(reference, setReference)}
+                className="rounded-xl border border-slate-300 px-3 py-1.5 text-xs font-semibold text-slate-600 hover:bg-slate-50"
+              >
+                코드블럭 추가
+              </button>
+            </div>
+
             <textarea
-              placeholder="참고한 코드, 개념, 링크 등을 작성해 주세요."
               value={reference}
               onChange={(e) => setReference(e.target.value)}
-              className="min-h-[140px] w-full resize-y rounded-2xl border border-slate-300 bg-white px-4 py-4 text-sm leading-7 text-slate-900 outline-none transition placeholder:text-slate-400 focus:border-slate-400"
+              placeholder="참고한 코드, 개념, 링크 등을 작성해 주세요."
+              className="min-h-[140px] w-full rounded-2xl border border-slate-300 px-4 py-4 text-sm outline-none focus:border-slate-400"
             />
           </div>
 
           <div className="space-y-2">
-            <label className="text-sm font-semibold text-slate-700">회고</label>
+            <div className="flex items-center justify-between gap-2">
+              <div className="flex items-center gap-2">
+                <Lightbulb size={18} className="text-yellow-500" />
+                <span className="text-sm font-semibold text-slate-700">
+                  회고
+                </span>
+              </div>
+              <button
+                type="button"
+                onClick={() =>
+                  insertCodeBlock(retrospective, setRetrospective)
+                }
+                className="rounded-xl border border-slate-300 px-3 py-1.5 text-xs font-semibold text-slate-600 hover:bg-slate-50"
+              >
+                코드블럭 추가
+              </button>
+            </div>
+
             <textarea
-              placeholder="이번 경험을 통해 배운 점을 작성해 주세요."
               value={retrospective}
               onChange={(e) => setRetrospective(e.target.value)}
-              className="min-h-[140px] w-full resize-y rounded-2xl border border-slate-300 bg-white px-4 py-4 text-sm leading-7 text-slate-900 outline-none transition placeholder:text-slate-400 focus:border-slate-400"
+              placeholder="이번 경험을 통해 배운 점을 작성해 주세요."
+              className="min-h-[140px] w-full rounded-2xl border border-slate-300 px-4 py-4 text-sm outline-none focus:border-slate-400"
             />
           </div>
 
           {existingFiles.length > 0 && (
             <div className="space-y-3">
               <label className="text-sm font-semibold text-slate-700">
-                현재 첨부 이미지
+                🖼 현재 첨부 이미지
               </label>
 
               <div className="grid gap-4 sm:grid-cols-2">
@@ -304,17 +352,21 @@ export function DevLogEditPage() {
           )}
 
           <div className="space-y-3">
-            <div className="flex items-center justify-between gap-3">
-              <label className="text-sm font-semibold text-slate-700">
-                새 이미지 첨부
-              </label>
-            </div>
+            <label className="text-sm font-semibold text-slate-700">
+              📷 새 이미지 첨부
+            </label>
 
             <div
               onDrop={handleDrop}
-              onDragOver={handleDragOver}
-              onDragEnter={handleDragEnter}
-              onDragLeave={handleDragLeave}
+              onDragOver={(e) => e.preventDefault()}
+              onDragEnter={(e) => {
+                e.preventDefault()
+                setDragging(true)
+              }}
+              onDragLeave={(e) => {
+                e.preventDefault()
+                setDragging(false)
+              }}
               className={`flex flex-col items-center justify-center rounded-2xl border-2 border-dashed px-6 py-10 text-center transition ${
                 dragging
                   ? "border-indigo-400 bg-indigo-50"
@@ -322,7 +374,7 @@ export function DevLogEditPage() {
               }`}
             >
               <p className="text-sm font-medium text-slate-700">
-                파일을 드래그해서 업로드
+                🖼 파일을 드래그해서 업로드
               </p>
               <p className="mt-1 text-xs text-slate-500">
                 또는 아래 버튼으로 선택하세요
@@ -341,14 +393,15 @@ export function DevLogEditPage() {
             </div>
 
             <p className="text-xs text-slate-500">
-              새 이미지를 추가할 수 있어요. 최대 5장, 각 5MB까지 업로드 가능해요.
+              새 이미지를 추가할 수 있어요. 최대 5장, 각 5MB까지 업로드
+              가능해요.
             </p>
           </div>
 
           {files.length > 0 && (
             <div className="rounded-xl border border-slate-200 bg-slate-50 p-4">
               <div className="mb-3 text-sm font-semibold text-slate-900">
-                새로 업로드할 파일 ({files.length}/5)
+                📦 새로 업로드할 파일 ({files.length}/5)
               </div>
 
               <div className="grid gap-4 sm:grid-cols-2">
@@ -398,7 +451,7 @@ export function DevLogEditPage() {
               onClick={onSubmit}
               className="rounded-2xl bg-slate-900 px-5 py-3 text-sm font-semibold text-white transition hover:bg-slate-800 disabled:cursor-not-allowed disabled:opacity-50"
             >
-              수정 완료
+              {saving ? "수정 중..." : "🚀 수정 완료"}
             </button>
 
             <button

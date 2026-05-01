@@ -2,30 +2,32 @@ import { useRef, useState } from "react"
 import { useNavigate } from "react-router-dom"
 import { createDevLog } from "../../api/devlog/devlog"
 import { apiErrorMessage } from "../../utils/error"
+import { Puzzle, Wrench, BookOpen, Lightbulb } from "lucide-react"
 
 function validateFiles(files: File[]) {
-  const allowedTypes = [
-    "image/png",
-    "image/jpeg",
-    "image/jpg",
-    "image/webp",
-  ]
+  const allowedTypes = ["image/png", "image/jpeg", "image/jpg", "image/webp"]
 
-  if (files.length > 5) {
-    return "이미지는 최대 5장까지 업로드할 수 있어요."
-  }
+  if (files.length > 5) return "이미지는 최대 5장까지 업로드할 수 있어요."
 
   for (const file of files) {
     if (!allowedTypes.includes(file.type)) {
       return "PNG, JPG, JPEG, WEBP 파일만 업로드할 수 있어요."
     }
-
     if (file.size > 5 * 1024 * 1024) {
       return "파일은 최대 5MB까지 업로드할 수 있어요."
     }
   }
 
   return null
+}
+
+function insertCodeBlock(
+  value: string,
+  setValue: (value: string) => void,
+  language = "tsx"
+) {
+  const codeBlock = `\n\`\`\`${language}\n// 여기에 코드를 입력하세요.\n\`\`\`\n`
+  setValue(value ? `${value}${codeBlock}` : codeBlock.trimStart())
 }
 
 export function NewDevLogPage() {
@@ -41,36 +43,35 @@ export function NewDevLogPage() {
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState("")
 
-
   const addFiles = (selected: File[]) => {
     setFiles((prev) => {
-        const merged = [...prev, ...selected]
-        return merged.slice(0, 5)
+      const merged = [...prev, ...selected]
+      return merged.slice(0, 5)
     })
   }
 
-  
   const submit = async () => {
-    
     const fileError = validateFiles(files)
     if (fileError) return setError(fileError)
-    
+
     if (!title.trim()) return setError("제목을 입력해 주세요.")
     if (!problem.trim()) return setError("문제 상황을 입력해 주세요.")
     if (!solution.trim()) return setError("해결 과정을 입력해 주세요.")
-    
+
     try {
       setLoading(true)
       setError("")
 
       const id = await createDevLog(
-      {
-            title: title.trim(),
-            problem: problem.trim(),
-            solution: solution.trim(),
-            reference: reference.trim() || undefined,
-            retrospective: retrospective.trim() || undefined,
-      },files)
+        {
+          title: title.trim(),
+          problem: problem.trim(),
+          solution: solution.trim(),
+          reference: reference.trim() || undefined,
+          retrospective: retrospective.trim() || undefined,
+        },
+        files
+      )
 
       nav(`/devlogs/${id}`)
     } catch (e) {
@@ -86,7 +87,7 @@ export function NewDevLogPage() {
         <div className="border-b border-slate-100 pb-6">
           <p className="text-sm font-semibold text-blue-600">New DevLog</p>
           <h1 className="mt-2 text-3xl font-bold text-slate-900">
-            DevLog 작성
+            📝 DevLog 작성
           </h1>
           <p className="mt-2 text-sm text-slate-500">
             개발 중 해결한 문제와 배운 점을 기록해보세요.
@@ -95,7 +96,9 @@ export function NewDevLogPage() {
 
         <div className="mt-6 space-y-6">
           <div>
-            <label className="text-sm font-semibold text-slate-700">제목</label>
+            <label className="text-sm font-semibold text-slate-700">
+              🏷 제목
+            </label>
             <input
               value={title}
               onChange={(e) => setTitle(e.target.value)}
@@ -105,9 +108,19 @@ export function NewDevLogPage() {
           </div>
 
           <div>
-            <label className="text-sm font-semibold text-slate-700">
-              문제 상황
-            </label>
+            <div className="mb-2 flex items-center justify-between gap-2">
+              <div className="flex items-center gap-2">
+                <Puzzle size={18} className="text-blue-500" />
+                <span className="font-semibold">문제 상황</span>
+              </div>
+              <button
+                type="button"
+                onClick={() => insertCodeBlock(problem, setProblem)}
+                className="rounded-xl border border-slate-300 px-3 py-1.5 text-xs font-semibold text-slate-600 hover:bg-slate-50"
+              >
+                코드블럭 추가
+              </button>
+            </div>
             <textarea
               value={problem}
               onChange={(e) => setProblem(e.target.value)}
@@ -115,10 +128,21 @@ export function NewDevLogPage() {
               className="mt-2 min-h-[150px] w-full resize-y rounded-2xl border border-slate-300 px-4 py-3 text-sm leading-7 outline-none focus:border-slate-500"
             />
           </div>
+
           <div>
-            <label className="text-sm font-semibold text-slate-700">
-              해결 과정
-            </label>
+            <div className="mb-2 flex items-center justify-between gap-2">
+              <div className="flex items-center gap-2">
+                <Wrench size={18} className="text-green-500" />
+                <span className="font-semibold">해결 과정</span>
+              </div>
+              <button
+                type="button"
+                onClick={() => insertCodeBlock(solution, setSolution)}
+                className="rounded-xl border border-slate-300 px-3 py-1.5 text-xs font-semibold text-slate-600 hover:bg-slate-50"
+              >
+                코드블럭 추가
+              </button>
+            </div>
             <textarea
               value={solution}
               onChange={(e) => setSolution(e.target.value)}
@@ -126,55 +150,75 @@ export function NewDevLogPage() {
               className="mt-2 min-h-[200px] w-full resize-y rounded-2xl border border-slate-300 px-4 py-3 text-sm leading-7 outline-none focus:border-slate-500"
             />
           </div>
+
           <input
             ref={fileInputRef}
             type="file"
             multiple
             accept="image/png,image/jpeg,image/jpg,image/webp"
             onChange={(e) => {
-                const selected = Array.from(e.target.files ?? [])
-                addFiles(selected)
-                e.currentTarget.value = ""
+              const selected = Array.from(e.target.files ?? [])
+              addFiles(selected)
+              e.currentTarget.value = ""
             }}
             className="hidden"
-            />
+          />
+
           <div
             onClick={() => fileInputRef.current?.click()}
-            className="cursor-pointer rounded-2xl border border-dashed border-slate-300 px-4 py-6 text-center"
-            >
-            이미지 업로드 (최대 5장)
+            onDragOver={(e) => e.preventDefault()}
+            onDrop={(e) => {
+              e.preventDefault()
+              const dropped = Array.from(e.dataTransfer.files)
+              addFiles(dropped)
+            }}
+            className="cursor-pointer rounded-2xl border border-dashed border-slate-300 px-4 py-6 text-center transition hover:bg-slate-50"
+          >
+            🖼 이미지 업로드 (최대 5장)
           </div>
+
           {files.length > 0 && (
             <div className="rounded-xl border border-slate-200 bg-slate-50 p-4">
-                <div className="mb-3 text-sm font-semibold text-slate-900">
+              <div className="mb-3 text-sm font-semibold text-slate-900">
                 첨부 이미지 ({files.length}/5)
-                </div>
+              </div>
 
-                <div className="space-y-2">
+              <div className="space-y-2">
                 {files.map((file, index) => (
-                    <div
+                  <div
                     key={`${file.name}-${file.lastModified}-${index}`}
                     className="flex items-center justify-between rounded-lg bg-white px-3 py-2 text-sm"
-                    >
+                  >
                     <span className="truncate text-slate-700">{file.name}</span>
-
                     <button
-                        type="button"
-                        onClick={() => setFiles((prev) => prev.filter((_, i) => i !== index))}
-                        className="ml-3 text-red-500"
+                      type="button"
+                      onClick={() =>
+                        setFiles((prev) => prev.filter((_, i) => i !== index))
+                      }
+                      className="ml-3 text-red-500"
                     >
-                        제거
+                      제거
                     </button>
-                    </div>
+                  </div>
                 ))}
-                </div>
+              </div>
             </div>
-            )}
+          )}
 
           <div>
-            <label className="text-sm font-semibold text-slate-700">
-              참고 코드 / 개념
-            </label>
+            <div className="mb-2 flex items-center justify-between gap-2">
+              <div className="flex items-center gap-2">
+                <BookOpen size={18} className="text-purple-500" />
+                <span className="font-semibold">참고 코드 / 개념</span>
+              </div>
+              <button
+                type="button"
+                onClick={() => insertCodeBlock(reference, setReference)}
+                className="rounded-xl border border-slate-300 px-3 py-1.5 text-xs font-semibold text-slate-600 hover:bg-slate-50"
+              >
+                코드블럭 추가
+              </button>
+            </div>
             <textarea
               value={reference}
               onChange={(e) => setReference(e.target.value)}
@@ -184,7 +228,19 @@ export function NewDevLogPage() {
           </div>
 
           <div>
-            <label className="text-sm font-semibold text-slate-700">회고</label>
+            <div className="mb-2 flex items-center justify-between gap-2">
+              <div className="flex items-center gap-2">
+                <Lightbulb size={18} className="text-yellow-500" />
+                <span className="font-semibold">회고</span>
+              </div>
+              <button
+                type="button"
+                onClick={() => insertCodeBlock(retrospective, setRetrospective)}
+                className="rounded-xl border border-slate-300 px-3 py-1.5 text-xs font-semibold text-slate-600 hover:bg-slate-50"
+              >
+                코드블럭 추가
+              </button>
+            </div>
             <textarea
               value={retrospective}
               onChange={(e) => setRetrospective(e.target.value)}
@@ -205,7 +261,7 @@ export function NewDevLogPage() {
               onClick={submit}
               className="rounded-2xl bg-slate-900 px-5 py-3 text-sm font-semibold text-white hover:bg-slate-800 disabled:opacity-50"
             >
-              {loading ? "등록 중..." : "등록"}
+              {loading ? "등록 중..." : "🚀 등록"}
             </button>
 
             <button

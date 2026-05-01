@@ -2,31 +2,7 @@ import React, { useEffect, useMemo, useState } from "react"
 import { useNavigate, useParams } from "react-router-dom"
 import type { PostAttachmentResponse } from "../../api/post/posts"
 import { getPost, updatePost } from "../../api/post/posts"
-
-function validateFiles(files: File[]) {
-  const allowedTypes = [
-    "image/png",
-    "image/jpeg",
-    "image/jpg",
-    "image/webp",
-  ]
-
-  if (files.length > 5) {
-    return "이미지는 최대 5장까지 업로드할 수 있어요."
-  }
-
-  for (const file of files) {
-    if (!allowedTypes.includes(file.type)) {
-      return "PNG, JPG, JPEG, WEBP 파일만 업로드할 수 있어요."
-    }
-
-    if (file.size > 5 * 1024 * 1024) {
-      return "파일은 최대 5MB까지 업로드할 수 있어요."
-    }
-  }
-
-  return null
-}
+import { validateFiles } from "../../utils/file"
 
 function makeFileKey(file: File) {
   return `${file.name}-${file.size}-${file.lastModified}`
