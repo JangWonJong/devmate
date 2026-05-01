@@ -41,12 +41,21 @@ export default function LandingHeader({
           >
             커뮤니티
           </Link>
+          
           <Link
             to="/mystudies"
             className="text-sm font-medium text-slate-600 transition hover:text-slate-900"
           >
             내스터디
           </Link>
+          
+          <Link
+            to="/devlogs"
+            className="text-sm font-medium text-slate-600 transition hover:text-slate-900"
+          >
+            DevLog
+          </Link>
+          
           <Link
             to="/reservations"
             className="text-sm font-medium text-slate-600 transition hover:text-slate-900"

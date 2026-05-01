@@ -361,7 +361,7 @@ export function PostsPage() {
           커뮤니티
         </h1>
         <p className="text-lg leading-8 text-slate-600">
-          개발 고민을 공유하고, 해결 과정을 기록해보세요.
+          개발 고민을 공유하고, 스터디를 진행해보세요.
         </p>
       </section>
 

@@ -24,6 +24,10 @@ import AdminSupportDetailPage from "./pages/admin/AdminSupportDetailPage"
 import AdminMembersPage from "./pages/admin/AdminMembersPage"
 import AdminMemberDetailPage from "./pages/admin/AdminMemberDetailPage"
 import AdminActionLogPage from "./pages/admin/AdminActionLogPage"
+import { DevLogListPage } from "./pages/devlog/DevLogListPage"
+import { NewDevLogPage } from "./pages/devlog/NewDevLogPage"
+import { DevLogDetailPage } from "./pages/devlog/DevLogDetailPage"
+import { DevLogEditPage } from "./pages/devlog/DevLogEditPage"
 
 
 export const router = createBrowserRouter([
@@ -42,6 +46,12 @@ export const router = createBrowserRouter([
 
             { path: "/posts/new", element: <RequireAuth><NewPostPage /></RequireAuth> },
             { path: "/posts/:id/edit", element: <RequireAuth><EditPostPage /></RequireAuth> },
+
+            { path: "/devlogs", element: <RequireAuth><DevLogListPage /></RequireAuth> },
+            { path: "/devlogs/new", element: <RequireAuth><NewDevLogPage /></RequireAuth> },
+            { path: "/devlogs/:devLogId", element: <DevLogDetailPage /> },
+            { path: "/devlogs/:devLogId/edit", element: <RequireAuth><DevLogEditPage /></RequireAuth> },
+
 
             { path: "/reservations", element: <ReservationsPage /> },
 

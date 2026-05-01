@@ -268,25 +268,22 @@ export default function PostDetailHeader({
           <div className="mt-6 space-y-3">
             <div className="text-sm font-semibold text-slate-700">첨부 이미지</div>
 
-            <div className="grid gap-4 sm:grid-cols-2">
-              {post.attachments.map((file, index) => (
-                <button
-                  key={file.id}
-                  type="button"
-                  onClick={() => openImageModal(index)}
-                  className="overflow-hidden rounded-2xl border border-slate-200 bg-white text-left transition hover:shadow-md"
-                >
-                  <img
-                    src={`${import.meta.env.VITE_API_BASE_URL}${file.fileUrl}`}
-                    alt={file.originalFileName}
-                    className="w-full object-cover"
-                  />
-                  <div className="px-3 py-2 text-xs text-slate-500">
-                    {file.originalFileName}
-                  </div>
-                </button>
-              ))}
-            </div>
+            <div className="columns-1 gap-4 sm:columns-2">
+            {post.attachments.map((file, index) => (
+              <button
+                key={file.id}
+                type="button"
+                onClick={() => openImageModal(index)}
+                className="mb-4 block w-full break-inside-avoid overflow-hidden rounded-2xl border border-slate-200 bg-white text-left transition hover:shadow-md"
+              >
+                <img
+                  src={`${import.meta.env.VITE_API_BASE_URL}${file.fileUrl}`}
+                  alt={file.originalFileName}
+                  className="w-full object-contain"
+                />
+              </button>
+            ))}
+          </div>
           </div>
         )}
 

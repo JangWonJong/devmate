@@ -113,6 +113,10 @@ export default function AppHeader({
               <NavLinkItem to="/mystudies">내 스터디</NavLinkItem>
             )}
 
+            {isAuthenticated && (
+              <NavLinkItem to="/devlogs">devLog</NavLinkItem>
+            )}
+
             <NavLinkItem to="/reservations">예약</NavLinkItem>
 
             {isAuthenticated && <NavLinkItem to="/mypage">마이페이지</NavLinkItem>}

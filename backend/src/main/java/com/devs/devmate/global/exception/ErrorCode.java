@@ -89,6 +89,10 @@ public enum ErrorCode {
     INVALID_STUDY_CAPACITY(HttpStatus.BAD_REQUEST, "STUDY_400_9", "현재 참여 인원보다 적게 정원을 설정할 수 없습니다."),
     FORBIDDEN_STUDY_NOTICE_UPDATE(HttpStatus.FORBIDDEN, "STUDY_403_6", "스터디 리더만 소개를 수정할 수 있습니다."),
 
+    // DEVLOG
+    DEVLOG_NOT_FOUND(HttpStatus.NOT_FOUND, "DEVLOG_404", "DevLog를 찾을 수 없습니다."),
+    FORBIDDEN_DEVLOG(HttpStatus.FORBIDDEN, "DEVLOG_403", "DevLog에 대한 권한이 없습니다."),
+
     // INQUIRY
     INQUIRY_NOT_FOUND(HttpStatus.NOT_FOUND, "INQUIRY_404", "문의 내역을 찾을 수 없습니다."),
     FORBIDDEN_INQUIRY(HttpStatus.FORBIDDEN, "INQUIRY_403", "해당 문의에 대한 권한이 없습니다."),
@@ -98,7 +102,6 @@ public enum ErrorCode {
     INVALID_GUEST_INQUIRY_NAME(HttpStatus.BAD_REQUEST, "INQUIRY_400_4", "비회원 문의 이름을 입력해주세요."),
     INVALID_GUEST_INQUIRY_EMAIL(HttpStatus.BAD_REQUEST, "INQUIRY_400_5", "비회원 문의 이메일을 입력해주세요."),
     INVALID_GUEST_INQUIRY_EMAIL_FORMAT(HttpStatus.BAD_REQUEST, "INQUIRY_400_6", "올바른 이메일 형식으로 입력해주세요."),
-
 
     // NOTIFICATION
     NOTIFICATION_NOT_FOUND(HttpStatus.NOT_FOUND, "NOTIFICATION_404","알림을 찾을 수 없습니다.");
