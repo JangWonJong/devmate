@@ -1,6 +1,5 @@
 package com.devs.devmate.devlog.entity;
 
-import com.devs.devmate.post.entity.Post;
 import jakarta.persistence.*;
 import lombok.*;
 

@@ -20,3 +20,38 @@ export function actionButtonClass(
 
   return `${base} ${tone} ${state}`
 }
+
+export function insertCodeBlockAtCursor(
+  ref: React.RefObject<HTMLTextAreaElement | null>,
+  value: string,
+  setValue: (value: string) => void,
+  language?: string
+) {
+  const textarea = ref.current
+  const placeholder = "// 여기에 코드를 입력하세요"
+
+  const codeBlock = language
+    ? `\n\`\`\`${language}\n${placeholder}\n\`\`\`\n`
+    : `\n\`\`\`\n${placeholder}\n\`\`\`\n`
+
+  if (!textarea) {
+    setValue(value ? `${value}${codeBlock}` : codeBlock.trimStart())
+    return
+  }
+
+  const start = textarea.selectionStart
+  const end = textarea.selectionEnd
+
+  const nextValue = value.slice(0, start) + codeBlock + value.slice(end)
+
+  setValue(nextValue)
+
+  setTimeout(() => {
+    const cursorStart = start + codeBlock.indexOf(placeholder)
+    const cursorEnd = cursorStart + placeholder.length
+
+    textarea.focus()
+    textarea.setSelectionRange(cursorStart, cursorEnd)
+  }, 0)
+}
+

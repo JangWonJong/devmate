@@ -1,4 +1,4 @@
-import React, { useEffect, useMemo, useState } from "react"
+import React, { useEffect, useMemo, useState, useRef } from "react"
 import { useNavigate, useParams } from "react-router-dom"
 import {
   getDevLog,
@@ -6,38 +6,10 @@ import {
   type DevLogAttachmentResponse,
 } from "../../api/devlog/devlog"
 import { apiErrorMessage } from "../../utils/error"
+import { validateFiles } from "../../utils/file"
+import { insertCodeBlockAtCursor } from "../../utils/button"
 import { Puzzle, Wrench, BookOpen, Lightbulb } from "lucide-react"
-
-function validateFiles(files: File[]) {
-  const allowedTypes = ["image/png", "image/jpeg", "image/jpg", "image/webp"]
-
-  if (files.length > 5) return "이미지는 최대 5장까지 업로드할 수 있어요."
-
-  for (const file of files) {
-    if (!allowedTypes.includes(file.type)) {
-      return "PNG, JPG, JPEG, WEBP 파일만 업로드할 수 있어요."
-    }
-
-    if (file.size > 5 * 1024 * 1024) {
-      return "파일은 최대 5MB까지 업로드할 수 있어요."
-    }
-  }
-
-  return null
-}
-
-function makeFileKey(file: File) {
-  return `${file.name}-${file.size}-${file.lastModified}`
-}
-
-function insertCodeBlock(
-  value: string,
-  setValue: (value: string) => void,
-  language = "tsx"
-) {
-  const codeBlock = `\n\`\`\`${language}\n// 여기에 코드를 입력하세요.\n\`\`\`\n`
-  setValue(value ? `${value}${codeBlock}` : codeBlock.trimStart())
-}
+import { CodeBlockButtons, makeFileKey } from "./DevlogCommon"
 
 export function DevLogEditPage() {
   const nav = useNavigate()
@@ -48,6 +20,11 @@ export function DevLogEditPage() {
   const [solution, setSolution] = useState("")
   const [reference, setReference] = useState("")
   const [retrospective, setRetrospective] = useState("")
+
+  const problemRef = useRef<HTMLTextAreaElement | null>(null)
+  const solutionRef = useRef<HTMLTextAreaElement | null>(null)
+  const referenceRef = useRef<HTMLTextAreaElement | null>(null)
+  const retrospectiveRef = useRef<HTMLTextAreaElement | null>(null)
 
   const [err, setErr] = useState<string | null>(null)
   const [loading, setLoading] = useState(true)
@@ -222,16 +199,15 @@ export function DevLogEditPage() {
                   문제 상황
                 </span>
               </div>
-              <button
-                type="button"
-                onClick={() => insertCodeBlock(problem, setProblem)}
-                className="rounded-xl border border-slate-300 px-3 py-1.5 text-xs font-semibold text-slate-600 hover:bg-slate-50"
-              >
-                코드블럭 추가
-              </button>
+              <CodeBlockButtons
+                onSelect={(lang) =>
+                  insertCodeBlockAtCursor(problemRef, problem, setProblem, lang)
+                }
+              />
             </div>
 
             <textarea
+              ref={problemRef}
               value={problem}
               onChange={(e) => setProblem(e.target.value)}
               placeholder="어떤 문제가 발생했는지 작성해 주세요."
@@ -247,16 +223,15 @@ export function DevLogEditPage() {
                   해결 과정
                 </span>
               </div>
-              <button
-                type="button"
-                onClick={() => insertCodeBlock(solution, setSolution)}
-                className="rounded-xl border border-slate-300 px-3 py-1.5 text-xs font-semibold text-slate-600 hover:bg-slate-50"
-              >
-                코드블럭 추가
-              </button>
+              <CodeBlockButtons
+                onSelect={(lang) =>
+                  insertCodeBlockAtCursor(solutionRef, solution, setSolution, lang)
+                }
+              />
             </div>
 
             <textarea
+              ref={solutionRef}
               value={solution}
               onChange={(e) => setSolution(e.target.value)}
               placeholder="어떻게 해결했는지 작성해 주세요."
@@ -272,16 +247,15 @@ export function DevLogEditPage() {
                   참고 코드 / 개념
                 </span>
               </div>
-              <button
-                type="button"
-                onClick={() => insertCodeBlock(reference, setReference)}
-                className="rounded-xl border border-slate-300 px-3 py-1.5 text-xs font-semibold text-slate-600 hover:bg-slate-50"
-              >
-                코드블럭 추가
-              </button>
+              <CodeBlockButtons
+                onSelect={(lang) =>
+                  insertCodeBlockAtCursor(referenceRef, reference, setReference, lang)
+                }
+              />
             </div>
 
             <textarea
+              ref={referenceRef}
               value={reference}
               onChange={(e) => setReference(e.target.value)}
               placeholder="참고한 코드, 개념, 링크 등을 작성해 주세요."
@@ -297,18 +271,15 @@ export function DevLogEditPage() {
                   회고
                 </span>
               </div>
-              <button
-                type="button"
-                onClick={() =>
-                  insertCodeBlock(retrospective, setRetrospective)
+              <CodeBlockButtons
+                onSelect={(lang) =>
+                  insertCodeBlockAtCursor(retrospectiveRef, retrospective, setRetrospective, lang)
                 }
-                className="rounded-xl border border-slate-300 px-3 py-1.5 text-xs font-semibold text-slate-600 hover:bg-slate-50"
-              >
-                코드블럭 추가
-              </button>
+              />
             </div>
 
             <textarea
+              ref={retrospectiveRef}
               value={retrospective}
               onChange={(e) => setRetrospective(e.target.value)}
               placeholder="이번 경험을 통해 배운 점을 작성해 주세요."
