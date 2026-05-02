@@ -50,7 +50,8 @@ public class DevLogController {
 
     @GetMapping("/devlogs/{devLogId}")
     public ApiResponse<DevLogResponse> get(@PathVariable Long devLogId) {
-        return ApiResponse.ok(devLogService.get(devLogId));
+        Long memberId = SecurityUtil.currentMemberIdOrNull();
+        return ApiResponse.ok(devLogService.get(memberId, devLogId));
     }
 
     @PatchMapping("/devlogs/{devLogId}")

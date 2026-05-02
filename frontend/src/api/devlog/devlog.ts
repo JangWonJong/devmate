@@ -37,9 +37,15 @@ export type DevLogResponse = {
   retrospective?: string
   authorId: number
   authorNickname: string
+  likeCount: number
   attachments: DevLogAttachmentResponse[]
   createdAt: string
   updatedAt: string
+}
+
+export type DevLogLikeStatusResponse = {
+  likedByMe: boolean
+  likeCount: number
 }
 
 export type DevLogSort = "id,desc" | "id,asc"
@@ -160,4 +166,24 @@ export async function deleteDevLog(id: number | string) {
   if (!data.success) {
     throw new Error(data.error?.message ?? "DevLog 삭제 실패")
   }
+}
+
+export async function getDevLogLikeStatus(devLogId: number) {
+  const { data } = await http.get<ApiResponse<DevLogLikeStatusResponse>>(
+    `/api/devlogs/${devLogId}/likes/status`
+  )
+
+  if (!data.success || data.data == null) {
+    throw new Error(data.error?.message ?? "좋아요 상태 조회 실패")
+  }
+
+  return data.data
+}
+
+export async function likeDevLog(devLogId: number) {
+  await http.post(`/api/devlogs/${devLogId}/likes`)
+}
+
+export async function unlikeDevLog(devLogId: number) {
+  await http.delete(`/api/devlogs/${devLogId}/likes`)
 }

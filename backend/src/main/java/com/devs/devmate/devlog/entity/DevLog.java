@@ -1,6 +1,7 @@
 package com.devs.devmate.devlog.entity;
 
 import com.devs.devmate.global.entity.BaseEntity;
+import com.devs.devmate.like.entity.DevLogLike;
 import com.devs.devmate.member.entity.Member;
 import jakarta.persistence.*;
 import lombok.*;
@@ -42,6 +43,10 @@ public class DevLog extends BaseEntity {
     @OneToMany(mappedBy = "devLog", cascade = CascadeType.ALL, orphanRemoval = true)
     @Builder.Default
     private List<DevLogAttachment> attachments = new ArrayList<>();
+
+    @OneToMany(mappedBy = "devLog", cascade = CascadeType.ALL, orphanRemoval = true)
+    @Builder.Default
+    private List<DevLogLike> likes = new ArrayList<>();
 
     public void update(String title, String problem, String solution, String reference, String retrospective) {
         this.title = title;

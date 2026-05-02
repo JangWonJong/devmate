@@ -3,6 +3,9 @@ import { useNavigate, useParams } from "react-router-dom"
 import {
   deleteDevLog,
   getDevLog,
+  unlikeDevLog,
+  likeDevLog,
+  getDevLogLikeStatus,
   type DevLogResponse,
 } from "../../api/devlog/devlog"
 import { fileUrl } from "../../utils/file"
@@ -13,7 +16,6 @@ import ReactMarkdown from "react-markdown"
 import remarkGfm from "remark-gfm"
 import { Prism as SyntaxHighlighter } from "react-syntax-highlighter"
 import { vscDarkPlus } from "react-syntax-highlighter/dist/esm/styles/prism"
-
 
 function normalizeMarkdown(text: string) {
   return text.replace(/\\`\\`\\`/g, "```")
@@ -34,73 +36,70 @@ function DevLogSection({
 
       <div className="mt-4 text-sm leading-7 text-slate-700">
         <ReactMarkdown
-            remarkPlugins={[remarkGfm]}
-            components={{
-                code({ inline, className, children, ...props }: any) {
-                const match = /language-(\w+)/.exec(className || "")
-                const language = match?.[1] ?? "text"
+          remarkPlugins={[remarkGfm]}
+          components={{
+            code({ inline, className, children, ...props }: any) {
+              const match = /language-(\w+)/.exec(className || "")
+              const language = match?.[1] ?? "text"
+              const code = String(children).replace(/\n$/, "")
 
-                if (inline) {
-                    return (
-                    <code
-                        className="rounded bg-slate-100 px-1.5 py-0.5 text-sm text-pink-600"
-                        {...props}
-                    >
-                        {children}
-                    </code>
-                    )
-                }
-
+              if (inline) {
                 return (
-                    <div className="my-5 overflow-hidden rounded-2xl border border-slate-700 bg-[#1f1f24] shadow-sm">
-                    <div className="flex items-center justify-between bg-[#3b383d] px-4 py-3">
-                        <div className="flex items-center gap-2">
-                        <span className="h-3 w-3 rounded-full bg-red-400" />
-                        <span className="h-3 w-3 rounded-full bg-yellow-400" />
-                        <span className="h-3 w-3 rounded-full bg-green-400" />
-                        <span className="ml-3 text-xs font-semibold text-slate-200">
-                            {language}
-                        </span>
-                        </div>
-
-                        <button
-                        type="button"
-                        onClick={() =>
-                            navigator.clipboard.writeText(
-                            String(children).replace(/\n$/, "")
-                            )
-                        }
-                        className="rounded-lg bg-white/10 px-2 py-1 text-xs font-medium text-white hover:bg-white/20"
-                        >
-                        복사
-                        </button>
-                    </div>
-
-                    <SyntaxHighlighter
-                        language={language}
-                        style={vscDarkPlus}
-                        showLineNumbers
-                        customStyle={{
-                        margin: 0,
-                        padding: "20px",
-                        background: "#1f1f24",
-                        fontSize: "14px",
-                        lineHeight: "1.7",
-                        }}
-                        lineNumberStyle={{
-                        color: "#64748b",
-                        paddingRight: "16px",
-                        }}
-                    >
-                        {String(children).replace(/\n$/, "")}
-                    </SyntaxHighlighter>
-                    </div>
+                  <code
+                    className="rounded bg-slate-100 px-1.5 py-0.5 text-sm text-pink-600"
+                    {...props}
+                  >
+                    {children}
+                  </code>
                 )
-                },
-            }}
-            >
-            {normalizeMarkdown(content)}
-            </ReactMarkdown>
+              }
+
+              return (
+                <div className="my-5 overflow-hidden rounded-2xl border border-slate-700 bg-[#1f1f24] shadow-sm">
+                  <div className="flex items-center justify-between bg-[#3b383d] px-4 py-3">
+                    <div className="flex items-center gap-2">
+                      <span className="h-3 w-3 rounded-full bg-red-400" />
+                      <span className="h-3 w-3 rounded-full bg-yellow-400" />
+                      <span className="h-3 w-3 rounded-full bg-green-400" />
+                      <span className="ml-3 text-xs font-semibold text-slate-200">
+                        {language}
+                      </span>
+                    </div>
+
+                    <button
+                      type="button"
+                      onClick={() => navigator.clipboard.writeText(code)}
+                      className="rounded-lg bg-white/10 px-2 py-1 text-xs font-medium text-white hover:bg-white/20"
+                    >
+                      복사
+                    </button>
+                  </div>
+
+                  <SyntaxHighlighter
+                    language={language}
+                    style={vscDarkPlus}
+                    showLineNumbers
+                    customStyle={{
+                      margin: 0,
+                      padding: "20px",
+                      background: "#1f1f24",
+                      fontSize: "14px",
+                      lineHeight: "1.7",
+                    }}
+                    lineNumberStyle={{
+                      color: "#64748b",
+                      paddingRight: "16px",
+                    }}
+                  >
+                    {code}
+                  </SyntaxHighlighter>
+                </div>
+              )
+            },
+          }}
+        >
+          {normalizeMarkdown(content)}
+        </ReactMarkdown>
       </div>
     </section>
   )
@@ -118,6 +117,9 @@ export function DevLogDetailPage() {
   const [selectedImageIndex, setSelectedImageIndex] = useState<number | null>(
     null
   )
+  const [likeCount, setLikeCount] = useState(0)
+  const [likedByMe, setLikedByMe] = useState(false)
+  const [likeLoading, setLikeLoading] = useState(false)
   const [error, setError] = useState("")
 
   useEffect(() => {
@@ -186,6 +188,28 @@ export function DevLogDetailPage() {
     })()
   }, [loggedIn])
 
+  useEffect(() => {
+    if (!devLog) return
+    setLikeCount(devLog.likeCount)
+  }, [devLog])
+
+  useEffect(() => {
+    ;(async () => {
+      if (!devLogId || !loggedIn) {
+        setLikedByMe(false)
+        return
+      }
+
+      try {
+        const res = await getDevLogLikeStatus(Number(devLogId))
+        setLikedByMe(res.likedByMe)
+        setLikeCount(res.likeCount)
+      } catch {
+        setLikedByMe(false)
+      }
+    })()
+  }, [devLogId, loggedIn, devLog?.likeCount])
+
   const closeImageModal = () => setSelectedImageIndex(null)
 
   const showPrevImage = () => {
@@ -206,6 +230,33 @@ export function DevLogDetailPage() {
           ? 0
           : prev + 1
     )
+  }
+
+  const onToggleLike = async () => {
+    if (!devLogId || likeLoading) return
+
+    if (!loggedIn) {
+      alert("로그인이 필요합니다.")
+      return
+    }
+
+    try {
+      setLikeLoading(true)
+
+      if (likedByMe) {
+        await unlikeDevLog(Number(devLogId))
+        setLikedByMe(false)
+        setLikeCount((prev) => Math.max(0, prev - 1))
+      } else {
+        await likeDevLog(Number(devLogId))
+        setLikedByMe(true)
+        setLikeCount((prev) => prev + 1)
+      }
+    } catch {
+      alert("좋아요 처리 실패")
+    } finally {
+      setLikeLoading(false)
+    }
   }
 
   const handleDelete = async () => {
@@ -279,58 +330,71 @@ ${devLog.reference ? `[참고한 코드 / 개념]\n${devLog.reference}\n\n` : ""
         <div className="p-6">
           <div className="flex items-start justify-between gap-4">
             <span className="rounded-full bg-blue-50 px-3 py-1 text-xs font-semibold text-blue-600">
-                DevLog
+              DevLog
             </span>
 
             <button
-                onClick={() => nav("/devlogs")}
-                className="shrink-0 rounded-xl border border-slate-300 px-4 py-2 text-sm font-medium text-slate-700 hover:bg-slate-50"
+              onClick={() => nav("/devlogs")}
+              className="shrink-0 rounded-xl border border-slate-300 px-4 py-2 text-sm font-medium text-slate-700 hover:bg-slate-50"
             >
-                뒤로가기
+              목록
             </button>
-            </div>
+          </div>
 
-            <h1 className="mt-5 break-words text-3xl font-bold leading-tight text-slate-900">
+          <h1 className="mt-5 break-words text-3xl font-bold leading-tight text-slate-900">
             📝 {devLog.title}
-            </h1>
+          </h1>
 
-            <div className="mt-3 flex items-center gap-2 text-sm text-slate-500">
+          <div className="mt-3 flex items-center gap-2 text-sm text-slate-500">
             <span className="font-medium text-slate-700">
-                {devLog.authorNickname}
+              {devLog.authorNickname}
             </span>
             <span>·</span>
             <span>{new Date(devLog.createdAt).toLocaleDateString("ko-KR")}</span>
-            </div>
+          </div>
+
+          <button
+            type="button"
+            onClick={onToggleLike}
+            disabled={likeLoading}
+            className={`mt-5 inline-flex items-center gap-2 rounded-xl px-4 py-2 text-sm font-semibold transition disabled:opacity-50 ${
+              likedByMe
+                ? "bg-red-50 text-red-600 hover:bg-red-100"
+                : "bg-slate-100 text-slate-600 hover:bg-slate-200"
+            }`}
+          >
+            {likedByMe ? "❤️" : "🤍"} {likeCount}
+          </button>
         </div>
 
         <div className="flex items-center justify-end gap-2 border-t border-slate-100 px-6 py-4">
-            {isOwner && (
+          {isOwner && (
             <>
-                <button
+              <button
                 onClick={convertToPost}
                 className="rounded-xl bg-blue-600 px-4 py-2 text-sm font-semibold text-white hover:bg-blue-500"
-                >
+              >
                 🚀 커뮤니티에 질문하기
-                </button>
+              </button>
 
-                <button
+              <button
                 onClick={() => nav(`/devlogs/${devLog.id}/edit`)}
                 className="rounded-xl border border-slate-300 px-4 py-2 text-sm font-semibold text-slate-700 hover:bg-slate-50"
-                >
+              >
                 ✏️ 수정
-                </button>
+              </button>
 
-                <button
+              <button
                 disabled={deleting}
                 onClick={handleDelete}
                 className="rounded-xl border border-red-200 px-4 py-2 text-sm font-semibold text-red-600 hover:bg-red-50 disabled:opacity-50"
-                >
+              >
                 🗑 {deleting ? "삭제 중..." : "삭제"}
-                </button>
+              </button>
             </>
-            )}
+          )}
         </div>
-        </section>
+      </section>
 
       {devLog.attachments && devLog.attachments.length > 0 && (
         <section className="rounded-3xl border border-slate-200 bg-white p-6 shadow-sm">

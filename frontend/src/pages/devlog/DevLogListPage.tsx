@@ -150,9 +150,15 @@ export function DevLogListPage() {
                       <span className="text-slate-500">
                         작성자 {devLog.authorNickname}
                       </span>
+
+                      <div className="flex items-center gap-4">
+                        <span className="flex items-center gap-1 text-sm font-medium text-red-500">
+                        ❤️ {devLog.likeCount}
+                        </span>
                       <span className="font-semibold text-slate-700">
                         🔍 자세히 보기 →
                       </span>
+                    </div>
                     </div>
                   </div>
                 </div>

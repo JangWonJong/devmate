@@ -23,10 +23,12 @@ public class DevLogResponse {
     private List<DevLogAttachmentResponse> attachments;
     private Long authorId;
     private String authorNickname;
+    private long likeCount;
+    private boolean likedByMe;
     private LocalDateTime createdAt;
     private LocalDateTime updatedAt;
 
-    public static DevLogResponse from(DevLog devLog) {
+    public static DevLogResponse from(DevLog devLog, long likeCount, boolean likedByMe) {
         String authorNickname = devLog.getMember().isDeleted()
                 ? "탈퇴한 회원"
                 : devLog.getMember().getNickname();
@@ -53,6 +55,8 @@ public class DevLogResponse {
                 .attachments(attachments)
                 .authorId(devLog.getMember().getId())
                 .authorNickname(authorNickname)
+                .likeCount(likeCount)
+                .likedByMe(likedByMe)
                 .createdAt(devLog.getCreatedAt())
                 .updatedAt(devLog.getUpdatedAt())
                 .build();

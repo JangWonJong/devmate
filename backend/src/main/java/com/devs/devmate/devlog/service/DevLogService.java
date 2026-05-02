@@ -17,7 +17,7 @@ public interface DevLogService {
 
     Page<DevLogResponse> listByMember(Long memberId, Pageable pageable);
 
-    DevLogResponse get(Long devLogId);
+    DevLogResponse get(Long memberId, Long devLogId);
 
     void update(Long memberId, Long devLogId, DevLogUpdateRequest request, List<MultipartFile> files);
 

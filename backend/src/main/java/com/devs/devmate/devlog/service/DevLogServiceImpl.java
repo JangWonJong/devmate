@@ -9,6 +9,7 @@ import com.devs.devmate.devlog.repository.DevLogAttachmentRepository;
 import com.devs.devmate.devlog.repository.DevLogRepository;
 import com.devs.devmate.global.exception.BusinessException;
 import com.devs.devmate.global.exception.ErrorCode;
+import com.devs.devmate.like.repository.DevLogLikeRepository;
 import com.devs.devmate.member.entity.Member;
 import com.devs.devmate.member.entity.MemberStatus;
 import com.devs.devmate.member.repository.MemberRepository;
@@ -33,7 +34,7 @@ public class DevLogServiceImpl implements DevLogService{
     private final MemberRepository memberRepository;
     private final PostFileService postFileService;
     private final DevLogAttachmentRepository devLogAttachmentRepository;
-
+    private final DevLogLikeRepository devLogLikeRepository;
 
     private Member getActiveMember(Long memberId) {
         Member member = memberRepository.findById(memberId)
@@ -80,6 +81,15 @@ public class DevLogServiceImpl implements DevLogService{
                 .toList();
     }
 
+    private long countLike(DevLog devLog) {
+        return devLogLikeRepository.countByDevLogId(devLog.getId());
+    }
+
+    private boolean isLiked(DevLog devLog, Long memberId) {
+        if (memberId == null) return false;
+        return devLogLikeRepository.existsByDevLogIdAndMemberId(devLog.getId(), memberId);
+    }
+
     @Override
     public Long create(Long memberId, DevLogCreateRequest request, List<MultipartFile> files) {
 
@@ -107,7 +117,8 @@ public class DevLogServiceImpl implements DevLogService{
     @Transactional(readOnly = true)
     public Page<DevLogResponse> listMine(Long memberId, Pageable pageable) {
         return devLogRepository.findByMemberId(memberId, pageable)
-                .map(DevLogResponse::from);
+                .map(devLog -> DevLogResponse.from(
+                        devLog, countLike(devLog), isLiked(devLog, memberId)));
     }
 
     @Override
@@ -119,17 +130,25 @@ public class DevLogServiceImpl implements DevLogService{
         }
 
         return devLogRepository.findByMemberId(memberId, pageable)
-                .map(DevLogResponse::from);
+                .map(devLog -> DevLogResponse.from(
+                        devLog,
+                        countLike(devLog),
+                        false
+                ));
     }
 
     @Override
     @Transactional(readOnly = true)
-    public DevLogResponse get(Long devLogId) {
+    public DevLogResponse get(Long memberId, Long devLogId) {
 
         DevLog devLog = devLogRepository.findById(devLogId)
                 .orElseThrow(() -> new BusinessException(ErrorCode.DEVLOG_NOT_FOUND));
 
-        return DevLogResponse.from(devLog);
+        return DevLogResponse.from(
+                devLog,
+                countLike(devLog),
+                isLiked(devLog, memberId)
+        );
     }
 
     @Override
