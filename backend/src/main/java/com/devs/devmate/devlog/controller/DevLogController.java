@@ -11,6 +11,7 @@ import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
+import org.springframework.http.MediaType;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 import org.springframework.web.bind.annotation.*;
@@ -20,12 +21,12 @@ import java.util.List;
 
 @RestController
 @RequiredArgsConstructor
-@RequestMapping("/api")
+@RequestMapping("/api/devlogs")
 public class DevLogController {
 
     private final DevLogService devLogService;
 
-    @PostMapping("/devlogs")
+    @PostMapping(consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
     public ApiResponse<Long> create(
             @RequestPart("request") @Valid DevLogCreateRequest request,
             @RequestPart(value = "files", required = false) List<MultipartFile> files
@@ -34,27 +35,21 @@ public class DevLogController {
         return ApiResponse.ok(devLogService.create(memberId, request, files));
     }
 
-    @GetMapping("/devlogs/mine")
-    public ApiResponse<Page<DevLogResponse>> listMine(Pageable pageable) {
+    @GetMapping("/mine")
+    public ApiResponse<Page<DevLogResponse>> listMine(
+            @RequestParam(required = false) String keyword,
+            Pageable pageable) {
         Long memberId = SecurityUtil.currentMemberId();
-        return ApiResponse.ok(devLogService.listMine(memberId, pageable));
+        return ApiResponse.ok(devLogService.listMine(memberId, keyword, pageable));
     }
 
-    @GetMapping("/members/{memberId}/devlogs")
-    public ApiResponse<Page<DevLogResponse>> listByMember(
-            @PathVariable Long memberId,
-            Pageable pageable
-    ) {
-        return ApiResponse.ok(devLogService.listByMember(memberId, pageable));
-    }
-
-    @GetMapping("/devlogs/{devLogId}")
+    @GetMapping("/{devLogId}")
     public ApiResponse<DevLogResponse> get(@PathVariable Long devLogId) {
         Long memberId = SecurityUtil.currentMemberIdOrNull();
         return ApiResponse.ok(devLogService.get(memberId, devLogId));
     }
 
-    @PatchMapping("/devlogs/{devLogId}")
+    @PatchMapping(value = "/{devLogId}", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
     public ApiResponse<Void> update(
             @PathVariable Long devLogId,
             @RequestPart("request") @Valid DevLogUpdateRequest request,
@@ -65,7 +60,7 @@ public class DevLogController {
         return ApiResponse.ok();
     }
 
-    @DeleteMapping("/devlogs/{devLogId}")
+    @DeleteMapping("/{devLogId}")
     public ApiResponse<Void> delete(@PathVariable Long devLogId) {
         Long memberId = SecurityUtil.currentMemberId();
         devLogService.delete(memberId, devLogId);

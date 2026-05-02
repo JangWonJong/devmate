@@ -1,7 +1,7 @@
 package com.devs.devmate.devlog.entity;
 
 import com.devs.devmate.global.entity.BaseEntity;
-import com.devs.devmate.like.entity.DevLogLike;
+import com.devs.devmate.like.entity.devlog.DevLogLike;
 import com.devs.devmate.member.entity.Member;
 import jakarta.persistence.*;
 import lombok.*;

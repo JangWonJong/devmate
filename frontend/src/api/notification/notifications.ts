@@ -14,6 +14,8 @@ export type NotificationType =
     | "MEMBER_LIKED"
     | "STUDY_LEADER_DELEGATED"
     | "INQUIRY_ANSWERED"
+    | "DEVLOG_COMMENT_CREATED"
+    | "DEVLOG_COMMENT_LIKED"
 
 export const getNotificationLabel = (type: NotificationResponse["type"]) => {
   switch (type) {
@@ -39,6 +41,10 @@ export const getNotificationLabel = (type: NotificationResponse["type"]) => {
       return "👑 리더 위임"
     case "INQUIRY_ANSWERED":
       return "📩 문의 답변"
+    case "DEVLOG_COMMENT_CREATED":
+      return "💬 댓글"
+    case "DEVLOG_COMMENT_LIKED":
+      return "🧡 댓글 좋아요"
     default:
       return "🔔 알림"
   }
@@ -100,6 +106,16 @@ export const getNotificationLabelStyle = (type: NotificationResponse["type"]) =>
       return {
         background: "#eef2ff",
         color: "#4338ca",
+      }
+      case "DEVLOG_COMMENT_CREATED":
+      return {
+        background: "#eff6ff",
+        color: "#1d4ed8",
+      }
+      case "DEVLOG_COMMENT_LIKED":
+      return {
+        background: "#fff7ed",
+        color: "#c2410c",
       }
       default:
         return {

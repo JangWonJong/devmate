@@ -39,5 +39,9 @@ public interface NotificationService {
     void createStudyLeaderDelegated(Member receiver, Member actor, Long postId, String studyTitle);
 
     void createInquiryAnswered(Long receiverId, Long inquiryId);
+
+    void createDevLogCommentCreated(Member receiver, Member actor, Long devLogId, Long commentId);
+
+    void createDevLogCommentLiked(Long receiverId, Long actorId, Long devLogId, Long commentId);
 }
 

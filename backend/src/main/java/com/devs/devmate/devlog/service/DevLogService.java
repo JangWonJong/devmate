@@ -13,9 +13,9 @@ public interface DevLogService {
 
     Long create(Long memberId, DevLogCreateRequest request, List<MultipartFile> files);
 
-    Page<DevLogResponse> listMine(Long memberId, Pageable pageable);
+    Page<DevLogResponse> listMine(Long memberId, String keyword, Pageable pageable);
 
-    Page<DevLogResponse> listByMember(Long memberId, Pageable pageable);
+    Page<DevLogResponse> listByMember(Long memberId, String keyword, Pageable pageable);
 
     DevLogResponse get(Long memberId, Long devLogId);
 

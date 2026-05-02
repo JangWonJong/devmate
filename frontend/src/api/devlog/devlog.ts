@@ -81,14 +81,16 @@ export async function listMyDevLogs(params?: {
   page?: number
   size?: number
   sort?: DevLogSort
+  keyword?: string
 }) {
   const page = params?.page ?? 0
   const size = params?.size ?? 10
   const sort = params?.sort ?? "id,desc"
+  const keyword = params?.keyword
 
   const { data } = await http.get<ApiResponse<PageResponse<DevLogResponse>>>(
     "/api/devlogs/mine",
-    { params: { page, size, sort } }
+    { params: { page, size, sort, keyword } }
   )
 
   if (!data.success || data.data == null) {
@@ -104,15 +106,17 @@ export async function listMemberDevLogs(
     page?: number
     size?: number
     sort?: DevLogSort
+    keyword?: string
   }
 ) {
   const page = params?.page ?? 0
   const size = params?.size ?? 10
   const sort = params?.sort ?? "id,desc"
+  const keyword = params?.keyword
 
   const { data } = await http.get<ApiResponse<PageResponse<DevLogResponse>>>(
     `/api/members/${memberId}/devlogs`,
-    { params: { page, size, sort } }
+    { params: { page, size, sort, keyword } }
   )
 
   if (!data.success || data.data == null) {

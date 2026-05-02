@@ -1,14 +1,18 @@
 package com.devs.devmate.member.controller;
 
 
+import com.devs.devmate.devlog.dto.DevLogResponse;
+import com.devs.devmate.devlog.service.DevLogService;
 import com.devs.devmate.global.common.ApiResponse;
 import com.devs.devmate.global.security.SecurityUtil;
-import com.devs.devmate.like.dto.MemberLikeStatusResponse;
-import com.devs.devmate.like.service.MemberLikeService;
+import com.devs.devmate.like.dto.member.MemberLikeStatusResponse;
+import com.devs.devmate.like.service.member.MemberLikeService;
 import com.devs.devmate.member.dto.*;
 import com.devs.devmate.member.service.MemberService;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
 import org.springframework.web.bind.annotation.*;
@@ -23,6 +27,7 @@ public class MemberController {
 
     private final MemberService memberService;
     private final MemberLikeService memberLikeService;
+    private final DevLogService devLogService;
 
     @GetMapping("/me")
     public ApiResponse<MeResponse> me(){
@@ -87,7 +92,6 @@ public class MemberController {
         return ApiResponse.ok(memberLikeService.getStatus(actorMemberId, memberId));
     }
 
-
     @GetMapping("/popular")
     public ApiResponse<List<PopularMemberResponse>> getPopularMember(
             @RequestParam(defaultValue = "5") int limit
@@ -95,5 +99,13 @@ public class MemberController {
         return ApiResponse.ok(memberService.getPopularMembers(limit));
     }
 
+    @GetMapping("/{memberId}/devlogs")
+    public ApiResponse<Page<DevLogResponse>> listByMember(
+            @PathVariable Long memberId,
+            @RequestParam(required = false) String keyword,
+            Pageable pageable
+    ) {
+        return ApiResponse.ok(devLogService.listByMember(memberId, keyword, pageable));
+    }
 
 }

@@ -33,6 +33,16 @@ public class NotificationServiceImpl implements NotificationService{
         notificationSseService.send(memberId, count);
     }
 
+    private Member getReceiver(Long receiverId) {
+        return memberRepository.findById(receiverId)
+                .orElseThrow(() -> new BusinessException(ErrorCode.MEMBER_NOT_FOUND));
+    }
+
+    private Member getActor(Long actorId) {
+        return memberRepository.findById(actorId)
+                .orElseThrow(() -> new BusinessException(ErrorCode.MEMBER_NOT_FOUND));
+    }
+
     @Override
     @Transactional(readOnly = true)
     public Page<NotificationResponse> list(Long memberId, Pageable pageable) {
@@ -170,10 +180,10 @@ public class NotificationServiceImpl implements NotificationService{
 
     @Override
     public void createPostLiked(Long receiverId, Long actorId, Long postId, String postTitle) {
-        Member receiver = memberRepository.findById(receiverId)
-                .orElseThrow(() -> new BusinessException(ErrorCode.MEMBER_NOT_FOUND));
-        Member actor = memberRepository.findById(actorId)
-                .orElseThrow(() -> new BusinessException(ErrorCode.MEMBER_NOT_FOUND));
+
+        Member receiver = getReceiver(receiverId);
+
+        Member actor = getActor(actorId);
 
         String content = actor.getNickname() + "님이 [" + postTitle + "] 게시글을 좋아요했습니다.";
 
@@ -191,10 +201,10 @@ public class NotificationServiceImpl implements NotificationService{
 
     @Override
     public void createCommentLiked(Long receiverId, Long actorId, Long postId, String commentContent, Long commentId) {
-        Member receiver = memberRepository.findById(receiverId)
-                .orElseThrow(() -> new BusinessException(ErrorCode.MEMBER_NOT_FOUND));
-        Member actor = memberRepository.findById(actorId)
-                .orElseThrow(() -> new BusinessException(ErrorCode.MEMBER_NOT_FOUND));
+
+        Member receiver = getReceiver(receiverId);
+
+        Member actor = getActor(actorId);
 
         /*String preview = commentContent;
         if (preview != null && preview.length() >20 ) {
@@ -218,11 +228,10 @@ public class NotificationServiceImpl implements NotificationService{
 
     @Override
     public void createMemberLiked(Long receiverId, Long actorId, Long targetMemberId) {
-        Member receiver = memberRepository.findById(receiverId)
-                .orElseThrow(() -> new BusinessException(ErrorCode.MEMBER_NOT_FOUND));
 
-        Member actor = memberRepository.findById(actorId)
-                .orElseThrow(() -> new BusinessException(ErrorCode.MEMBER_NOT_FOUND));
+        Member receiver = getReceiver(receiverId);
+
+        Member actor = getActor(actorId);
 
         if (receiverId.equals(actorId)) {
             return;
@@ -261,8 +270,8 @@ public class NotificationServiceImpl implements NotificationService{
 
     @Override
     public void createInquiryAnswered(Long receiverId, Long inquiryId) {
-        Member receiver = memberRepository.findById(receiverId)
-                .orElseThrow(() -> new BusinessException(ErrorCode.MEMBER_NOT_FOUND));
+
+        Member receiver = getReceiver(receiverId);
 
         List<Member> admins = memberRepository.findAllByRole(Role.ADMIN);
 
@@ -279,6 +288,48 @@ public class NotificationServiceImpl implements NotificationService{
                         .type(NotificationType.INQUIRY_ANSWERED)
                         .content("DevMine 운영팀이 문의에 답변을 등록했습니다.")
                         .targetUrl("/mypage/inquiries")
+                        .build()
+        );
+
+        push(receiver.getId());
+    }
+
+    @Override
+    public void createDevLogCommentCreated(Member receiver, Member actor, Long devLogId, Long commentId) {
+        if (receiver.getId().equals(actor.getId())) {
+            return;
+        }
+
+        notificationRepository.save(
+                Notification.builder()
+                        .receiver(receiver)
+                        .actor(actor)
+                        .type(NotificationType.DEVLOG_COMMENT_CREATED)
+                        .content(actor.getNickname() + "님이 회원님의 DevLog에 댓글을 남겼어요.")
+                        .targetUrl("/devlogs/" + devLogId + "#comment-" + commentId)
+                        .build()
+        );
+
+        push(receiver.getId());
+    }
+
+    @Override
+    public void createDevLogCommentLiked(Long receiverId, Long actorId, Long devLogId, Long commentId) {
+
+        Member receiver = getReceiver(receiverId);
+        Member actor = getActor(actorId);
+
+        if (receiverId.equals(actorId)) {
+            return;
+        }
+
+        notificationRepository.save(
+                Notification.builder()
+                        .receiver(receiver)
+                        .actor(actor)
+                        .type(NotificationType.DEVLOG_COMMENT_LIKED)
+                        .content(actor.getNickname() + "님이 회원님의 DevLog 댓글에 좋아요를 했습니다.")
+                        .targetUrl("/devlogs/" + devLogId + "#comment-" + commentId)
                         .build()
         );
 

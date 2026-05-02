@@ -20,22 +20,50 @@ function thumbnail(devLog: DevLogResponse) {
 
 export function MemberDevLogPage() {
   const { memberId } = useParams()
+  
   const nav = useNavigate()
   const [searchParams, setSearchParams] = useSearchParams()
 
   const page = Number(searchParams.get("page") ?? 0)
+  const keyword = searchParams.get("keyword") ?? "" 
   const size = 10
 
   const [nickname, setNickname] = useState("")
   const [devLogs, setDevLogs] = useState<DevLogResponse[]>([])
   const [totalPages, setTotalPages] = useState(0)
   const [loading, setLoading] = useState(false)
+  const [searchInput, setSearchInput] = useState(keyword)
+
   const [error, setError] = useState("")
 
   const movePage = (nextPage: number) => {
-    setSearchParams(nextPage === 0 ? {} : { page: String(nextPage) })
-  }
+    const next = new URLSearchParams()
 
+    if (keyword) {
+        next.set("keyword", keyword)
+    }
+
+    if (nextPage > 0) {
+        next.set("page", String(nextPage))
+    }
+
+    setSearchParams(next)
+    }
+
+  const submitSearch = () => {
+    const next = new URLSearchParams()
+
+    if (searchInput.trim()) {
+        next.set("keyword", searchInput.trim())
+    }
+
+    setSearchParams(next)
+    }
+
+  useEffect(() => {
+    setSearchInput(keyword)
+    }, [keyword])  
+    
   useEffect(() => {
     async function fetchMemberDevLogs() {
       if (!memberId) return
@@ -51,6 +79,7 @@ export function MemberDevLogPage() {
           page,
           size,
           sort: "id,desc",
+          keyword: keyword || undefined,
         })
 
         setDevLogs(data.content)
@@ -63,7 +92,7 @@ export function MemberDevLogPage() {
     }
 
     fetchMemberDevLogs()
-  }, [memberId, page])
+  }, [memberId, page, keyword])
 
   return (
     <div className="mx-auto max-w-5xl px-4 py-8">
@@ -87,6 +116,43 @@ export function MemberDevLogPage() {
           </button>
         </div>
       </div>
+
+      <div className="mt-5 rounded-3xl border border-slate-200 bg-white p-4 shadow-sm">
+        <form
+            onSubmit={(e) => {
+            e.preventDefault()
+            submitSearch()
+            }}
+            className="flex flex-col gap-3 sm:flex-row"
+        >
+            <input
+            value={searchInput}
+            onChange={(e) => setSearchInput(e.target.value)}
+            placeholder="제목, 문제 상황, 해결 과정, 참고 내용 검색"
+            className="h-12 flex-1 rounded-2xl border border-slate-300 px-4 text-sm outline-none focus:border-slate-500"
+            />
+
+            <button
+            type="submit"
+            className="rounded-2xl bg-slate-900 px-5 py-3 text-sm font-semibold text-white hover:bg-slate-800"
+            >
+            🔍 검색
+            </button>
+
+            {keyword && (
+            <button
+                type="button"
+                onClick={() => {
+                setSearchInput("")
+                setSearchParams({})
+                }}
+                className="rounded-2xl border border-slate-300 px-5 py-3 text-sm font-semibold text-slate-700 hover:bg-slate-50"
+            >
+                초기화
+            </button>
+            )}
+        </form>
+        </div>
 
       {error && (
         <div className="mt-5 rounded-2xl border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-700">
@@ -155,12 +221,17 @@ export function MemberDevLogPage() {
                       <span className="text-slate-500">
                         작성자 {devLog.authorNickname}
                       </span>
+                      <div className="flex items-center gap-4">
+                        <span className="flex items-center gap-1 text-sm font-medium text-red-500">
+                        ❤️ {devLog.likeCount}
+                        </span>
                       <span className="font-semibold text-slate-700">
                         자세히 보기 →
                       </span>
                     </div>
                   </div>
                 </div>
+              </div>
               </div>
             )
           })}

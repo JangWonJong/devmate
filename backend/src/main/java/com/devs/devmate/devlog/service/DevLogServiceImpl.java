@@ -9,7 +9,7 @@ import com.devs.devmate.devlog.repository.DevLogAttachmentRepository;
 import com.devs.devmate.devlog.repository.DevLogRepository;
 import com.devs.devmate.global.exception.BusinessException;
 import com.devs.devmate.global.exception.ErrorCode;
-import com.devs.devmate.like.repository.DevLogLikeRepository;
+import com.devs.devmate.like.repository.devlog.DevLogLikeRepository;
 import com.devs.devmate.member.entity.Member;
 import com.devs.devmate.member.entity.MemberStatus;
 import com.devs.devmate.member.repository.MemberRepository;
@@ -115,26 +115,44 @@ public class DevLogServiceImpl implements DevLogService{
 
     @Override
     @Transactional(readOnly = true)
-    public Page<DevLogResponse> listMine(Long memberId, Pageable pageable) {
-        return devLogRepository.findByMemberId(memberId, pageable)
-                .map(devLog -> DevLogResponse.from(
-                        devLog, countLike(devLog), isLiked(devLog, memberId)));
+    public Page<DevLogResponse> listMine(Long memberId, String keyword, Pageable pageable) {
+
+        Page<DevLog> devLogs;
+
+        if (keyword != null && !keyword.trim().isEmpty()) {
+            devLogs = devLogRepository.searchMine(memberId, keyword.trim(), pageable);
+        } else {
+            devLogs = devLogRepository.findByMemberId(memberId, pageable);
+        }
+
+        return devLogs.map(devLog -> DevLogResponse.from(
+                devLog,
+                countLike(devLog),
+                isLiked(devLog, memberId)
+        ));
     }
 
     @Override
     @Transactional(readOnly = true)
-    public Page<DevLogResponse> listByMember(Long memberId, Pageable pageable) {
+    public Page<DevLogResponse> listByMember(Long memberId, String keyword, Pageable pageable) {
 
         if (!memberRepository.existsById(memberId)) {
             throw new BusinessException(ErrorCode.MEMBER_NOT_FOUND);
         }
 
-        return devLogRepository.findByMemberId(memberId, pageable)
-                .map(devLog -> DevLogResponse.from(
-                        devLog,
-                        countLike(devLog),
-                        false
-                ));
+        Page<DevLog> devLogs;
+
+        if (keyword != null && !keyword.trim().isEmpty()) {
+            devLogs = devLogRepository.searchByMember(memberId, keyword.trim(), pageable);
+        } else {
+            devLogs = devLogRepository.findByMemberId(memberId, pageable);
+        }
+
+        return devLogs.map(devLog -> DevLogResponse.from(
+                devLog,
+                countLike(devLog),
+                isLiked(devLog, memberId)
+        ));
     }
 
     @Override

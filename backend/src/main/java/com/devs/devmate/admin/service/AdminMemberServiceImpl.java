@@ -8,7 +8,7 @@ import com.devs.devmate.admin.repository.AdminActionLogRepository;
 import com.devs.devmate.admin.repository.AdminMemberManagementRepository;
 import com.devs.devmate.admin.repository.AdminMemberQueryRepository;
 import com.devs.devmate.admin.repository.AdminMemberRepository;
-import com.devs.devmate.comment.repository.CommentRepository;
+import com.devs.devmate.comment.repository.post.CommentRepository;
 import com.devs.devmate.global.exception.BusinessException;
 import com.devs.devmate.global.exception.ErrorCode;
 import com.devs.devmate.inquiry.repository.InquiryRepository;

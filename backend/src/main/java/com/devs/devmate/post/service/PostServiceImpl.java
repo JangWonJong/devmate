@@ -1,11 +1,11 @@
 package com.devs.devmate.post.service;
 
 import com.devs.devmate.bookmark.repository.PostBookmarkRepository;
-import com.devs.devmate.comment.repository.CommentRepository;
+import com.devs.devmate.comment.repository.post.CommentRepository;
 import com.devs.devmate.global.exception.BusinessException;
 import com.devs.devmate.global.exception.ErrorCode;
-import com.devs.devmate.like.repository.CommentLikeRepository;
-import com.devs.devmate.like.repository.PostLikeRepository;
+import com.devs.devmate.like.repository.post.CommentLikeRepository;
+import com.devs.devmate.like.repository.post.PostLikeRepository;
 import com.devs.devmate.member.entity.Member;
 import com.devs.devmate.member.entity.MemberStatus;
 import com.devs.devmate.member.repository.MemberRepository;
