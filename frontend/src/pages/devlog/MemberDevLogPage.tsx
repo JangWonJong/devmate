@@ -7,6 +7,8 @@ import {
 import { getMemberProfile } from "../../api/member/members"
 import { fileUrl } from "../../utils/file"
 import { apiErrorMessage } from "../../utils/error"
+import { tokenStore } from "../../api/auth/token"
+import { getMeId } from "../../api/member/members"
 
 function preview(text: string) {
   return text.length > 120 ? `${text.slice(0, 120)}...` : text
@@ -27,7 +29,8 @@ export function MemberDevLogPage() {
   const page = Number(searchParams.get("page") ?? 0)
   const keyword = searchParams.get("keyword") ?? "" 
   const size = 10
-
+  
+  const [meId, setMeId] = useState<number | null>(null)
   const [nickname, setNickname] = useState("")
   const [devLogs, setDevLogs] = useState<DevLogResponse[]>([])
   const [totalPages, setTotalPages] = useState(0)
@@ -35,6 +38,8 @@ export function MemberDevLogPage() {
   const [searchInput, setSearchInput] = useState(keyword)
 
   const [error, setError] = useState("")
+
+  const id = memberId ? Number(memberId) : null
 
   const movePage = (nextPage: number) => {
     const next = new URLSearchParams()
@@ -59,23 +64,47 @@ export function MemberDevLogPage() {
 
     setSearchParams(next)
     }
+  
+  useEffect(() => {
+    ;(async () => {
+        if (!tokenStore.isLoggedIn()) {
+        setMeId(null)
+        return
+        }
+
+        try {
+        const id = await getMeId()
+        setMeId(id)
+        } catch {
+        setMeId(null)
+        }
+    })()
+    }, [])
+    
+  useEffect(() => {
+    if (id == null || meId == null) return
+
+    if (id === meId) {
+        nav("/devlogs", { replace: true })
+    }
+    }, [id, meId, nav])
 
   useEffect(() => {
     setSearchInput(keyword)
     }, [keyword])  
-    
+
   useEffect(() => {
     async function fetchMemberDevLogs() {
-      if (!memberId) return
+      if (!id) return
 
       try {
         setLoading(true)
         setError("")
 
-        const profile = await getMemberProfile(memberId)
+        const profile = await getMemberProfile(id)
         setNickname(profile.nickname)
 
-        const data = await listMemberDevLogs(Number(memberId), {
+        const data = await listMemberDevLogs(Number(id), {
           page,
           size,
           sort: "id,desc",
@@ -92,7 +121,7 @@ export function MemberDevLogPage() {
     }
 
     fetchMemberDevLogs()
-  }, [memberId, page, keyword])
+  }, [id, page, keyword])
 
   return (
     <div className="mx-auto max-w-5xl px-4 py-8">

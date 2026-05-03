@@ -2,6 +2,7 @@ package com.devs.devmate.comment.controller.devlog;
 
 
 import com.devs.devmate.comment.dto.CommentCreateRequest;
+import com.devs.devmate.comment.dto.CommentUpdateRequest;
 import com.devs.devmate.comment.dto.devlog.DevLogCommentResponse;
 import com.devs.devmate.comment.service.devlog.DevLogCommentService;
 import com.devs.devmate.global.common.ApiResponse;
@@ -33,7 +34,28 @@ public class DevLogCommentController {
             @PathVariable Long devLogId
     ) {
         Long memberId = SecurityUtil.currentMemberIdOrNull();
-        return ApiResponse.ok(devLogCommentService.list(memberId, devLogId));
+        return ApiResponse.ok(devLogCommentService.list(devLogId, memberId));
+    }
+
+    @PatchMapping("/{commentId}")
+    public ApiResponse<Void> update(
+            @PathVariable Long devLogId,
+            @PathVariable Long commentId,
+            @RequestBody @Valid CommentUpdateRequest request
+    ) {
+        Long memberId = SecurityUtil.currentMemberId();
+        devLogCommentService.update(memberId, devLogId, commentId, request);
+        return ApiResponse.ok();
+    }
+
+    @DeleteMapping("/{commentId}")
+    public ApiResponse<Void> delete(
+            @PathVariable Long devLogId,
+            @PathVariable Long commentId
+    ) {
+        Long memberId = SecurityUtil.currentMemberId();
+        devLogCommentService.delete(memberId, devLogId, commentId);
+        return ApiResponse.ok();
     }
 
 }

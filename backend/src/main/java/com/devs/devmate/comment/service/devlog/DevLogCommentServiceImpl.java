@@ -95,11 +95,15 @@ public class DevLogCommentServiceImpl implements DevLogCommentService{
     }
 
     @Override
-    public void update(Long memberId, Long commentId, CommentUpdateRequest request) {
+    @Transactional
+    public void update(Long memberId, Long devLogId, Long commentId, CommentUpdateRequest request) {
 
         DevLogComment comment = devLogCommentRepository.findById(commentId)
                 .orElseThrow(() -> new BusinessException(ErrorCode.COMMENT_NOT_FOUND));
 
+        if (!comment.getDevLog().getId().equals(devLogId)) {
+            throw new BusinessException(ErrorCode.INVALID_REQUEST);
+        }
         if (!comment.getMember().getId().equals(memberId)) {
             throw new BusinessException(ErrorCode.FORBIDDEN_COMMENT);
         }
@@ -108,10 +112,15 @@ public class DevLogCommentServiceImpl implements DevLogCommentService{
     }
 
     @Override
-    public void delete(Long memberId, Long commentId) {
+    @Transactional
+    public void delete(Long memberId, Long devLogId, Long commentId) {
 
         DevLogComment comment = devLogCommentRepository.findById(commentId)
                 .orElseThrow(() -> new BusinessException(ErrorCode.COMMENT_NOT_FOUND));
+
+        if (!comment.getDevLog().getId().equals(devLogId)) {
+            throw new BusinessException(ErrorCode.COMMENT_NOT_FOUND);
+        }
 
         if (!comment.getMember().getId().equals(memberId)) {
             throw new BusinessException(ErrorCode.FORBIDDEN_COMMENT);

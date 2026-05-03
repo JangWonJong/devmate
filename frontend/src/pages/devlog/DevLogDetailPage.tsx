@@ -1,13 +1,13 @@
 import { useEffect, useState } from "react"
 import { useNavigate, useParams } from "react-router-dom"
 import {
-  deleteDevLog,
-  getDevLog,
-  unlikeDevLog,
-  likeDevLog,
-  getDevLogLikeStatus,
-  type DevLogResponse,
+  deleteDevLog, getDevLog, unlikeDevLog, likeDevLog,
+  getDevLogLikeStatus, type DevLogResponse,
 } from "../../api/devlog/devlog"
+import DevLogCommentSection from "../../components/devlog/DevLogCommentSection"
+import { listDevLogComments, createDevLogComment, updateDevLogComment,
+    deleteDevLogComment, likeDevLogComment, unlikeDevLogComment, type DevLogCommentResponse
+ } from "../../api/devlog/devlogComment"
 import { fileUrl } from "../../utils/file"
 import { apiErrorMessage } from "../../utils/error"
 import { getMeId } from "../../api/member/members"
@@ -109,17 +109,28 @@ export function DevLogDetailPage() {
   const { devLogId } = useParams()
   const nav = useNavigate()
 
+  const id = devLogId ? Number(devLogId) : null
+
   const [loggedIn, setLoggedIn] = useState(tokenStore.isLoggedIn())
   const [meId, setMeId] = useState<number | null>(null)
   const [devLog, setDevLog] = useState<DevLogResponse | null>(null)
   const [loading, setLoading] = useState(false)
   const [deleting, setDeleting] = useState(false)
-  const [selectedImageIndex, setSelectedImageIndex] = useState<number | null>(
-    null
-  )
+  const [selectedImageIndex, setSelectedImageIndex] = useState<number | null>(null)
   const [likeCount, setLikeCount] = useState(0)
   const [likedByMe, setLikedByMe] = useState(false)
   const [likeLoading, setLikeLoading] = useState(false)
+
+  const [comments, setComments] = useState<DevLogCommentResponse[]>([])
+  const [commentInput, setCommentInput] = useState("")
+  const [commentErr, setCommentErr] = useState<string | null>(null)
+
+  const [editingCommentId, setEditingCommentId] = useState<number | null>(null)
+  const [editingContent, setEditingContent] = useState("")
+
+  const [commentLikedMap, setCommentLikedMap] = useState<Record<number, boolean>>({})
+  const [commentLikeCountMap, setCommentLikeCountMap] = useState<Record<number, number>>({})
+  const [commentLikeLoadingMap, setCommentLikeLoadingMap] = useState<Record<number, boolean>>({})
   const [error, setError] = useState("")
 
   useEffect(() => {
@@ -210,6 +221,11 @@ export function DevLogDetailPage() {
     })()
   }, [devLogId, loggedIn, devLog?.likeCount])
 
+  useEffect(() => {
+    if (!id) return
+    fetchComments()
+    }, [id])
+
   const closeImageModal = () => setSelectedImageIndex(null)
 
   const showPrevImage = () => {
@@ -275,6 +291,94 @@ export function DevLogDetailPage() {
       setDeleting(false)
     }
   }
+
+  const fetchComments = async () => {
+    if (!id) return
+
+    try {
+        setCommentErr(null)
+
+        const data = await listDevLogComments(id)
+        setComments(data)
+
+        const likedMap: Record<number, boolean> = {}
+        const countMap: Record<number, number> = {}
+
+        data.forEach((c) => {
+        likedMap[c.id] = c.likedByMe
+        countMap[c.id] = c.likeCount
+        })
+
+        setCommentLikedMap(likedMap)
+        setCommentLikeCountMap(countMap)
+    } catch {
+        setCommentErr("댓글을 불러오지 못했습니다.")
+    }
+    }
+
+  const handleCreateComment = async () => {
+    if (!id) return
+    if (!commentInput.trim()) return
+
+    try {
+        await createDevLogComment(id, commentInput.trim())
+        setCommentInput("")
+        await fetchComments()
+    } catch {
+        alert("댓글 작성 실패")
+    }
+    }
+    
+  const handleUpdateComment = async (commentId: number) => {
+    if (!id) return
+
+    try {
+        await updateDevLogComment(id, commentId, editingContent)
+        setEditingCommentId(null)
+        setEditingContent("")
+        await fetchComments()
+    } catch {
+        alert("댓글 수정 실패")
+    }
+    }
+
+  const handleDeleteComment = async (commentId: number) => {
+    if (!id) return
+    if (!confirm("삭제할까요?")) return
+
+    try {
+        await deleteDevLogComment(id, commentId)
+        await fetchComments()
+    } catch {
+        alert("댓글 삭제 실패")
+    }
+    }
+  
+  const handleToggleCommentLike = async (commentId: number) => {
+  if (commentLikeLoadingMap[commentId]) return
+
+  setCommentLikeLoadingMap((prev) => ({
+    ...prev,
+        [commentId]: true,
+    }))
+
+    try {
+        if (commentLikedMap[commentId]) {
+        await unlikeDevLogComment(commentId)
+        } else {
+        await likeDevLogComment(commentId)
+        }
+
+        await fetchComments()
+    } catch {
+        alert("좋아요 실패")
+    } finally {
+        setCommentLikeLoadingMap((prev) => ({
+        ...prev,
+        [commentId]: false,
+        }))
+    }
+    }  
 
   const convertToPost = () => {
     if (!devLog) return
@@ -424,6 +528,25 @@ ${devLog.reference ? `[참고한 코드 / 개념]\n${devLog.reference}\n\n` : ""
       <DevLogSection title="📚 참고 코드 / 개념" content={devLog.reference} />
       <DevLogSection title="💡 회고" content={devLog.retrospective} />
 
+      <DevLogCommentSection
+        loggedIn={loggedIn}
+        meId={meId}
+        commentErr={commentErr}
+        comments={comments}
+        commentInput={commentInput}
+        setCommentInput={setCommentInput}
+        editingCommentId={editingCommentId}
+        editingContent={editingContent}
+        setEditingCommentId={setEditingCommentId}
+        setEditingContent={setEditingContent}
+        onCreateComment={handleCreateComment}
+        onDeleteComment={handleDeleteComment}
+        onUpdateComment={handleUpdateComment}
+        commentLikedMap={commentLikedMap}
+        commentLikeCountMap={commentLikeCountMap}
+        commentLikeLoadingMap={commentLikeLoadingMap}
+        onToggleCommentLike={handleToggleCommentLike}
+        />
       {selectedImageIndex !== null && devLog.attachments[selectedImageIndex] && (
         <div
           className="fixed inset-0 z-[1000] flex items-center justify-center bg-black/80 px-4 py-6"

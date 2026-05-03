@@ -12,7 +12,7 @@ public interface DevLogCommentService {
 
     List<DevLogCommentResponse> list(Long devLogId, Long memberId);
 
-    void update(Long memberId, Long commentId, CommentUpdateRequest request);
+    void update(Long memberId, Long devLogId, Long commentId, CommentUpdateRequest request);
 
-    void delete(Long memberId, Long commentId);
+    void delete(Long memberId, Long devLogId, Long commentId);
 }
