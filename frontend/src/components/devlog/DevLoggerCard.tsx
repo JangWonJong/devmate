@@ -30,7 +30,7 @@ export function DevLoggerCard() {
         {list.map((m, idx) => (
           <Link
             key={m.memberId}
-            to={`/devlogs/members/${m.memberId}`}
+            to={`/members/${m.memberId}/devlogs`}
             className="flex items-center gap-3 rounded-xl border border-slate-200 px-3 py-2.5 transition hover:bg-slate-50"
           >
             {/* 프로필 */}

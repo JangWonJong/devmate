@@ -3,7 +3,7 @@ export function CodeBlockButtons({
 }: {
   onSelect: (language: string) => void
 }) {
-  const languages = ["tsx", "java", "python", "javascript", "sql"]
+  const languages = ["text","tsx", "java", "python", "javascript", "sql"]
 
   return (
     <div className="flex flex-wrap gap-1">
