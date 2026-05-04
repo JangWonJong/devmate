@@ -39,19 +39,40 @@ export function insertCodeBlockAtCursor(
     return
   }
 
-  const start = textarea.selectionStart
-  const end = textarea.selectionEnd
+  const cursor = textarea.selectionStart
+  const beforeCursor = value.slice(0, cursor)
 
-  const nextValue = value.slice(0, start) + codeBlock + value.slice(end)
+  const fenceCountBeforeCursor = (beforeCursor.match(/```/g) ?? []).length
+  const isInsideCodeBlock = fenceCountBeforeCursor % 2 === 1
+
+  let insertStart = textarea.selectionStart
+  let insertEnd = textarea.selectionEnd
+
+  if (isInsideCodeBlock) {
+    const afterCursor = value.slice(cursor)
+    const nextFenceIndex = afterCursor.indexOf("```")
+
+    if (nextFenceIndex !== -1) {
+      insertStart = cursor + nextFenceIndex + 3
+      insertEnd = insertStart
+    } else {
+      insertStart = value.length
+      insertEnd = value.length
+    }
+  }
+
+  const nextValue =
+    value.slice(0, insertStart) +
+    codeBlock +
+    value.slice(insertEnd)
 
   setValue(nextValue)
 
-  setTimeout(() => {
-    const cursorStart = start + codeBlock.indexOf(placeholder)
+  requestAnimationFrame(() => {
+    const cursorStart = insertStart + codeBlock.indexOf(placeholder)
     const cursorEnd = cursorStart + placeholder.length
 
     textarea.focus()
     textarea.setSelectionRange(cursorStart, cursorEnd)
-  }, 0)
+  })
 }
-

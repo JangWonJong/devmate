@@ -1,6 +1,7 @@
 import { useEffect, useState } from "react"
 import { useNavigate } from "react-router-dom"
 import { getMyStudies, type StudyResponse } from "../../api/study/study"
+import { PageContainer } from "../../layouts/PageContainer"
 
 function StudyStatusBadge({ status }: { status: string }) {
   const isRecruiting = status === "RECRUITING"
@@ -58,7 +59,7 @@ export function MyStudiesPage() {
   }
 
   return (
-    <div className="space-y-8">
+    <PageContainer className="space-y-6">
       <section className="space-y-3">
         <h1 className="text-4xl font-bold tracking-tight text-slate-900">
           내 스터디
@@ -117,6 +118,6 @@ export function MyStudiesPage() {
         ))}
       </section>
       )}
-    </div>
+    </PageContainer>
   )
 }

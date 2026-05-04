@@ -11,6 +11,8 @@ public interface DevLogCommentRepository extends JpaRepository<DevLogComment, Lo
     @EntityGraph(attributePaths = {"member"})
     List<DevLogComment> findByDevLogIdOrderByIdAsc(Long devLogId);
 
+    long countByDevLogId(Long devLogId);
+
     void deleteAllByDevLogId(Long devLogId);
 
     List<DevLogComment> findAllByDevLogIdOrderByCreatedAtAsc(Long devLogId);

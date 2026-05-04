@@ -16,6 +16,8 @@ import ReactMarkdown from "react-markdown"
 import remarkGfm from "remark-gfm"
 import { Prism as SyntaxHighlighter } from "react-syntax-highlighter"
 import { vscDarkPlus } from "react-syntax-highlighter/dist/esm/styles/prism"
+import "../../components/common/devlog.css"
+import { PageContainer } from "../../layouts/PageContainer"
 
 function normalizeMarkdown(text: string) {
   return text.replace(/\\`\\`\\`/g, "```")
@@ -34,7 +36,7 @@ function DevLogSection({
     <section className="rounded-3xl border border-slate-200 bg-white p-6 shadow-sm">
       <h2 className="text-base font-bold text-slate-900">{title}</h2>
 
-      <div className="mt-4 text-sm leading-7 text-slate-700">
+      <div className="mt-4 text-sm leading-7 text-slate-700 devlog-markdown">
         <ReactMarkdown
           remarkPlugins={[remarkGfm]}
           components={{
@@ -429,7 +431,7 @@ ${devLog.reference ? `[참고한 코드 / 개념]\n${devLog.reference}\n\n` : ""
   const isOwner = meId != null && devLog.authorId === meId
 
   return (
-    <div className="mx-auto max-w-4xl space-y-5 px-4 py-8">
+    <PageContainer className="space-y-6">
       <section className="rounded-3xl border border-slate-200 bg-white shadow-sm">
         <div className="p-6">
           <div className="flex items-start justify-between gap-4">
@@ -596,6 +598,6 @@ ${devLog.reference ? `[참고한 코드 / 개념]\n${devLog.reference}\n\n` : ""
           </div>
         </div>
       )}
-    </div>
+    </PageContainer>
   )
 }

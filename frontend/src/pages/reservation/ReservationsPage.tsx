@@ -16,6 +16,7 @@ import { apiErrorMessage } from "../../utils/error"
 import { addHours, today } from "../../utils/reservationUtils"
 import ReservationCreateSection from "../../components/reservation/ReservationCreateSection"
 import ReservationListSection from "../../components/reservation/ReservationListSection"
+import { PageContainer } from "../../layouts/PageContainer"
 
 type Scope = "all" | "mine"
 
@@ -412,11 +413,11 @@ export function ReservationsPage() {
 
   
   return (
-    <div className="space-y-6">
+    <PageContainer className="space-y-6">
       <section className="flex flex-col gap-4 lg:flex-row lg:items-end lg:justify-between">
         <div>
           <p className="text-sm font-medium text-indigo-600">personal Reservation</p>
-          <h1 className="mt-2 text-4xl font-bold tracking-tight text-slate-900">예약</h1>
+          <h1 className="mt-2 text-4xl font-bold tracking-tight text-slate-900">개인 예약</h1>
           <p className="mt-2 text-lg leading-8 text-slate-600">
             스터디룸 예약 현황을 확인하고 원하는 시간대를 선택해보세요.
           </p>
@@ -503,7 +504,7 @@ export function ReservationsPage() {
           />
         </>
       ) : (
-        <div className="grid gap-6 xl:grid-cols-[1.45fr_0.95fr]">
+        <div className="grid gap-6 xl:grid-cols-[minmax(0,1fr)_360px] xl:items-start">
           <ReservationCreateSection
             date={date}
             roomId={roomId}
@@ -539,6 +540,6 @@ export function ReservationsPage() {
           />
         </div>
       )}
-    </div>
+    </PageContainer>
   )
 }

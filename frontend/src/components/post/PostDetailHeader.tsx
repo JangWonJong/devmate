@@ -279,7 +279,7 @@ export default function PostDetailHeader({
                 <img
                   src={`${import.meta.env.VITE_API_BASE_URL}${file.fileUrl}`}
                   alt={file.originalFileName}
-                  className="w-full object-contain"
+                  className="w-auto object-contain hover:scale-[1.02] transition"
                 />
               </button>
             ))}

@@ -4,6 +4,7 @@ package com.devs.devmate.devlog.controller;
 import com.devs.devmate.devlog.dto.DevLogCreateRequest;
 import com.devs.devmate.devlog.dto.DevLogResponse;
 import com.devs.devmate.devlog.dto.DevLogUpdateRequest;
+import com.devs.devmate.devlog.dto.DevLoggerSummaryResponse;
 import com.devs.devmate.devlog.service.DevLogService;
 import com.devs.devmate.global.common.ApiResponse;
 import com.devs.devmate.global.security.SecurityUtil;
@@ -65,5 +66,27 @@ public class DevLogController {
         Long memberId = SecurityUtil.currentMemberId();
         devLogService.delete(memberId, devLogId);
         return ApiResponse.ok();
+    }
+
+    @GetMapping("/popular")
+    public ApiResponse<List<DevLogResponse>> popular(
+            @RequestParam(defaultValue = "5") int limit
+    ) {
+        return ApiResponse.ok(devLogService.listPopular(limit));
+    }
+
+    @GetMapping("/members/{memberId}/popular")
+    public ApiResponse<List<DevLogResponse>> popularByMember(
+            @PathVariable Long memberId,
+            @RequestParam(defaultValue = "5") int limit
+    ) {
+        return ApiResponse.ok(devLogService.listPopularByMember(memberId, limit));
+    }
+
+    @GetMapping("/members/recent")
+    public ApiResponse<List<DevLoggerSummaryResponse>> recentDevLoggers(
+            @RequestParam(defaultValue = "5") int limit
+    ) {
+        return ApiResponse.ok(devLogService.listRecentDevLoggers(limit));
     }
 }

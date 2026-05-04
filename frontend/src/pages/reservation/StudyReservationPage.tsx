@@ -17,7 +17,9 @@ import {
 } from "../../utils/reservationUtils"
 import StudyInfoCard from "../../components/study/reservation/StudyInfoCard"
 import StudyReservationCreateSection from "../../components/study/reservation/StudyReservationCreateSection"
+import StudyReservationStatusSection from "../../components/study/reservation/StudyReservationStatusSection"
 import { tokenStore } from "../../api/auth/token"
+import { PageContainer } from "../../layouts/PageContainer"
 
 export function StudyReservationPage() {
   const nav = useNavigate()
@@ -222,7 +224,8 @@ export function StudyReservationPage() {
   }
 
   return (
-  <div className="space-y-6">
+  <PageContainer>
+  <div className="mx-auto w-full max-w-6xl space-y-6">
     <section className="flex flex-col gap-4 lg:flex-row lg:items-end lg:justify-between">
       <div>
         <p className="text-sm font-medium text-indigo-600">
@@ -257,13 +260,10 @@ export function StudyReservationPage() {
         {successMessage}
       </div>
     )}
-
-    <div className="grid gap-6 xl:grid-cols-[minmax(0,1fr)_1.1fr]">
+    <div className="grid gap-6 xl:grid-cols-[minmax(0,1fr)_360px] xl:items-start">
       <div className="space-y-6">
         <StudyInfoCard study={study} />
-      </div>
 
-      <div>
         <StudyReservationCreateSection
           date={date}
           roomId={roomId}
@@ -271,7 +271,6 @@ export function StudyReservationPage() {
           durationHours={durationHours}
           selectedTime={selectedTime}
           saving={saving}
-          items={items}
           availability={availability}
           availabilityLoading={availabilityLoading}
           onChangeDate={setDate}
@@ -281,7 +280,15 @@ export function StudyReservationPage() {
           onCreate={onCreate}
         />
       </div>
+
+      <StudyReservationStatusSection
+        roomId={roomId}
+        items={items}
+        selectedTime={selectedTime}
+        durationHours={durationHours}
+      />
     </div>
-  </div>
+    </div>
+  </PageContainer>
 )
 }

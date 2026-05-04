@@ -16,6 +16,7 @@ import {
 import { imageUrl } from "../../utils/image"
 import { apiErrorMessage } from "../../utils/error"
 import { listPopularStudies, joinStudy, type StudyResponse } from "../../api/study/study"
+import { PageContainer } from "../../layouts/PageContainer"
 
 type PageInfo = {
   totalPages: number
@@ -355,7 +356,7 @@ export function PostsPage() {
   })()
 
   return (
-    <div className="space-y-8">
+    <PageContainer className="space-y-8">
       <section className="space-y-3">
         <h1 className="text-4xl font-bold tracking-tight text-slate-900">
           커뮤니티
@@ -499,7 +500,7 @@ export function PostsPage() {
         </div>
       )}
 
-      <div className="grid gap-6 xl:grid-cols-[minmax(0,1fr)_280px]">
+      <div className="grid gap-6 xl:grid-cols-[minmax(0,1fr)_240px]">
         <div className="min-w-0 space-y-5">
           {!bookmarked && (
             popularLoading ? (
@@ -899,6 +900,6 @@ export function PostsPage() {
           )}
         </aside>
       </div>
-    </div>
+    </PageContainer>
   )
 }

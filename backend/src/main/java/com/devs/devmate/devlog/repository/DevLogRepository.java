@@ -8,7 +8,11 @@ import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 
+import java.util.List;
+
 public interface DevLogRepository extends JpaRepository<DevLog, Long> {
+
+    long countByMemberId(Long memberId);
 
     @EntityGraph(attributePaths = {"member", "attachments"})
     Page<DevLog> findByMemberId(Long memberId, Pageable pageable);
@@ -50,5 +54,13 @@ public interface DevLogRepository extends JpaRepository<DevLog, Long> {
             @Param("keyword") String keyword,
             Pageable pageable
     );
+
+
+    @Query("""
+    select d
+    from DevLog d
+    order by d.createdAt desc
+    """)
+    List<DevLog> findRecentDevLogs(Pageable pageable);
 
 }

@@ -43,6 +43,7 @@ import {
   type ReservationResponse,
 } from "../../api/reservation/reservations"
 import { apiErrorMessage } from "../../utils/error"
+import { PageContainer } from "../../layouts/PageContainer"
 import PostDetailHeader from "../../components/post/PostDetailHeader"
 import StudyInfoSection from "../../components/study/detail/StudyInfoSection"
 import CommentSection from "../../components/post/CommentSection"
@@ -740,7 +741,7 @@ export function PostDetailPage() {
   const isStudyPost = post.type === "STUDY"
 
   return (
-    <div className="mx-auto max-w-4xl space-y-8">
+    <PageContainer className="mx-auto max-w-4xl space-y-8">
       <PostDetailHeader
         post={post}
         isMine={isMine}
@@ -801,6 +802,6 @@ export function PostDetailPage() {
         commentLikeLoadingMap={commentLikeLoadingMap}
         onToggleCommentLike={onToggleCommentLike}
       />
-    </div>
+    </PageContainer>
   )
 }

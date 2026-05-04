@@ -3,6 +3,7 @@ import { useNavigate, useParams } from "react-router-dom"
 import type { PostAttachmentResponse } from "../../api/post/posts"
 import { getPost, updatePost } from "../../api/post/posts"
 import { validateFiles } from "../../utils/file"
+import { PageContainer } from "../../layouts/PageContainer"
 
 function makeFileKey(file: File) {
   return `${file.name}-${file.size}-${file.lastModified}`
@@ -161,7 +162,7 @@ export function EditPostPage() {
   }
 
   return (
-    <div className="mx-auto max-w-3xl space-y-8">
+     <PageContainer className="mx-auto max-w-4xl">
       <section className="space-y-3">
         <h1 className="text-4xl font-bold tracking-tight text-slate-900">
           게시글 수정
@@ -347,6 +348,6 @@ export function EditPostPage() {
           </div>
         </div>
       </section>
-    </div>
+    </PageContainer>
   )
 }

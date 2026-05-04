@@ -8,6 +8,7 @@ import { listMyComments, type MyCommentResponse } from "../../api/post/comments"
 import { apiErrorMessage } from "../../utils/error"
 import { imageUrl } from "../../utils/image"
 import { isUpcomingReservation, formatDate, countRecentActivities } from "../../components/member/mypage"
+import { PageContainer } from "../../layouts/PageContainer"
 
 function StatCard({
   label,
@@ -245,7 +246,7 @@ export function MyPage() {
   }
 
   return (
-    <div className="mx-auto max-w-5xl space-y-6 px-4 py-10">
+    <PageContainer className="space-y-6">
       <section className="flex flex-col gap-4 lg:flex-row lg:items-end lg:justify-between">
         <div>
           <p className="text-sm font-medium text-indigo-600">My Page</p>
@@ -464,7 +465,7 @@ export function MyPage() {
       </section>
 
       <section className="rounded-2xl border border-slate-200 bg-white p-6 shadow-sm">
-        <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-5">
+        <div className="grid gap-4 sm:grid-cols-2 grid-cols-2 sm:grid-cols-3 xl:grid-cols-5">
           <StatCard label="내 상태" value={me?.status ?? "-"} />
 
           <button
@@ -656,6 +657,6 @@ export function MyPage() {
         </div>
       )}
 
-    </div>
+    </PageContainer>
   )
 }

@@ -3,6 +3,7 @@ package com.devs.devmate.devlog.service;
 import com.devs.devmate.devlog.dto.DevLogCreateRequest;
 import com.devs.devmate.devlog.dto.DevLogResponse;
 import com.devs.devmate.devlog.dto.DevLogUpdateRequest;
+import com.devs.devmate.devlog.dto.DevLoggerSummaryResponse;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.web.multipart.MultipartFile;
@@ -23,4 +24,9 @@ public interface DevLogService {
 
     void delete(Long memberId, Long devLogId);
 
+    List<DevLogResponse> listPopular(int limit);
+
+    List<DevLogResponse> listPopularByMember(Long memberId, int limit);
+
+    List<DevLoggerSummaryResponse> listRecentDevLoggers(int limit);
 }

@@ -6,6 +6,7 @@ import { validateFiles } from "../../utils/file"
 import { Puzzle, Wrench, BookOpen, Lightbulb } from "lucide-react"
 import { insertCodeBlockAtCursor } from "../../utils/button"
 import { CodeBlockButtons } from "./DevlogCommon"
+import { PageContainer } from "../../layouts/PageContainer"
 
 export function NewDevLogPage() {
   const nav = useNavigate()
@@ -65,7 +66,7 @@ export function NewDevLogPage() {
   }
 
   return (
-    <div className="mx-auto max-w-4xl px-4 py-8">
+    <PageContainer className="space-y-6">
       <div className="rounded-3xl border border-slate-200 bg-white p-6 shadow-sm">
         <div className="border-b border-slate-100 pb-6">
           <p className="text-sm font-semibold text-blue-600">New DevLog</p>
@@ -253,6 +254,6 @@ export function NewDevLogPage() {
           </div>
         </div>
       </div>
-    </div>
+    </PageContainer>
   )
 }

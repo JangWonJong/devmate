@@ -10,6 +10,7 @@ import { validateFiles } from "../../utils/file"
 import { insertCodeBlockAtCursor } from "../../utils/button"
 import { Puzzle, Wrench, BookOpen, Lightbulb } from "lucide-react"
 import { CodeBlockButtons, makeFileKey } from "./DevlogCommon"
+import { PageContainer } from "../../layouts/PageContainer"
 
 export function DevLogEditPage() {
   const nav = useNavigate()
@@ -167,7 +168,7 @@ export function DevLogEditPage() {
   }
 
   return (
-    <div className="mx-auto max-w-3xl space-y-8">
+    <PageContainer className="space-y-8">
       <section className="space-y-3">
         <h1 className="text-4xl font-bold tracking-tight text-slate-900">
           ✏️ DevLog 수정
@@ -435,6 +436,6 @@ export function DevLogEditPage() {
           </div>
         </div>
       </section>
-    </div>
+    </PageContainer>
   )
 }

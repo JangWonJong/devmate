@@ -100,7 +100,7 @@ export default function AppHeader({
           <VisitorStats compact />
           </div >
           
-          <nav className="hidden items-center gap-7 md:flex">
+          <nav className="hidden items-center gap-7 xl:flex">
             <NavLinkItem to="/posts">커뮤니티</NavLinkItem>
 
             {isAuthenticated ? (

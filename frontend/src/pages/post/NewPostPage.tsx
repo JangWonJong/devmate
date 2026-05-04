@@ -3,6 +3,7 @@ import { useLocation, useNavigate } from "react-router-dom"
 import { createPost } from "../../api/post/posts"
 import AiAssistantPanel from "../../components/support/AiAssistantPanel"
 import { validateFiles } from "../../utils/file"
+import { PageContainer } from "../../layouts/PageContainer"
 
 export function NewPostPage() {
   const nav = useNavigate()
@@ -85,7 +86,7 @@ export function NewPostPage() {
   }
 
   return (
-    <div className="mx-auto max-w-3xl space-y-8">
+     <PageContainer className="mx-auto max-w-4xl">
       <section className="space-y-3">
         <h1 className="text-4xl font-bold tracking-tight text-slate-900">
           게시글 작성
@@ -307,6 +308,6 @@ export function NewPostPage() {
           </div>
         </div>
       </section>
-    </div>
+    </PageContainer>
   )
 }

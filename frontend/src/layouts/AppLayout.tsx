@@ -13,6 +13,7 @@ import {
 } from "../api/notification/notifications"
 import SupportFloatingButton from "../components/support/SupportFloatingButton"
 import SupportPanel from "../components/support/SupportPanel"
+import { AppSidebar } from "./AppSidebar"
 
 export function AppLayout() {
   const nav = useNavigate()
@@ -347,8 +348,14 @@ export function AppLayout() {
         formatNotificationTime={formatNotificationTime}
       />
 
-      <main className="mx-auto min-h-[calc(100vh-64px)] max-w-7xl px-6 py-10">
-        <Outlet />
+      <main className="mx-auto min-h-[calc(100vh-64px)] w-full max-w-[1400px] px-6 py-10">
+        <div className="grid gap-8 xl:grid-cols-[220px_minmax(0,1fr)]">
+          <AppSidebar />
+
+          <div className="min-w-0">
+            <Outlet />
+          </div>
+        </div>
       </main>
        <SupportFloatingButton
           open={supportOpen}

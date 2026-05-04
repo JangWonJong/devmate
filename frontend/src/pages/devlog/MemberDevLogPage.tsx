@@ -9,6 +9,7 @@ import { fileUrl } from "../../utils/file"
 import { apiErrorMessage } from "../../utils/error"
 import { tokenStore } from "../../api/auth/token"
 import { getMeId } from "../../api/member/members"
+import { PageContainer } from "../../layouts/PageContainer"
 
 function preview(text: string) {
   return text.length > 120 ? `${text.slice(0, 120)}...` : text
@@ -124,7 +125,7 @@ export function MemberDevLogPage() {
   }, [id, page, keyword])
 
   return (
-    <div className="mx-auto max-w-5xl px-4 py-8">
+    <PageContainer className="space-y-6">
       <div className="rounded-3xl border border-slate-200 bg-white p-6 shadow-sm">
         <div className="flex flex-col justify-between gap-4 sm:flex-row sm:items-center">
           <div>
@@ -215,7 +216,7 @@ export function MemberDevLogPage() {
               >
                 <div
                   className={`grid ${
-                    thumb ? "sm:grid-cols-[180px_1fr]" : ""
+                    thumb ? "sm:grid-cols-[200px_1fr]" : ""
                   }`}
                 >
                   {thumb && (
@@ -290,6 +291,6 @@ export function MemberDevLogPage() {
           </button>
         </div>
       )}
-    </div>
+    </PageContainer>
   )
 }

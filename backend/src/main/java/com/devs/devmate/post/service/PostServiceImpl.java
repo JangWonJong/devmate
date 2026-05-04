@@ -155,12 +155,9 @@ public class PostServiceImpl implements PostService {
         return postBookmarkRepository.existsByPostIdAndMemberId(post.getId(), memberId);
     }
 
-    private ObjectMapper redisObjectMapper() {
-        ObjectMapper objectMapper = new ObjectMapper();
-        objectMapper.registerModule(new JavaTimeModule());
-        objectMapper.disable(SerializationFeature.WRITE_DATES_AS_TIMESTAMPS);
-        return objectMapper;
-    }
+    private final ObjectMapper objectMapper = new ObjectMapper()
+            .registerModule(new JavaTimeModule())
+            .disable(SerializationFeature.WRITE_DATES_AS_TIMESTAMPS);
 
     @Override
     public Long create(Long memberId, PostCreateRequest request, List<MultipartFile> files) {
@@ -486,7 +483,7 @@ public class PostServiceImpl implements PostService {
             String cachedJson = stringRedisTemplate.opsForValue().get(cacheKey);
 
             if (cachedJson != null && !cachedJson.isBlank()) {
-                return redisObjectMapper().readValue(
+                return objectMapper.readValue(
                         cachedJson,
                         new TypeReference<List<PostResponse>>() {}
                 );
@@ -516,7 +513,7 @@ public class PostServiceImpl implements PostService {
                 .toList();
 
         try {
-            String json = redisObjectMapper().writeValueAsString(result);
+            String json = objectMapper.writeValueAsString(result);
             stringRedisTemplate.opsForValue().set(cacheKey, json, POPULAR_POST_CACHE_TTL);
         } catch (Exception e) {
             // 캐시 저장 실패해도 응답은 정상 반환

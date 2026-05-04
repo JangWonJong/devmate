@@ -11,6 +11,7 @@ import {
   type ProfileLinkType,
 } from "../../api/member/members"
 import { tokenStore } from "../../api/auth/token"
+import { PageContainer } from "../../layouts/PageContainer"
 
 const inputClassName =
   "w-full rounded-xl border border-slate-300 px-4 py-3 text-sm outline-none focus:border-indigo-500 focus:ring-2 focus:ring-indigo-100"
@@ -394,7 +395,8 @@ export function AccountSettingsPage() {
   }
 
   return (
-    <div className="mx-auto max-w-xl space-y-6 px-4 py-16">
+    <PageContainer>
+    <div className="mx-auto w-full max-w-2xl space-y-6">
       <div className="text-center">
         <h1 className="text-3xl font-bold text-slate-900">계정 설정</h1>
         <p className="mt-2 text-sm text-slate-600">
@@ -706,6 +708,7 @@ export function AccountSettingsPage() {
           회원탈퇴 진행
         </button>
       </form>
-    </div>
+      </div>
+    </PageContainer>
   )
 }

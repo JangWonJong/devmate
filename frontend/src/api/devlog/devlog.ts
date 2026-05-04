@@ -48,6 +48,15 @@ export type DevLogLikeStatusResponse = {
   likeCount: number
 }
 
+export type DevLoggerSummaryResponse = {
+  memberId: number
+  nickname: string
+  bio?: string
+  profileImageUrl?: string
+  devLogCount: number
+  latestDevLogCreatedAt?: string
+}
+
 export type DevLogSort = "id,desc" | "id,asc"
 
 export async function createDevLog(
@@ -190,4 +199,30 @@ export async function likeDevLog(devLogId: number) {
 
 export async function unlikeDevLog(devLogId: number) {
   await http.delete(`/api/devlogs/${devLogId}/likes`)
+}
+
+export async function listPopularDevLogs(limit = 5) {
+  const { data } = await http.get<ApiResponse<DevLogResponse[]>>(
+    "/api/devlogs/popular",
+    { params: { limit } }
+  )
+
+  if (!data.success || data.data == null) {
+    throw new Error("인기 DevLog 조회 실패")
+  }
+
+  return data.data
+}
+
+export async function listRecentDevLoggers(limit = 5) {
+  const { data } = await http.get<ApiResponse<DevLoggerSummaryResponse[]>>(
+    "/api/devlogs/members/recent",
+    { params: { limit } }
+  )
+
+  if (!data.success || data.data == null) {
+    throw new Error("최근 DevLogger 조회 실패")
+  }
+
+  return data.data
 }

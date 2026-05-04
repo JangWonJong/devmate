@@ -22,30 +22,30 @@ type StudyInfoCardProps = {
 
 export default function StudyInfoCard({ study }: StudyInfoCardProps) {
   return (
-    <section className="sticky top-24 rounded-[28px] border border-slate-200 bg-white p-6 shadow-sm">
+    <section className="rounded-[24px] border border-slate-200 bg-white p-5 shadow-sm">
       <div className="mb-5 flex items-center justify-between gap-3">
-        <h2 className="text-2xl font-bold tracking-tight text-slate-900">
+        <h2 className="text-xl font-bold tracking-tight text-slate-900">
           스터디 정보
         </h2>
         <StudyStatusBadge status={study.status} />
       </div>
 
       <div className="grid gap-4 md:grid-cols-2">
-        <div className="rounded-2xl border border-slate-200 bg-slate-50 px-4 py-4">
+        <div className="rounded-2xl border border-slate-200 bg-slate-50 px-4 py-3">
           <div className="text-xs font-medium text-slate-500">제목</div>
           <div className="mt-2 text-base font-semibold text-slate-900">
             {study.postTitle}
           </div>
         </div>
 
-        <div className="rounded-2xl border border-slate-200 bg-slate-50 px-4 py-4">
+        <div className="rounded-2xl border border-slate-200 bg-slate-50 px-4 py-3">
           <div className="text-xs font-medium text-slate-500">리더</div>
           <div className="mt-2 text-base font-semibold text-slate-900">
             {study.leaderNickname}
           </div>
         </div>
 
-        <div className="rounded-2xl border border-slate-200 bg-slate-50 px-4 py-4">
+        <div className="rounded-2xl border border-slate-200 bg-slate-50 px-4 py-3">
           <div className="text-xs font-medium text-slate-500">현재 인원</div>
           <div className="mt-2 inline-flex items-center gap-2 text-base font-semibold text-slate-900">
             <Users className="h-4 w-4 text-slate-500" />
@@ -53,7 +53,7 @@ export default function StudyInfoCard({ study }: StudyInfoCardProps) {
           </div>
         </div>
 
-        <div className="rounded-2xl border border-slate-200 bg-slate-50 px-4 py-4">
+        <div className="rounded-2xl border border-slate-200 bg-slate-50 px-4 py-3">
           <div className="text-xs font-medium text-slate-500">상태</div>
           <div className="mt-2 text-base font-semibold text-slate-900">
             {getStudyStatusText(study.status)}

@@ -3,6 +3,8 @@ import { useNavigate, useSearchParams } from "react-router-dom"
 import { listMyDevLogs, type DevLogResponse } from "../../api/devlog/devlog"
 import { fileUrl } from "../../utils/file"
 import { apiErrorMessage } from "../../utils/error"
+import { DevLoggerCard } from "../../components/devlog/DevLoggerCard"
+import { PageContainer } from "../../layouts/PageContainer"
 
 function preview(text: string) {
   return text.length > 120 ? `${text.slice(0, 120)}...` : text
@@ -83,7 +85,10 @@ export function DevLogListPage() {
   }, [page, keyword])
 
   return (
-    <div className="mx-auto max-w-5xl px-4 py-8">
+    <PageContainer>
+    <div className="grid gap-6 xl:grid-cols-[minmax(0,1fr)_240px]">
+      
+      <div className="min-w-0 space-y-5">
       <div className="rounded-3xl border border-slate-200 bg-white p-6 shadow-sm">
         <div className="flex flex-col justify-between gap-4 sm:flex-row sm:items-center">
           <div>
@@ -141,6 +146,7 @@ export function DevLogListPage() {
             )}
         </form>
         </div>
+        
 
       {error && (
         <div className="mt-5 rounded-2xl border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-700">
@@ -232,7 +238,7 @@ export function DevLogListPage() {
           })}
         </div>
       )}
-
+        
       {totalPages > 1 && (
         <div className="mt-6 flex justify-center gap-2">
           <button
@@ -256,6 +262,13 @@ export function DevLogListPage() {
           </button>
         </div>
       )}
+      </div>
+
+    <aside className="space-y-4 xl:sticky xl:top-24 xl:self-start">
+      <DevLoggerCard />
+    </aside>
     </div>
+    </PageContainer>
+
   )
 }

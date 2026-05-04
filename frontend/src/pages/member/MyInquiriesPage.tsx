@@ -1,11 +1,12 @@
 import { useNavigate } from "react-router-dom"
 import InquiryList from "../../components/support/InquiryList"
+import { PageContainer } from "../../layouts/PageContainer"
 
 export function MyInquiriesPage() {
   const nav = useNavigate()
 
   return (
-    <div className="mx-auto max-w-5xl space-y-6 px-4 py-10">
+    <PageContainer className="space-y-6">
       <section className="flex flex-col gap-4 lg:flex-row lg:items-end lg:justify-between">
         <div>
           <p className="text-sm font-medium text-indigo-600">My Page</p>
@@ -42,6 +43,6 @@ export function MyInquiriesPage() {
 
         <InquiryList variant="full" />
       </section>
-    </div>
+    </PageContainer>
   )
 }
