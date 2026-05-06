@@ -12,6 +12,9 @@ import {
 } from "../../api/admin/memberManagement"
 import { getCurrentMemberId } from "../../api/auth/currentUser"
 import { imageUrl } from "../../utils/image"
+import { appToast } from "../../lib/toast"
+import { ConfirmModal } from "../../components/common/ConfirmModal"
+import { useConfirm } from "../../components/common/useConfirm"
 
 function InfoCard({ label, value }: { label: string; value: string }) {
   return (
@@ -67,6 +70,16 @@ export default function AdminMemberDetailPage() {
 
   const [error, setError] = useState("")
   const [imageError, setImageError] = useState(false)
+
+  const {
+      open,
+      title,
+      message,
+      danger,
+      action,
+      setOpen,
+      confirm: openConfirm,
+    } = useConfirm()
 
   async function fetchMemberDetail(id: number) {
     const data = await getAdminMemberDetail(id)
@@ -156,114 +169,143 @@ export default function AdminMemberDetailPage() {
     if (!member) return
 
     if (member.status === "SUSPENDED") {
-      alert("정지 상태에서는 탈퇴 처리를 할 수 없습니다. 먼저 정지를 해제해주세요.")
+      appToast.info("정지 상태에서는 탈퇴 처리를 할 수 없습니다. 먼저 정지를 해제해주세요.")
       return
     }
 
     const nextStatus = member.status === "DELETED" ? "ACTIVE" : "DELETED"
 
-    const confirmed = window.confirm(
-      nextStatus === "DELETED"
-        ? "해당 회원을 탈퇴 처리하시겠습니까?"
-        : "해당 회원을 복구 처리하시겠습니까?"
-    )
-
-    if (!confirmed) return
-
-    try {
-      setSaving(true)
-      await updateAdminMemberStatus(member.id, nextStatus)
-      await fetchMemberDetail(member.id)
-
-      alert(
+    openConfirm({
+      title:
         nextStatus === "DELETED"
-          ? "회원이 탈퇴 처리되었습니다."
-          : "회원이 복구되었습니다."
-      )
-    } catch (e) {
-      console.error(e)
-      alert("회원 상태 변경에 실패했습니다.")
-    } finally {
-      setSaving(false)
-    }
+          ? "회원 탈퇴 처리"
+          : "회원 복구 처리",
+
+      message:
+        nextStatus === "DELETED"
+          ? "해당 회원을 탈퇴 처리하시겠습니까?"
+          : "해당 회원을 복구 처리하시겠습니까?",
+
+      danger: nextStatus === "DELETED",
+
+      onConfirm: async () => {
+        try {
+          setSaving(true)
+
+          await updateAdminMemberStatus(member.id, nextStatus)
+          await fetchMemberDetail(member.id)
+
+          appToast.success(
+            nextStatus === "DELETED"
+              ? "회원이 탈퇴 처리되었습니다."
+              : "회원이 복구되었습니다."
+          )
+        } catch (e) {
+          console.error(e)
+          appToast.error("회원 상태 변경에 실패했습니다.")
+        } finally {
+          setSaving(false)
+          setOpen(false)
+        }
+      },
+    })
   }
 
   async function handleToggleRole() {
     if (!member) return
 
     if (isSelfAdmin) {
-      alert("현재 로그인한 관리자 계정은 권한을 변경할 수 없습니다.")
+      appToast.info("현재 로그인한 관리자 계정은 권한을 변경할 수 없습니다.")
       return
     }
 
     if (isDeletedMember) {
-      alert("탈퇴한 회원의 권한은 변경할 수 없습니다.")
+      appToast.info("탈퇴한 회원의 권한은 변경할 수 없습니다.")
       return
     }
 
     if (isSuspendedMember) {
-      alert("정지된 회원의 권한은 변경할 수 없습니다.")
+      appToast.info("정지된 회원의 권한은 변경할 수 없습니다.")
       return
     }
 
     const nextRole = member.role === "USER" ? "ADMIN" : "USER"
 
-    const confirmed = window.confirm(
-      nextRole === "ADMIN"
-        ? "해당 회원에게 관리자 권한을 부여하시겠습니까?"
-        : "해당 회원을 일반 회원 권한으로 변경하시겠습니까?"
-    )
-
-    if (!confirmed) return
-
-    try {
-      setSaving(true)
-      await updateAdminMemberRole(member.id, nextRole)
-      await fetchMemberDetail(member.id)
-
-      alert(
+    openConfirm({
+      title:
         nextRole === "ADMIN"
-          ? "관리자 권한이 부여되었습니다."
-          : "일반 회원 권한으로 변경되었습니다."
-      )
-    } catch (e) {
-      console.error(e)
-      alert("회원 권한 변경에 실패했습니다.")
-    } finally {
-      setSaving(false)
-    }
+          ? "관리자 권한 부여"
+          : "일반 회원 권한 변경",
+
+      message:
+        nextRole === "ADMIN"
+          ? "해당 회원에게 관리자 권한을 부여하시겠습니까?"
+          : "해당 회원을 일반 회원 권한으로 변경하시겠습니까?",
+
+      onConfirm: async () => {
+        try {
+          setSaving(true)
+
+          await updateAdminMemberRole(member.id, nextRole)
+          await fetchMemberDetail(member.id)
+
+          appToast.success(
+            nextRole === "ADMIN"
+              ? "관리자 권한이 부여되었습니다."
+              : "일반 회원 권한으로 변경되었습니다."
+          )
+        } catch (e) {
+          console.error(e)
+          appToast.error("회원 권한 변경에 실패했습니다.")
+        } finally {
+          setSaving(false)
+          setOpen(false)
+        }
+      },
+    })
   }
 
   async function handleSuspendMember() {
     if (!member) return
 
-    const nextStatus = member.status === "SUSPENDED" ? "ACTIVE" : "SUSPENDED"
+    const nextStatus = member.status === "SUSPENDED"
+      ? "ACTIVE"
+      : "SUSPENDED"
 
-    const confirmed = window.confirm(
-      nextStatus === "SUSPENDED"
-        ? "해당 회원을 정지 처리하시겠습니까?"
-        : "해당 회원의 정지를 해제하시겠습니까?"
-    )
-
-    if (!confirmed) return
-
-    try {
-      setSaving(true)
-
-      await updateAdminMemberStatus(member.id, nextStatus)
-      await fetchMemberDetail(member.id)
-
-      alert(
+    openConfirm({
+      title:
         nextStatus === "SUSPENDED"
-          ? "회원이 정지 처리되었습니다."
-          : "회원 정지가 해제되었습니다."
-      )
-    } catch (e) {
-      console.error(e)
-      alert("회원 정지 상태 변경에 실패했습니다.")
-    } finally {
-      setSaving(false)
-    }
+          ? "회원 정지 처리"
+          : "회원 정지 해제",
+
+      message:
+        nextStatus === "SUSPENDED"
+          ? "해당 회원을 정지 처리하시겠습니까?"
+          : "해당 회원의 정지를 해제하시겠습니까?",
+
+      danger: nextStatus === "SUSPENDED",
+
+      onConfirm: async () => {
+        try {
+          setSaving(true)
+
+          await updateAdminMemberStatus(member.id, nextStatus)
+          await fetchMemberDetail(member.id)
+
+          appToast.success(
+            nextStatus === "SUSPENDED"
+              ? "회원이 정지 처리되었습니다."
+              : "회원 정지가 해제되었습니다."
+          )
+        } catch (e) {
+          console.error(e)
+          appToast.error("회원 정지 상태 변경에 실패했습니다.")
+        } finally {
+          setSaving(false)
+          setOpen(false)
+        }
+      },
+    })
   }
 
   async function handleSaveAdminMemo() {
@@ -274,10 +316,10 @@ export default function AdminMemberDetailPage() {
       await updateAdminMemberMemo(member.id, adminMemo.trim())
       await fetchMemberDetail(member.id)
 
-      alert("관리자 메모가 저장되었습니다.")
+      appToast.success("관리자 메모가 저장되었습니다.")
     } catch (e) {
       console.error(e)
-      alert("관리자 메모 저장에 실패했습니다.")
+      appToast.error("관리자 메모 저장에 실패했습니다.")
     } finally {
       setSaving(false)
     }
@@ -677,6 +719,17 @@ export default function AdminMemberDetailPage() {
           </div>
         )}
       </section>
+      <ConfirmModal
+        open={open}
+        title={title}
+        message={message}
+        confirmText="확인"
+        cancelText="취소"
+        danger={danger}
+        onConfirm={() => action?.()}
+        onCancel={() => setOpen(false)}
+      />
     </div>
+    
   )
 }

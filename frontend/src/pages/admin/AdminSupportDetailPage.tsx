@@ -9,6 +9,9 @@ import {
   formatInquiryDate,
   type AdminInquiryDetail,
 } from "../../api/admin/support"
+import { appToast } from "../../lib/toast"
+import { ConfirmModal } from "../../components/common/ConfirmModal"
+import { useConfirm } from "../../components/common/useConfirm"
 
 function getStatusBadgeClass(status: AdminInquiryDetail["status"]) {
   if (status === "RECEIVED") {
@@ -78,6 +81,16 @@ export default function AdminSupportDetailPage() {
   const [saving, setSaving] = useState(false)
   const [error, setError] = useState("")
 
+  const {
+    open,
+    title,
+    message,
+    danger,
+    action,
+    setOpen,
+    confirm: openConfirm,
+  } = useConfirm()
+
   useEffect(() => {
     if (!inquiryId) return
 
@@ -127,7 +140,7 @@ export default function AdminSupportDetailPage() {
       setReply(refreshed.adminReply ?? "")
     } catch (e) {
       console.error(e)
-      alert("상태 변경에 실패했습니다.")
+      appToast.error("상태 변경에 실패했습니다.")
     } finally {
       setSaving(false)
     }
@@ -137,41 +150,47 @@ export default function AdminSupportDetailPage() {
     if (!inquiry) return
 
     if (!reply.trim()) {
-      alert("답변 내용을 입력해주세요.")
+      appToast.error("답변 내용을 입력해주세요.")
       return
     }
 
-    const confirmed = window.confirm(
-      inquiry.adminReply
+    openConfirm({
+      title: inquiry.adminReply
+        ? "답변 수정"
+        : "답변 등록",
+
+      message: inquiry.adminReply
         ? "답변을 수정하시겠습니까?"
-        : "답변을 등록하시겠습니까?"
-    )
+        : "답변을 등록하시겠습니까?",
 
-    if (!confirmed) return
+      onConfirm: async () => {
+        try {
+          setSaving(true)
 
-    try {
-      setSaving(true)
+          await replyAdminInquiry({
+            inquiryId: inquiry.id,
+            adminReply: reply.trim(),
+          })
 
-      await replyAdminInquiry({
-        inquiryId: inquiry.id,
-        adminReply: reply.trim(),
-      })
+          const refreshed = await getAdminInquiryDetail(inquiry.id)
 
-      const refreshed = await getAdminInquiryDetail(inquiry.id)
-      setInquiry(refreshed)
-      setReply(refreshed.adminReply ?? "")
+          setInquiry(refreshed)
+          setReply(refreshed.adminReply ?? "")
 
-      alert(
-        inquiry.adminReply
-          ? "답변이 수정되었습니다."
-          : "답변이 등록되었습니다."
-      )
-    } catch (e) {
-      console.error(e)
-      alert("답변 등록에 실패했습니다.")
-    } finally {
-      setSaving(false)
-    }
+          appToast.success(
+            inquiry.adminReply
+              ? "답변이 수정되었습니다."
+              : "답변이 등록되었습니다."
+          )
+        } catch (e) {
+          console.error(e)
+          appToast.error("답변 등록에 실패했습니다.")
+        } finally {
+          setSaving(false)
+          setOpen(false)
+        }
+      },
+    })
   }
 
   if (loading) {
@@ -376,6 +395,17 @@ export default function AdminSupportDetailPage() {
           />
         </div>
       </section>
+
+      <ConfirmModal
+        open={open}
+        title={title}
+        message={message}
+        confirmText="확인"
+        cancelText="취소"
+        danger={danger}
+        onConfirm={() => action?.()}
+        onCancel={() => setOpen(false)}
+      />
     </div>
   )
 }

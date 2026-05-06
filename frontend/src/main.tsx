@@ -5,6 +5,7 @@ import { router } from './router'
 import React from 'react'
 import { Analytics } from '@vercel/analytics/react'
 import { countVisit } from './api/analytics/analytics'
+import { Toaster } from 'sonner'
 
 const today = new Date().toISOString().slice(0, 10)
 const visitKey = `devmine-visit-counted-${today}`
@@ -25,6 +26,13 @@ trackVisitOncePerDay()
 createRoot(document.getElementById('root')!).render(
   <React.StrictMode>
     <RouterProvider router={router} />
+    <Toaster
+    position="top-center"
+    richColors
+    closeButton
+    duration={2500}
+    theme="light"
+    />
     <Analytics />
   </React.StrictMode>,
 )

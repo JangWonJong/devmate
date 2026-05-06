@@ -12,6 +12,7 @@ import { tokenStore } from "../../api/auth/token"
 import { apiErrorMessage } from "../../utils/error"
 import { imageUrl } from "../../utils/image"
 import { PageContainer } from "../../layouts/PageContainer"
+import { appToast } from "../../lib/toast"
 
 export function MemberProfilePage() {
   const { memberId } = useParams()
@@ -91,7 +92,7 @@ export function MemberProfilePage() {
     if (!memberId || likeLoading) return
 
     if (!loggedIn) {
-      alert("로그인이 필요합니다.")
+      appToast.info("로그인이 필요합니다.")
       return
     }
 

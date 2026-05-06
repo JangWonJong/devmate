@@ -10,6 +10,10 @@ import {
   type Inquiry,
 } from "../../api/support/inquiry"
 import { tokenStore } from "../../api/auth/token"
+import { appToast } from "../../lib/toast"
+import { ConfirmModal } from "../common/ConfirmModal"
+import { useConfirm } from "../common/useConfirm"
+
 
 type InquiryListProps = {
   variant?: "compact" | "full"
@@ -22,6 +26,16 @@ export default function InquiryList({
   const [inquiries, setInquiries] = useState<Inquiry[]>([])
   const [loading, setLoading] = useState(true)
   const [loggedIn, setLoggedIn] = useState(tokenStore.isLoggedIn())
+
+  const {
+    open,
+    title,
+    message,
+    danger,
+    action,
+    setOpen,
+    confirm: openConfirm,
+  } = useConfirm()
 
   const isCompact = variant === "compact"
 
@@ -111,15 +125,22 @@ export default function InquiryList({
                 <button
                   type="button"
                   onClick={async () => {
-                    const ok = window.confirm("문의 내용을 취소할까요?")
-                    if (!ok) return
-
-                    try {
-                      await deleteInquiry(inquiry.id)
-                      window.dispatchEvent(new Event("inquiry-updated"))
-                    } catch {
-                      alert("문의 취소에 실패했습니다.")
-                    }
+                    openConfirm({
+                    title: "문의 취소",
+                    message: "문의 내용을 취소할까요?",
+                    danger: true,
+                    onConfirm: async () => {
+                      try {
+                        await deleteInquiry(inquiry.id)
+                        window.dispatchEvent(new Event("inquiry-updated"))
+                        appToast.success("문의가 취소되었습니다.")
+                      } catch {
+                        appToast.error("문의 취소에 실패했습니다.")
+                      } finally {
+                        setOpen(false)
+                      }
+                    },
+                  })
                   }}
                   className="inline-flex shrink-0 items-center rounded-full border border-slate-200 bg-white px-2.5 py-1 text-[11px] font-medium text-slate-500 transition hover:border-red-200 hover:bg-red-50 hover:text-red-500"
                 >
@@ -168,6 +189,17 @@ export default function InquiryList({
           )}
         </div>
       ))}
+      <ConfirmModal
+        open={open}
+        title={title}
+        message={message}
+        confirmText="확인"
+        cancelText="취소"
+        danger={danger}
+        onConfirm={() => action?.()}
+        onCancel={() => setOpen(false)}
+      />
     </div>
+    
   )
 }

@@ -14,6 +14,7 @@ import {
 import SupportFloatingButton from "../components/support/SupportFloatingButton"
 import SupportPanel from "../components/support/SupportPanel"
 import { AppSidebar } from "./AppSidebar"
+import { appToast } from "../lib/toast"
 
 export function AppLayout() {
   const nav = useNavigate()
@@ -112,7 +113,7 @@ export function AppLayout() {
       setNotifications((prev) => prev.map((item) => ({ ...item, isRead: true })))
       setUnreadCount(0)
     } catch {
-      alert("전체 읽음 처리에 실패했습니다.")
+      appToast.error("전체 읽음 처리에 실패했습니다.")
     }
   }
 
@@ -136,7 +137,7 @@ export function AppLayout() {
   }
 
   const handleGuestWriteClick = () => {
-    alert("로그인 후 게시글 작성이 가능합니다.")
+    appToast.info("로그인 후 게시글 작성이 가능합니다.")
     nav("/login", {
       state: {
         from: {
@@ -363,7 +364,11 @@ export function AppLayout() {
         />
         <SupportPanel open={supportOpen} onClose={() => setSupportOpen(false)} />
       {toast && (
-        <div className="fixed bottom-6 right-6 z-[9999] rounded-xl bg-slate-900 px-4 py-3 text-sm text-white shadow-lg">
+        <div className="fixed bottom-6 right-6 z-[9999]
+          rounded-2xl bg-slate-900/95
+          px-4 py-3 text-sm text-white
+          shadow-2xl backdrop-blur-sm
+          animate-in slide-in-from-bottom-2 duration-300">
           🔔 {toast}
         </div>
       )}

@@ -17,6 +17,9 @@ import { addHours, today } from "../../utils/reservationUtils"
 import ReservationCreateSection from "../../components/reservation/ReservationCreateSection"
 import ReservationListSection from "../../components/reservation/ReservationListSection"
 import { PageContainer } from "../../layouts/PageContainer"
+import { ConfirmModal } from "../../components/common/ConfirmModal"
+import { useConfirm } from "../../components/common/useConfirm"
+import { appToast } from "../../lib/toast"
 
 type Scope = "all" | "mine"
 
@@ -134,7 +137,16 @@ export function ReservationsPage() {
 
   const [availability, setAvailability] = useState<AvailabilityResponse | null>(null)
   const [availabilityLoading, setAvailabilityLoading] = useState(false)
-  const [successMessage, setSuccessMessage] = useState<string | null>(null)
+
+  const {
+    open,
+    title: confirmTitle,
+    message,
+    danger,
+    action,
+    setOpen,
+    confirm: openConfirm,
+  } = useConfirm()
 
   const refreshAvailability = useCallback(async () => {
     if (scope !== "all" || !roomId || !date) {
@@ -207,8 +219,6 @@ export function ReservationsPage() {
       return
     }
 
-    setSuccessMessage(null)
-
     try {
       setBusy(true)
       setErr(null)
@@ -221,7 +231,7 @@ export function ReservationsPage() {
         title: t,
       })
 
-      setSuccessMessage("예약이 완료되었어요")
+      appToast.success("예약이 완료되었어요")
       setTitle("")
       setSelectedTime(null)
       setDurationHours(1)
@@ -242,28 +252,34 @@ export function ReservationsPage() {
   }
 
   const onCancel = async (id: number) => {
-    const ok = confirm("예약을 취소할까요?")
-    if (!ok) return
+    openConfirm({
+      title: "예약 취소",
+      message: "예약을 취소할까요?",
+      danger: true,
 
-    setSuccessMessage(null)
+      onConfirm: async () => {
+        try {
+          setBusy(true)
+          setErr(null)
 
-    try {
-      setBusy(true)
-      setErr(null)
-      await cancelReservation(id)
-      setSuccessMessage("예약이 취소되었어요")
+          await cancelReservation(id)
 
-      if (scope === "mine") {
-        await loadMine()
-      } else {
-        await loadAll()
-        await refreshAvailability()
-      }
-    } catch (e: any) {
-      setErr(apiErrorMessage(e, "예약 취소 실패"))
-    } finally {
-      setBusy(false)
-    }
+          appToast.success("예약이 취소되었어요")
+
+          if (scope === "mine") {
+            await loadMine()
+          } else {
+            await loadAll()
+            await refreshAvailability()
+          }
+        } catch (e: any) {
+          setErr(apiErrorMessage(e, "예약 취소 실패"))
+        } finally {
+          setBusy(false)
+          setOpen(false)
+        }
+      },
+    })
   }
 
   const groupedItems = useMemo(() => {
@@ -361,18 +377,6 @@ export function ReservationsPage() {
   }, [])
 
   useEffect(() => {
-    void refreshAvailability()
-  }, [refreshAvailability])
-
-  useEffect(() => {
-    if (!successMessage) return
-    const timer = window.setTimeout(() => {
-      setSuccessMessage(null)
-    }, 2500)
-    return () => window.clearTimeout(timer)
-  }, [successMessage])
-
-  useEffect(() => {
     ;(async () => {
       try {
         setErr(null)
@@ -451,12 +455,6 @@ export function ReservationsPage() {
       {err && (
         <div className="rounded-2xl border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-700">
           {err}
-        </div>
-      )}
-
-      {successMessage && (
-        <div className="rounded-2xl border border-emerald-200 bg-emerald-50 px-4 py-3 text-sm font-semibold text-emerald-700">
-          {successMessage}
         </div>
       )}
 
@@ -540,6 +538,18 @@ export function ReservationsPage() {
           />
         </div>
       )}
+
+     <ConfirmModal
+        open={open}
+        title={confirmTitle}
+        message={message}
+        confirmText="확인"
+        cancelText="취소"
+        danger={danger}
+        onConfirm={() => action?.()}
+        onCancel={() => setOpen(false)}
+      /> 
+
     </PageContainer>
   )
 }

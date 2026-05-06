@@ -1,5 +1,6 @@
 import axios from "axios"
 import { tokenStore } from "./auth/token"
+import { appToast } from "../lib/toast"
 
 export const http = axios.create({
   baseURL: import.meta.env.VITE_API_BASE_URL,
@@ -73,7 +74,7 @@ http.interceptors.response.use(
     }
 
     if (isAccountBlockedError(errorCode)) {
-      alert(errorMessage ?? "계정 상태를 확인해주세요.")
+      appToast.error(errorMessage ?? "계정 상태를 확인해주세요.")
       logoutToLogin()
       return Promise.reject(err)
     }
@@ -151,7 +152,7 @@ http.interceptors.response.use(
       const reissueErrorMessage = e?.response?.data?.error?.message
 
       if (isAccountBlockedError(reissueErrorCode)) {
-        alert(reissueErrorMessage ?? "계정 상태를 확인해주세요.")
+        appToast.error(reissueErrorMessage ?? "계정 상태를 확인해주세요.")
         logoutToLogin()
         return Promise.reject(e)
       }

@@ -18,6 +18,8 @@ import { Prism as SyntaxHighlighter } from "react-syntax-highlighter"
 import { vscDarkPlus } from "react-syntax-highlighter/dist/esm/styles/prism"
 import "../../components/common/devlog.css"
 import { PageContainer } from "../../layouts/PageContainer"
+import { appToast } from "../../lib/toast"
+import { ConfirmModal } from "../../components/common/ConfirmModal"
 
 function normalizeMarkdown(text: string) {
   return text.replace(/\\`\\`\\`/g, "```")
@@ -122,6 +124,10 @@ export function DevLogDetailPage() {
   const [likeCount, setLikeCount] = useState(0)
   const [likedByMe, setLikedByMe] = useState(false)
   const [likeLoading, setLikeLoading] = useState(false)
+
+  const [confirmOpen, setconfirmOpen] = useState(false)
+  const [deleteCommentConfirmOpen, setDeleteCommentConfirmOpen] = useState(false)
+  const [selectedCommentId, setSelectedCommentId] = useState<number | null>(null)
 
   const [comments, setComments] = useState<DevLogCommentResponse[]>([])
   const [commentInput, setCommentInput] = useState("")
@@ -254,7 +260,7 @@ export function DevLogDetailPage() {
     if (!devLogId || likeLoading) return
 
     if (!loggedIn) {
-      alert("로그인이 필요합니다.")
+      appToast.info("로그인이 필요합니다.")
       return
     }
 
@@ -271,7 +277,7 @@ export function DevLogDetailPage() {
         setLikeCount((prev) => prev + 1)
       }
     } catch {
-      alert("좋아요 처리 실패")
+      appToast.error("좋아요 처리 실패")
     } finally {
       setLikeLoading(false)
     }
@@ -279,18 +285,19 @@ export function DevLogDetailPage() {
 
   const handleDelete = async () => {
     if (!devLogId) return
-    if (!window.confirm("DevLog를 삭제할까요?")) return
 
     try {
       setDeleting(true)
       setError("")
 
       await deleteDevLog(devLogId)
+      appToast.success("DevLog가 삭제되었습니다.")
       nav("/devlogs")
     } catch (e) {
-      setError(apiErrorMessage(e, "DevLog 삭제 실패"))
+      appToast.error(apiErrorMessage(e, "DevLog 삭제 실패"))
     } finally {
       setDeleting(false)
+      setconfirmOpen(false)
     }
   }
 
@@ -327,7 +334,7 @@ export function DevLogDetailPage() {
         setCommentInput("")
         await fetchComments()
     } catch {
-        alert("댓글 작성 실패")
+        appToast.error("댓글 작성 실패")
     }
     }
     
@@ -340,21 +347,30 @@ export function DevLogDetailPage() {
         setEditingContent("")
         await fetchComments()
     } catch {
-        alert("댓글 수정 실패")
+        appToast.error("댓글 수정 실패")
     }
     }
 
-  const handleDeleteComment = async (commentId: number) => {
-    if (!id) return
-    if (!confirm("삭제할까요?")) return
+  const confirmDeleteComment = async () => {
+    if (!id || selectedCommentId == null) return
 
     try {
-        await deleteDevLogComment(id, commentId)
-        await fetchComments()
+      await deleteDevLogComment(id, selectedCommentId)
+
+      appToast.success("댓글이 삭제되었습니다.")
+      await fetchComments()
     } catch {
-        alert("댓글 삭제 실패")
+      appToast.error("댓글 삭제 실패")
+    } finally {
+      setDeleteCommentConfirmOpen(false)
+      setSelectedCommentId(null)
     }
-    }
+  }
+
+  const handleDeleteComment = async (commentId: number) => {
+     setSelectedCommentId(commentId)
+     setDeleteCommentConfirmOpen(true)
+  }
   
   const handleToggleCommentLike = async (commentId: number) => {
   if (commentLikeLoadingMap[commentId]) return
@@ -373,7 +389,7 @@ export function DevLogDetailPage() {
 
         await fetchComments()
     } catch {
-        alert("좋아요 실패")
+        appToast.error("좋아요 실패")
     } finally {
         setCommentLikeLoadingMap((prev) => ({
         ...prev,
@@ -492,7 +508,7 @@ ${devLog.reference ? `[참고한 코드 / 개념]\n${devLog.reference}\n\n` : ""
 
               <button
                 disabled={deleting}
-                onClick={handleDelete}
+                onClick={() => setconfirmOpen(true)}
                 className="rounded-xl border border-red-200 px-4 py-2 text-sm font-semibold text-red-600 hover:bg-red-50 disabled:opacity-50"
               >
                 🗑 {deleting ? "삭제 중..." : "삭제"}
@@ -598,6 +614,31 @@ ${devLog.reference ? `[참고한 코드 / 개념]\n${devLog.reference}\n\n` : ""
           </div>
         </div>
       )}
+      <ConfirmModal
+      open={confirmOpen}
+      title="DevLog 삭제"
+      message="삭제한 DevLog는 복구할 수 없어요. 정말 삭제할까요?"
+      confirmText="삭제"
+      cancelText="취소"
+      danger
+      loading={deleting}
+      onConfirm={handleDelete}
+      onCancel={() => setconfirmOpen(false)}
+    />
+    <ConfirmModal
+      open={deleteCommentConfirmOpen}
+      title="댓글 삭제"
+      message="댓글을 삭제할까요?"
+      confirmText="삭제"
+      cancelText="취소"
+      danger
+      onConfirm={confirmDeleteComment}
+      onCancel={() => {
+        setDeleteCommentConfirmOpen(false)
+        setSelectedCommentId(null)
+      }}
+    />
     </PageContainer>
   )
+  
 }

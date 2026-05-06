@@ -47,6 +47,10 @@ import { PageContainer } from "../../layouts/PageContainer"
 import PostDetailHeader from "../../components/post/PostDetailHeader"
 import StudyInfoSection from "../../components/study/detail/StudyInfoSection"
 import CommentSection from "../../components/post/CommentSection"
+import { ConfirmModal } from "../../components/common/ConfirmModal"
+import { InputModal } from "../../components/common/InputModal"
+import { useConfirm } from "../../components/common/useConfirm"
+import { appToast } from "../../lib/toast"
 
 export function PostDetailPage() {
   const nav = useNavigate()
@@ -74,23 +78,47 @@ export function PostDetailPage() {
   const [studyLoading, setStudyLoading] = useState(false)
   const [studyMembers, setStudyMembers] = useState<StudyMemberResponse[]>([])
 
-  const [studyReservations, setStudyReservations] = useState<ReservationResponse[]>([])
+  const [studyReservations, setStudyReservations] = useState<
+    ReservationResponse[]
+  >([])
   const [reservationsLoading, setReservationsLoading] = useState(false)
 
   const [likedByMe, setLikedByMe] = useState(false)
   const [likeCount, setLikeCount] = useState(0)
   const [likeLoading, setLikeLoading] = useState(false)
 
-  const [commentLikedMap, setCommentLikedMap] = useState<Record<number, boolean>>({})
-  const [commentLikeCountMap, setCommentLikeCountMap] = useState<Record<number, number>>({})
-  const [commentLikeLoadingMap, setCommentLikeLoadingMap] = useState<Record<number, boolean>>({})
-  
+  const [commentLikedMap, setCommentLikedMap] = useState<
+    Record<number, boolean>
+  >({})
+  const [commentLikeCountMap, setCommentLikeCountMap] = useState<
+    Record<number, number>
+  >({})
+  const [commentLikeLoadingMap, setCommentLikeLoadingMap] = useState<
+    Record<number, boolean>
+  >({})
+
   const [bookmarkedByMe, setBookmarkedByMe] = useState(false)
   const [bookmarkCount, setBookmarkCount] = useState(0)
   const [bookmarkLoading, setBookmarkLoading] = useState(false)
 
+  const [noticeModalOpen, setNoticeModalOpen] = useState(false)
+  const [noticeInput, setNoticeInput] = useState("")
+  const [capacityModalOpen, setCapacityModalOpen] = useState(false)
+  const [capacityInput, setCapacityInput] = useState("4")
+  const [capacityMode, setCapacityMode] = useState<"create" | "update">("create")
+
   const handledNotFoundRef = useRef(false)
   const handledHashRef = useRef<string | null>(null)
+
+  const {
+    open,
+    title,
+    message,
+    danger,
+    action,
+    setOpen,
+    confirm: openConfirm,
+  } = useConfirm()
 
   const applyComments = (res: CommentResponse[]) => {
     setComments(res)
@@ -104,20 +132,34 @@ export function PostDetailPage() {
 
   const refreshComments = async () => {
     if (!id) return
+
     const res = await listComments(id)
     applyComments(res)
+  }
+
+  const refreshStudySection = async (postId: number) => {
+    const s = await getStudyByPostId(postId)
+    setStudy(s)
+
+    const members = await getStudyMembers(s.id)
+    setStudyMembers(members)
+
+    const reservationPage = await listStudyReservations({
+      studyId: s.id,
+      page: 0,
+      size: 20,
+      sort: "date,asc",
+    })
+
+    setStudyReservations(reservationPage.content)
   }
 
   useEffect(() => {
     const sync = () => setLoggedIn(tokenStore.isLoggedIn())
     sync()
+
     return tokenStore.subscribe(sync)
   }, [])
-
-  useEffect(() => {
-    handledNotFoundRef.current = false
-    handledHashRef.current = null
-  }, [id])
 
   useEffect(() => {
     ;(async () => {
@@ -136,25 +178,36 @@ export function PostDetailPage() {
   }, [loggedIn])
 
   useEffect(() => {
+    handledNotFoundRef.current = false
+    handledHashRef.current = null
+  }, [id])
+
+  useEffect(() => {
     ;(async () => {
       try {
         setLoadErr(null)
         setLoading(true)
 
         if (!id) return
+
         const p = await getPost(id)
         setPost(p)
       } catch (e: any) {
         const status = e?.response?.status
+
         if (status === 404) {
           if (handledNotFoundRef.current) return
+
           handledNotFoundRef.current = true
+
           if (!deletingPost) {
-            alert("삭제되었거나 존재하지 않는 게시글입니다.")
+            appToast.info("삭제되었거나 존재하지 않는 게시글입니다.")
           }
+
           nav("/", { replace: true })
           return
         }
+
         setLoadErr(apiErrorMessage(e, "상세 조회 실패"))
       } finally {
         setLoading(false)
@@ -168,11 +221,14 @@ export function PostDetailPage() {
 
       try {
         setCommentErr(null)
+
         const res = await listComments(id)
         applyComments(res)
       } catch (e: any) {
         const status = e?.response?.status
+
         if (status === 404) return
+
         setCommentErr(apiErrorMessage(e, "댓글 조회 실패"))
       }
     })()
@@ -265,6 +321,7 @@ export function PostDetailPage() {
 
         if (status === 404) {
           if (cancelled) return
+
           setStudy(null)
           setStudyMembers([])
           setStudyReservations([])
@@ -272,6 +329,7 @@ export function PostDetailPage() {
         }
 
         if (cancelled) return
+
         setStudyError(apiErrorMessage(e, "스터디 정보를 불러오지 못했습니다."))
       } finally {
         if (!cancelled) {
@@ -322,81 +380,20 @@ export function PostDetailPage() {
         setBookmarkCount(0)
       }
     })()
-  }, [id, loggedIn])  
-
-  const refreshStudySection = async (postId: number) => {
-    const s = await getStudyByPostId(postId)
-    setStudy(s)
-
-    const members = await getStudyMembers(s.id)
-    setStudyMembers(members)
-
-    const reservationPage = await listStudyReservations({
-      studyId: s.id,
-      page: 0,
-      size: 20,
-      sort: "date,asc",
-    })
-    setStudyReservations(reservationPage.content)
-  }
+  }, [id, loggedIn])
 
   const onCreateStudy = async () => {
-    if (!post) return
-
-    const input = prompt("최대 인원을 입력하세요", "4")
-    if (!input) return
-
-    const maxMembers = Number(input)
-
-    if (!Number.isInteger(maxMembers) || maxMembers < 2) {
-      setStudyError("최대 인원은 2명 이상이어야 합니다.")
-      return
-    }
-
-    try {
-      setStudyError(null)
-      setStudyLoading(true)
-
-      const studyId = await createStudy({
-        postId: post.id,
-        maxMembers,
-      })
-
-      const createdStudy = await getStudy(studyId)
-      setStudy(createdStudy)
-
-      const members = await getStudyMembers(studyId)
-      setStudyMembers(members)
-    } catch (e: any) {
-      setStudyError(apiErrorMessage(e, "스터디 생성 실패"))
-    } finally {
-      setStudyLoading(false)
-    }
+    setCapacityMode("create")
+    setCapacityInput("4")
+    setCapacityModalOpen(true)
   }
 
   const onUpdateStudyCapacity = async () => {
-    if (!study || !post) return
+    if (!study) return
 
-    const input = prompt("변경할 최대 인원을 입력하세요", String(study.maxMembers))
-    if (!input) return
-
-    const maxMembers = Number(input)
-
-    if (!Number.isInteger(maxMembers) || maxMembers < 2) {
-      setStudyError("최대 인원은 2명 이상이어야 합니다.")
-      return
-    }
-
-    try {
-      setStudyError(null)
-      setStudyLoading(true)
-      await updateStudyCapacity(study.id, { maxMembers })
-      await refreshStudySection(post.id)
-    } catch (e: any) {
-      setStudyError(apiErrorMessage(e, "스터디 정원 수정 실패"))
-    } finally {
-      setStudyLoading(false)
-    }
+    setCapacityMode("update")
+    setCapacityInput(String(study.maxMembers))
+    setCapacityModalOpen(true)
   }
 
   const onJoinStudy = async () => {
@@ -405,8 +402,11 @@ export function PostDetailPage() {
     try {
       setStudyError(null)
       setStudyLoading(true)
+
       await joinStudy(study.id)
       await refreshStudySection(post.id)
+
+      appToast.success("스터디에 참여했습니다.")
     } catch (e: any) {
       setStudyError(apiErrorMessage(e, "스터디 참가 실패"))
     } finally {
@@ -417,52 +417,153 @@ export function PostDetailPage() {
   const onLeaveStudy = async () => {
     if (!study || !post) return
 
-    const ok = confirm("스터디에서 탈퇴할까요?")
-    if (!ok) return
+    openConfirm({
+      title: "스터디 탈퇴",
+      message: "스터디에서 탈퇴할까요?",
+      danger: true,
+      onConfirm: async () => {
+        try {
+          setStudyError(null)
+          setStudyLoading(true)
 
-    try {
-      setStudyError(null)
-      setStudyLoading(true)
-      await leaveStudy(study.id)
-      await refreshStudySection(post.id)
-    } catch (e: any) {
-      setStudyError(apiErrorMessage(e, "스터디 탈퇴 실패"))
-    } finally {
-      setStudyLoading(false)
-    }
+          await leaveStudy(study.id)
+          await refreshStudySection(post.id)
+
+          appToast.success("스터디에서 탈퇴했습니다.")
+        } catch (e: any) {
+          setStudyError(apiErrorMessage(e, "스터디 탈퇴 실패"))
+        } finally {
+          setStudyLoading(false)
+          setOpen(false)
+        }
+      },
+    })
   }
 
   const onCloseStudy = async () => {
     if (!study || !post) return
 
-    const ok = confirm("스터디 모집을 마감할까요?")
-    if (!ok) return
+    openConfirm({
+      title: "스터디 모집 마감",
+      message: "스터디 모집을 마감할까요?",
+      danger: true,
+      onConfirm: async () => {
+        try {
+          setStudyError(null)
+          setStudyLoading(true)
 
-    try {
-      setStudyError(null)
-      setStudyLoading(true)
-      await closeStudy(study.id)
-      await refreshStudySection(post.id)
-    } catch (e: any) {
-      setStudyError(apiErrorMessage(e, "스터디 모집 마감 실패"))
-    } finally {
-      setStudyLoading(false)
-    }
+          await closeStudy(study.id)
+          await refreshStudySection(post.id)
+
+          appToast.success("스터디 모집을 마감했습니다.")
+        } catch (e: any) {
+          setStudyError(apiErrorMessage(e, "스터디 모집 마감 실패"))
+        } finally {
+          setStudyLoading(false)
+          setOpen(false)
+        }
+      },
+    })
   }
 
   const onDelegateLeader = async (targetMemberId: number) => {
     if (!study || !post) return
 
-    const ok = confirm("이 멤버에게 리더를 위임할까요?")
-    if (!ok) return
+    openConfirm({
+      title: "리더 위임",
+      message: "이 멤버에게 리더를 위임할까요?",
+      onConfirm: async () => {
+        try {
+          setStudyError(null)
+          setStudyLoading(true)
+
+          await delegateStudyLeader(study.id, { targetMemberId })
+          await refreshStudySection(post.id)
+
+          appToast.success("리더를 위임했습니다.")
+        } catch (e: any) {
+          setStudyError(apiErrorMessage(e, "리더 위임 실패"))
+        } finally {
+          setStudyLoading(false)
+          setOpen(false)
+        }
+      },
+    })
+  }
+
+  const onUpdateNotice = async () => {
+    if (!study || !post) return
+
+    setNoticeInput(study.notice ?? "")
+    setNoticeModalOpen(true)
+  }
+
+  const submitUpdateNotice = async (value: string) => {
+    if (!study || !post) return
 
     try {
       setStudyError(null)
       setStudyLoading(true)
-      await delegateStudyLeader(study.id, { targetMemberId })
+
+      await updateStudyNotice(study.id, value)
       await refreshStudySection(post.id)
+
+      appToast.success("공지 내용이 수정되었습니다.")
+      setNoticeModalOpen(false)
     } catch (e: any) {
-      setStudyError(apiErrorMessage(e, "리더 위임 실패"))
+      setStudyError(apiErrorMessage(e, "공지 수정 실패"))
+    } finally {
+      setStudyLoading(false)
+    }
+  }
+
+  const submitCapacity = async (value: string) => {
+    if (!post) return
+
+    const maxMembers = Number(value)
+
+    if (!Number.isInteger(maxMembers) || maxMembers < 2) {
+      setStudyError("최대 인원은 2명 이상이어야 합니다.")
+      return
+    }
+
+    try {
+      setStudyError(null)
+      setStudyLoading(true)
+
+      if (capacityMode === "create") {
+        const studyId = await createStudy({
+          postId: post.id,
+          maxMembers,
+        })
+
+        const createdStudy = await getStudy(studyId)
+        setStudy(createdStudy)
+
+        const members = await getStudyMembers(studyId)
+        setStudyMembers(members)
+
+        appToast.success("스터디가 생성되었습니다.")
+      } else {
+        if (!study) return
+
+        await updateStudyCapacity(study.id, { maxMembers })
+        await refreshStudySection(post.id)
+
+        appToast.success("정원이 수정되었습니다.")
+      }
+
+      setCapacityModalOpen(false)
+      setCapacityInput("")
+    } catch (e: any) {
+      setStudyError(
+        apiErrorMessage(
+          e,
+          capacityMode === "create"
+            ? "스터디 생성 실패"
+            : "스터디 정원 수정 실패"
+        )
+      )
     } finally {
       setStudyLoading(false)
     }
@@ -474,49 +575,66 @@ export function PostDetailPage() {
 
     try {
       setCommentErr(null)
+
       await createComment(id, { content: commentInput.trim() })
       setCommentInput("")
       await refreshComments()
+
+      appToast.success("댓글이 작성되었습니다.")
     } catch (e: any) {
       setCommentErr(apiErrorMessage(e, "댓글 작성 실패"))
     }
   }
 
   const onDeleteComment = async (commentId: number) => {
-    const ok = confirm("댓글을 삭제할까요?")
-    if (!ok) return
+    openConfirm({
+      title: "댓글 삭제",
+      message: "댓글을 삭제할까요?",
+      danger: true,
+      onConfirm: async () => {
+        try {
+          setCommentErr(null)
 
-    try {
-      setCommentErr(null)
-      await deleteComment(commentId)
-      setComments((prev) => prev.filter((c) => c.id !== commentId))
-      setCommentLikedMap((prev) => {
-        const next = { ...prev }
-        delete next[commentId]
-        return next
-      })
-      setCommentLikeCountMap((prev) => {
-        const next = { ...prev }
-        delete next[commentId]
-        return next
-      })
-      setCommentLikeLoadingMap((prev) => {
-        const next = { ...prev }
-        delete next[commentId]
-        return next
-      })
+          await deleteComment(commentId)
 
-      if (editingCommentId === commentId) {
-        setEditingCommentId(null)
-        setEditingContent("")
-      }
-    } catch (e: any) {
-      setCommentErr(apiErrorMessage(e, "댓글 삭제 실패"))
-    }
+          setComments((prev) => prev.filter((c) => c.id !== commentId))
+
+          setCommentLikedMap((prev) => {
+            const next = { ...prev }
+            delete next[commentId]
+            return next
+          })
+
+          setCommentLikeCountMap((prev) => {
+            const next = { ...prev }
+            delete next[commentId]
+            return next
+          })
+
+          setCommentLikeLoadingMap((prev) => {
+            const next = { ...prev }
+            delete next[commentId]
+            return next
+          })
+
+          if (editingCommentId === commentId) {
+            setEditingCommentId(null)
+            setEditingContent("")
+          }
+
+          appToast.success("댓글이 삭제되었습니다.")
+        } catch (e: any) {
+          setCommentErr(apiErrorMessage(e, "댓글 삭제 실패"))
+        } finally {
+          setOpen(false)
+        }
+      },
+    })
   }
 
   const onUpdateComment = async (commentId: number) => {
     const content = editingContent.trim()
+
     if (!content) {
       setCommentErr("댓글 내용을 입력하세요")
       return
@@ -524,6 +642,7 @@ export function PostDetailPage() {
 
     try {
       setCommentErr(null)
+
       await updateComment(commentId, content)
 
       setComments((prev) =>
@@ -532,86 +651,89 @@ export function PostDetailPage() {
 
       setEditingCommentId(null)
       setEditingContent("")
+
+      appToast.success("댓글이 수정되었습니다.")
     } catch (e: any) {
       setCommentErr(apiErrorMessage(e, "댓글 수정 실패"))
-    }
-  }
-
-  const onSolve = async () => {
-    if (!id) return
-    const ok = confirm("이 글을 해결됨으로 처리할까요?")
-    if (!ok) return
-
-    try {
-      setBusy(true)
-      setActionErr(null)
-
-      await solvePost(id)
-      const updated = await getPost(id)
-      setPost(updated)
-    } catch (e: any) {
-      setActionErr(apiErrorMessage(e, "해결 처리 실패"))
-    } finally {
-      setBusy(false)
-    }
-  }
-
-  const onDeletePost = async () => {
-    if (!id) return
-    const ok = confirm("정말 삭제할까요?")
-    if (!ok) return
-
-    try {
-      setBusy(true)
-      setDeletingPost(true)
-      setActionErr(null)
-      await deletePost(id)
-      nav("/posts", { replace: true })
-    } catch (e: any) {
-      setActionErr(apiErrorMessage(e, "삭제 실패"))
-      setDeletingPost(false)
-    } finally {
-      setBusy(false)
     }
   }
 
   const onAdoptComment = async (commentId: number) => {
     try {
       setCommentErr(null)
+
       await adoptComment(commentId)
       await refreshComments()
 
       const updatedPost = await getPost(id!)
       setPost(updatedPost)
+
+      appToast.success("댓글을 채택했습니다.")
     } catch (e: any) {
       setCommentErr(apiErrorMessage(e, "댓글 채택 실패"))
     }
   }
 
-  const onUpdateNotice = async () => {
-    if (!study || !post) return
+  const onSolve = async () => {
+    if (!id) return
 
-    const input = prompt("공지 내용을 입력하세요", study.notice ?? "")
-    if (input === null) return
+    openConfirm({
+      title: "게시글 해결 처리",
+      message: "이 글을 해결됨으로 처리할까요?",
+      onConfirm: async () => {
+        try {
+          setBusy(true)
+          setActionErr(null)
 
-    try {
-      setStudyError(null)
-      setStudyLoading(true)
+          await solvePost(id)
 
-      await updateStudyNotice(study.id, input)
-      await refreshStudySection(post.id)
-    } catch (e: any) {
-      setStudyError(apiErrorMessage(e, "공지 수정 실패"))
-    } finally {
-      setStudyLoading(false)
-    }
+          const updated = await getPost(id)
+          setPost(updated)
+
+          appToast.success("해결 처리되었습니다.")
+        } catch (e: any) {
+          setActionErr(apiErrorMessage(e, "해결 처리 실패"))
+        } finally {
+          setBusy(false)
+          setOpen(false)
+        }
+      },
+    })
+  }
+
+  const onDeletePost = async () => {
+    if (!id) return
+
+    openConfirm({
+      title: "게시글 삭제",
+      message: "삭제한 게시글은 복구할 수 없어요. 정말 삭제할까요?",
+      danger: true,
+      onConfirm: async () => {
+        try {
+          setBusy(true)
+          setDeletingPost(true)
+          setActionErr(null)
+
+          await deletePost(id)
+
+          appToast.success("게시글이 삭제되었습니다.")
+          nav("/posts", { replace: true })
+        } catch (e: any) {
+          setActionErr(apiErrorMessage(e, "삭제 실패"))
+          setDeletingPost(false)
+        } finally {
+          setBusy(false)
+          setOpen(false)
+        }
+      },
+    })
   }
 
   const onToggleLike = async () => {
     if (!id || likeLoading) return
 
     if (!loggedIn) {
-      alert("로그인이 필요합니다.")
+      appToast.info("로그인이 필요합니다.")
       return
     }
 
@@ -637,7 +759,7 @@ export function PostDetailPage() {
 
   const onToggleCommentLike = async (commentId: number) => {
     if (!loggedIn) {
-      alert("로그인이 필요합니다.")
+      appToast.info("로그인이 필요합니다.")
       return
     }
 
@@ -687,7 +809,7 @@ export function PostDetailPage() {
     if (!id || bookmarkLoading) return
 
     if (!loggedIn) {
-      alert("로그인이 필요합니다.")
+      appToast.info("로그인이 필요합니다.")
       return
     }
 
@@ -710,7 +832,6 @@ export function PostDetailPage() {
       setBookmarkLoading(false)
     }
   }
-
 
   if (loading) {
     return (
@@ -801,6 +922,54 @@ export function PostDetailPage() {
         commentLikeCountMap={commentLikeCountMap}
         commentLikeLoadingMap={commentLikeLoadingMap}
         onToggleCommentLike={onToggleCommentLike}
+      />
+
+      <ConfirmModal
+        open={open}
+        title={title}
+        message={message}
+        confirmText="확인"
+        cancelText="취소"
+        danger={danger}
+        onConfirm={() => action?.()}
+        onCancel={() => setOpen(false)}
+      />
+
+      <InputModal
+        open={noticeModalOpen}
+        title="공지 수정"
+        message="스터디 공지 내용을 입력하세요."
+        placeholder="공지 내용을 입력하세요"
+        defaultValue={noticeInput}
+        multiline
+        loading={studyLoading}
+        confirmText="저장"
+        cancelText="취소"
+        onConfirm={submitUpdateNotice}
+        onCancel={() => {
+          setNoticeModalOpen(false)
+          setNoticeInput("")
+        }}
+      />
+
+      <InputModal
+        open={capacityModalOpen}
+        title={
+          capacityMode === "create"
+            ? "스터디 생성"
+            : "스터디 정원 수정"
+        }
+        message="최대 인원을 입력하세요."
+        placeholder="예: 4"
+        defaultValue={capacityInput}
+        loading={studyLoading}
+        confirmText="확인"
+        cancelText="취소"
+        onConfirm={submitCapacity}
+        onCancel={() => {
+          setCapacityModalOpen(false)
+          setCapacityInput("")
+        }}
       />
     </PageContainer>
   )

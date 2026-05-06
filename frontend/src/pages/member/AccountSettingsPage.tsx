@@ -12,6 +12,9 @@ import {
 } from "../../api/member/members"
 import { tokenStore } from "../../api/auth/token"
 import { PageContainer } from "../../layouts/PageContainer"
+import { ConfirmModal } from "../../components/common/ConfirmModal"
+import { useConfirm } from "../../components/common/useConfirm"
+
 
 const inputClassName =
   "w-full rounded-xl border border-slate-300 px-4 py-3 text-sm outline-none focus:border-indigo-500 focus:ring-2 focus:ring-indigo-100"
@@ -95,6 +98,16 @@ export function AccountSettingsPage() {
   const [withdrawPassword, setWithdrawPassword] = useState("")
 
   const [originalProfile, setOriginalProfile] = useState<ProfileSnapshot | null>(null)
+
+  const {
+    open,
+    title,
+    message,
+    danger,
+    action,
+    setOpen,
+    confirm: openConfirm,
+  } = useConfirm()
 
   useEffect(() => {
     const fetchMe = async () => {
@@ -374,20 +387,32 @@ export function AccountSettingsPage() {
       return
     }
 
-    const ok = window.confirm("정말 탈퇴하시겠습니까?")
-    if (!ok) return
+    openConfirm({
+      title: "회원 탈퇴",
+      message: "정말 탈퇴하시겠습니까?",
+      danger: true,
 
-    try {
-      await withdrawMember({ password: withdrawPassword.trim() })
-      tokenStore.clear()
+      onConfirm: async () => {
+        try {
+          await withdrawMember({
+            password: withdrawPassword.trim(),
+          })
 
-      nav("/login", {
-        replace: true,
-        state: { withdrawSuccess: true },
-      })
-    } catch (e) {
-      setWithdrawErr(apiErrorMessage(e, "회원탈퇴 실패"))
-    }
+          tokenStore.clear()
+
+          nav("/login", {
+            replace: true,
+            state: {
+              withdrawSuccess: true,
+            },
+          })
+        } catch (e) {
+          setWithdrawErr(apiErrorMessage(e, "회원탈퇴 실패"))
+        } finally {
+          setOpen(false)
+        }
+      },
+    })
   }
 
   if (loading) {
@@ -709,6 +734,16 @@ export function AccountSettingsPage() {
         </button>
       </form>
       </div>
+      <ConfirmModal
+        open={open}
+        title={title}
+        message={message}
+        confirmText="확인"
+        cancelText="취소"
+        danger={danger}
+        onConfirm={() => action?.()}
+        onCancel={() => setOpen(false)}
+      />
     </PageContainer>
   )
 }

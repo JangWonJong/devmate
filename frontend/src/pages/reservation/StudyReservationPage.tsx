@@ -20,6 +20,7 @@ import StudyReservationCreateSection from "../../components/study/reservation/St
 import StudyReservationStatusSection from "../../components/study/reservation/StudyReservationStatusSection"
 import { tokenStore } from "../../api/auth/token"
 import { PageContainer } from "../../layouts/PageContainer"
+import { appToast } from "../../lib/toast"
 
 export function StudyReservationPage() {
   const nav = useNavigate()
@@ -42,7 +43,6 @@ export function StudyReservationPage() {
   const [saving, setSaving] = useState(false)
 
   const [err, setErr] = useState<string | null>(null)
-  const [successMessage, setSuccessMessage] = useState<string | null>(null)
 
   const loadReservations = useCallback(async () => {
     if (!date) return
@@ -103,8 +103,6 @@ export function StudyReservationPage() {
       return
     }
 
-    setSuccessMessage(null)
-
     try {
       setSaving(true)
       setErr(null)
@@ -116,7 +114,7 @@ export function StudyReservationPage() {
         endTime: addHours(selectedTime, durationHours),
       })
 
-      setSuccessMessage("스터디 예약이 완료되었어요.")
+      appToast.success("스터디 예약이 완료되었어요.")
       setSelectedTime(null)
       setDurationHours(1)
 
@@ -128,14 +126,6 @@ export function StudyReservationPage() {
       setSaving(false)
     }
   }
-
-  useEffect(() => {
-    if (!successMessage) return
-    const timer = window.setTimeout(() => {
-      setSuccessMessage(null)
-    }, 2500)
-    return () => window.clearTimeout(timer)
-  }, [successMessage])
 
   useEffect(() => {
       if (!roomId || !date) return
@@ -254,12 +244,7 @@ export function StudyReservationPage() {
         {err}
       </div>
     )}
-
-    {successMessage && (
-      <div className="rounded-2xl border border-emerald-200 bg-emerald-50 px-4 py-3 text-sm font-semibold text-emerald-700">
-        {successMessage}
-      </div>
-    )}
+    
     <div className="grid gap-6 xl:grid-cols-[minmax(0,1fr)_360px] xl:items-start">
       <div className="space-y-6">
         <StudyInfoCard study={study} />
