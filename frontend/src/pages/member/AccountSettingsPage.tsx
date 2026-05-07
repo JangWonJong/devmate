@@ -12,8 +12,8 @@ import {
 } from "../../api/member/members"
 import { tokenStore } from "../../api/auth/token"
 import { PageContainer } from "../../layouts/PageContainer"
-import { ConfirmModal } from "../../components/common/ConfirmModal"
-import { useConfirm } from "../../components/common/useConfirm"
+import { ConfirmModal } from "../../components/common/feedback/ConfirmModal"
+import { useConfirm } from "../../hooks/common/useConfirm"
 
 
 const inputClassName =
@@ -105,8 +105,8 @@ export function AccountSettingsPage() {
     message,
     danger,
     action,
-    setOpen,
     confirm: openConfirm,
+    closeConfirm,
   } = useConfirm()
 
   useEffect(() => {
@@ -409,7 +409,7 @@ export function AccountSettingsPage() {
         } catch (e) {
           setWithdrawErr(apiErrorMessage(e, "회원탈퇴 실패"))
         } finally {
-          setOpen(false)
+          closeConfirm()
         }
       },
     })
@@ -742,7 +742,7 @@ export function AccountSettingsPage() {
         cancelText="취소"
         danger={danger}
         onConfirm={() => action?.()}
-        onCancel={() => setOpen(false)}
+        onCancel={closeConfirm}
       />
     </PageContainer>
   )

@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react"
-import { getAnalyticsSummary, type AnalyticsSummaryResponse } from "../../api/analytics/analytics"
+import { getAnalyticsSummary, type AnalyticsSummaryResponse } from "../../../api/analytics/analytics"
 
 type Props = {
   compact?: boolean

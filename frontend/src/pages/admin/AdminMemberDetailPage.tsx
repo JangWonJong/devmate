@@ -13,8 +13,8 @@ import {
 import { getCurrentMemberId } from "../../api/auth/currentUser"
 import { imageUrl } from "../../utils/image"
 import { appToast } from "../../lib/toast"
-import { ConfirmModal } from "../../components/common/ConfirmModal"
-import { useConfirm } from "../../components/common/useConfirm"
+import { ConfirmModal } from "../../components/common/feedback/ConfirmModal"
+import { useConfirm } from "../../hooks/common/useConfirm"
 
 function InfoCard({ label, value }: { label: string; value: string }) {
   return (
@@ -77,8 +77,8 @@ export default function AdminMemberDetailPage() {
       message,
       danger,
       action,
-      setOpen,
       confirm: openConfirm,
+      closeConfirm,
     } = useConfirm()
 
   async function fetchMemberDetail(id: number) {
@@ -205,7 +205,7 @@ export default function AdminMemberDetailPage() {
           appToast.error("회원 상태 변경에 실패했습니다.")
         } finally {
           setSaving(false)
-          setOpen(false)
+          closeConfirm()
         }
       },
     })
@@ -259,7 +259,7 @@ export default function AdminMemberDetailPage() {
           appToast.error("회원 권한 변경에 실패했습니다.")
         } finally {
           setSaving(false)
-          setOpen(false)
+          closeConfirm()
         }
       },
     })
@@ -302,7 +302,7 @@ export default function AdminMemberDetailPage() {
           appToast.error("회원 정지 상태 변경에 실패했습니다.")
         } finally {
           setSaving(false)
-          setOpen(false)
+          closeConfirm()
         }
       },
     })
@@ -727,7 +727,7 @@ export default function AdminMemberDetailPage() {
         cancelText="취소"
         danger={danger}
         onConfirm={() => action?.()}
-        onCancel={() => setOpen(false)}
+        onCancel={closeConfirm}
       />
     </div>
     

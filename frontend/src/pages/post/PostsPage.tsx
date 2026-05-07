@@ -347,7 +347,7 @@ export function PostsPage() {
   const emptyText = (() => {
     if (hasQuery) return "검색 결과가 없어요"
     if (bookmarked) {
-      return loggedIn ? "저장한 글이 아직 없어요" : "로그인 후 저장한 글을 확인할 수 있어요"
+      return loggedIn ? "북마크한 글이 아직 없어요" : "로그인 후 북마크한 글을 확인할 수 있어요"
     }
     if (scope === "mine") {
       return loggedIn ? "내 글이 아직 없어요" : "로그인 후 내 글을 확인할 수 있어요"
@@ -457,7 +457,7 @@ export function PostsPage() {
                     page: 0,
                   })
                 }>
-                저장한 글
+                북마크
               </ScopeButton>
             </div>
 
@@ -716,7 +716,7 @@ export function PostsPage() {
                               {bookmarkingPostId === p.id
                                 ? "처리중..."
                                 : p.bookmarkedByMe
-                                ? "🔖 저장됨"
+                                ? "🔖 북마크"
                                 : "📑 저장"}
                             </button>
 

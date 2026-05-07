@@ -10,8 +10,8 @@ import {
   type AdminInquiryDetail,
 } from "../../api/admin/support"
 import { appToast } from "../../lib/toast"
-import { ConfirmModal } from "../../components/common/ConfirmModal"
-import { useConfirm } from "../../components/common/useConfirm"
+import { ConfirmModal } from "../../components/common/feedback/ConfirmModal"
+import { useConfirm } from "../../hooks/common/useConfirm"
 
 function getStatusBadgeClass(status: AdminInquiryDetail["status"]) {
   if (status === "RECEIVED") {
@@ -87,8 +87,8 @@ export default function AdminSupportDetailPage() {
     message,
     danger,
     action,
-    setOpen,
     confirm: openConfirm,
+    closeConfirm,
   } = useConfirm()
 
   useEffect(() => {
@@ -187,7 +187,7 @@ export default function AdminSupportDetailPage() {
           appToast.error("답변 등록에 실패했습니다.")
         } finally {
           setSaving(false)
-          setOpen(false)
+          closeConfirm()
         }
       },
     })
@@ -404,7 +404,7 @@ export default function AdminSupportDetailPage() {
         cancelText="취소"
         danger={danger}
         onConfirm={() => action?.()}
-        onCancel={() => setOpen(false)}
+        onCancel={closeConfirm}
       />
     </div>
   )

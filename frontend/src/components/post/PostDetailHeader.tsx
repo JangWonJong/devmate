@@ -1,7 +1,8 @@
-import { useEffect, useState } from "react"
+import { useState } from "react"
 import { useNavigate, Link } from "react-router-dom"
 import type { PostResponse } from "../../api/post/posts"
 import { actionButtonClass } from "../../utils/button"
+import { ImageGalleryModal } from "../common/image/ImageGalleryModal"
 
 
 function StatusBadge({ solved }: { solved: boolean }) {
@@ -15,116 +16,6 @@ function StatusBadge({ solved }: { solved: boolean }) {
     >
       {solved ? "고민 해결됨" : "고민 해결 전"}
     </span>
-  )
-}
-
-type ImageModalProps = {
-  images: PostResponse["attachments"]
-  currentIndex: number
-  onClose: () => void
-  onPrev: () => void
-  onNext: () => void
-}
-
-function ImageModal({
-  images,
-  currentIndex,
-  onClose,
-  onPrev,
-  onNext,
-}: ImageModalProps) {
-  const current = images[currentIndex]
-
-  useEffect(() => {
-    const handleKeyDown = (e: KeyboardEvent) => {
-      if (e.key === "Escape") onClose()
-      if (e.key === "ArrowLeft") onPrev()
-      if (e.key === "ArrowRight") onNext()
-    }
-
-    window.addEventListener("keydown", handleKeyDown)
-    document.body.style.overflow = "hidden"
-
-    return () => {
-      window.removeEventListener("keydown", handleKeyDown)
-      document.body.style.overflow = ""
-    }
-  }, [onClose, onPrev, onNext])
-
-  if (!current) return null
-
-  return (
-    <div
-      className="fixed inset-0 z-50 flex items-center justify-center bg-black/75 px-4 py-6"
-      onClick={onClose}
-    >
-      <div
-        className="relative w-full max-w-5xl"
-        onClick={(e) => e.stopPropagation()}
-      >
-        <button
-          type="button"
-          onClick={onClose}
-          className="absolute right-0 top-[-52px] rounded-xl bg-white/10 px-4 py-2 text-sm font-medium text-white backdrop-blur transition hover:bg-white/20"
-        >
-          닫기
-        </button>
-
-        {images.length > 1 && (
-          <>
-            <button
-              type="button"
-              onClick={onPrev}
-              className="absolute left-3 top-1/2 z-10 -translate-y-1/2 rounded-full bg-black/40 px-4 py-3 text-white transition hover:bg-black/60"
-            >
-              ‹
-            </button>
-
-            <button
-              type="button"
-              onClick={onNext}
-              className="absolute right-3 top-1/2 z-10 -translate-y-1/2 rounded-full bg-black/40 px-4 py-3 text-white transition hover:bg-black/60"
-            >
-              ›
-            </button>
-          </>
-        )}
-
-        <div className="overflow-hidden rounded-3xl bg-white shadow-2xl">
-          <div className="bg-slate-950">
-            <img
-              src={`${import.meta.env.VITE_API_BASE_URL}${current.fileUrl}`}
-              alt={current.originalFileName}
-              className="max-h-[75vh] w-full object-contain"
-            />
-          </div>
-
-          <div className="flex items-center justify-between gap-3 border-t border-slate-200 px-5 py-4">
-            <div className="min-w-0">
-              <div className="truncate text-sm font-semibold text-slate-900">
-                {current.originalFileName}
-              </div>
-              <div className="mt-1 text-xs text-slate-500">
-                {currentIndex + 1} / {images.length}
-              </div>
-            </div>
-
-            {images.length > 1 && (
-              <div className="flex items-center gap-2">
-                {images.map((_, index) => (
-                  <div
-                    key={index}
-                    className={`h-2.5 w-2.5 rounded-full ${
-                      index === currentIndex ? "bg-slate-900" : "bg-slate-300"
-                    }`}
-                  />
-                ))}
-              </div>
-            )}
-          </div>
-        </div>
-      </div>
-    </div>
   )
 }
 
@@ -349,9 +240,10 @@ export default function PostDetailHeader({
       </section>
 
       {selectedImageIndex != null && (
-        <ImageModal
+        <ImageGalleryModal
           images={post.attachments}
           currentIndex={selectedImageIndex}
+          getImageUrl={(fileUrl) => `${import.meta.env.VITE_API_BASE_URL}${fileUrl}`}
           onClose={closeImageModal}
           onPrev={goPrevImage}
           onNext={goNextImage}

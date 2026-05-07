@@ -17,8 +17,8 @@ import { addHours, today } from "../../utils/reservationUtils"
 import ReservationCreateSection from "../../components/reservation/ReservationCreateSection"
 import ReservationListSection from "../../components/reservation/ReservationListSection"
 import { PageContainer } from "../../layouts/PageContainer"
-import { ConfirmModal } from "../../components/common/ConfirmModal"
-import { useConfirm } from "../../components/common/useConfirm"
+import { ConfirmModal } from "../../components/common/feedback/ConfirmModal"
+import { useConfirm } from "../../hooks/common/useConfirm"
 import { appToast } from "../../lib/toast"
 
 type Scope = "all" | "mine"
@@ -143,9 +143,9 @@ export function ReservationsPage() {
     title: confirmTitle,
     message,
     danger,
-    action,
-    setOpen,
+    action,    
     confirm: openConfirm,
+    closeConfirm,
   } = useConfirm()
 
   const refreshAvailability = useCallback(async () => {
@@ -276,7 +276,7 @@ export function ReservationsPage() {
           setErr(apiErrorMessage(e, "예약 취소 실패"))
         } finally {
           setBusy(false)
-          setOpen(false)
+          closeConfirm()
         }
       },
     })
@@ -547,7 +547,7 @@ export function ReservationsPage() {
         cancelText="취소"
         danger={danger}
         onConfirm={() => action?.()}
-        onCancel={() => setOpen(false)}
+        onCancel={closeConfirm}
       /> 
 
     </PageContainer>

@@ -11,8 +11,8 @@ import {
 } from "../../api/support/inquiry"
 import { tokenStore } from "../../api/auth/token"
 import { appToast } from "../../lib/toast"
-import { ConfirmModal } from "../common/ConfirmModal"
-import { useConfirm } from "../common/useConfirm"
+import { ConfirmModal } from "../common/feedback/ConfirmModal"
+import { useConfirm } from "../../hooks/common/useConfirm"
 
 
 type InquiryListProps = {
@@ -33,8 +33,8 @@ export default function InquiryList({
     message,
     danger,
     action,
-    setOpen,
     confirm: openConfirm,
+    closeConfirm,
   } = useConfirm()
 
   const isCompact = variant === "compact"
@@ -124,7 +124,7 @@ export default function InquiryList({
               {inquiry.status === "RECEIVED" && (
                 <button
                   type="button"
-                  onClick={async () => {
+                  onClick={() => {
                     openConfirm({
                     title: "문의 취소",
                     message: "문의 내용을 취소할까요?",
@@ -137,7 +137,7 @@ export default function InquiryList({
                       } catch {
                         appToast.error("문의 취소에 실패했습니다.")
                       } finally {
-                        setOpen(false)
+                        closeConfirm()
                       }
                     },
                   })
@@ -197,7 +197,7 @@ export default function InquiryList({
         cancelText="취소"
         danger={danger}
         onConfirm={() => action?.()}
-        onCancel={() => setOpen(false)}
+        onCancel={closeConfirm}
       />
     </div>
     

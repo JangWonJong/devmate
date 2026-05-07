@@ -11,8 +11,8 @@ import {
   getNotificationLabelStyle,
   type NotificationResponse,
 } from "../../api/notification/notifications"
-import AppLogo from "../common/AppLogo"
-import { VisitorStats } from "../common/VisitorStats"
+import AppLogo from "../common/brand/AppLogo"
+import { VisitorStats } from "../common/stats/VisitorStats"
 import { isAdminUser } from "../../utils/jwt"
 
 

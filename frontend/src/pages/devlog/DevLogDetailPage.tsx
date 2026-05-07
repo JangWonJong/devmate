@@ -1,25 +1,25 @@
-import { useEffect, useState } from "react"
+import { useState } from "react"
 import { useNavigate, useParams } from "react-router-dom"
 import {
-  deleteDevLog, getDevLog, unlikeDevLog, likeDevLog,
-  getDevLogLikeStatus, type DevLogResponse,
+  deleteDevLog,
 } from "../../api/devlog/devlog"
 import DevLogCommentSection from "../../components/devlog/DevLogCommentSection"
-import { listDevLogComments, createDevLogComment, updateDevLogComment,
-    deleteDevLogComment, likeDevLogComment, unlikeDevLogComment, type DevLogCommentResponse
- } from "../../api/devlog/devlogComment"
+import { useAuthState } from "../../hooks/auth/useAuthState"
+import { useDevLogDetail } from "../../hooks/devlog/useDevLogDetail"
+import { useDevLogReactions } from "../../hooks/devlog/useDevLogReactions"
+import { useDevLogComments } from "../../hooks/devlog/useDevLogComments"
 import { fileUrl } from "../../utils/file"
 import { apiErrorMessage } from "../../utils/error"
-import { getMeId } from "../../api/member/members"
-import { tokenStore } from "../../api/auth/token"
 import ReactMarkdown from "react-markdown"
 import remarkGfm from "remark-gfm"
 import { Prism as SyntaxHighlighter } from "react-syntax-highlighter"
 import { vscDarkPlus } from "react-syntax-highlighter/dist/esm/styles/prism"
-import "../../components/common/devlog.css"
 import { PageContainer } from "../../layouts/PageContainer"
 import { appToast } from "../../lib/toast"
-import { ConfirmModal } from "../../components/common/ConfirmModal"
+import { useConfirm } from "../../hooks/common/useConfirm"
+import { ConfirmModal } from "../../components/common/feedback/ConfirmModal"
+import { ImageGalleryModal } from "../../components/common/image/ImageGalleryModal"
+import "../../components/common/devlog.css"
 
 function normalizeMarkdown(text: string) {
   return text.replace(/\\`\\`\\`/g, "```")
@@ -115,124 +115,65 @@ export function DevLogDetailPage() {
 
   const id = devLogId ? Number(devLogId) : null
 
-  const [loggedIn, setLoggedIn] = useState(tokenStore.isLoggedIn())
-  const [meId, setMeId] = useState<number | null>(null)
-  const [devLog, setDevLog] = useState<DevLogResponse | null>(null)
-  const [loading, setLoading] = useState(false)
+  const { loggedIn, meId } = useAuthState()
+
   const [deleting, setDeleting] = useState(false)
   const [selectedImageIndex, setSelectedImageIndex] = useState<number | null>(null)
-  const [likeCount, setLikeCount] = useState(0)
-  const [likedByMe, setLikedByMe] = useState(false)
-  const [likeLoading, setLikeLoading] = useState(false)
 
-  const [confirmOpen, setconfirmOpen] = useState(false)
-  const [deleteCommentConfirmOpen, setDeleteCommentConfirmOpen] = useState(false)
-  const [selectedCommentId, setSelectedCommentId] = useState<number | null>(null)
+  const {
+    open,
+    title,
+    message,
+    danger,
+    action,
+    confirm: openConfirm,
+    closeConfirm,
+  } = useConfirm()
 
-  const [comments, setComments] = useState<DevLogCommentResponse[]>([])
-  const [commentInput, setCommentInput] = useState("")
-  const [commentErr, setCommentErr] = useState<string | null>(null)
+  const {
+    devLog,
+    loading,
+    error,
+    setError,
+  } = useDevLogDetail({
+    devLogId,
+  })
 
-  const [editingCommentId, setEditingCommentId] = useState<number | null>(null)
-  const [editingContent, setEditingContent] = useState("")
+  const {
+    likeCount,
+    likedByMe,
+    likeLoading,
+    onToggleLike,
+  } = useDevLogReactions({
+    devLogId,
+    devLog,
+    loggedIn,
+  })
 
-  const [commentLikedMap, setCommentLikedMap] = useState<Record<number, boolean>>({})
-  const [commentLikeCountMap, setCommentLikeCountMap] = useState<Record<number, number>>({})
-  const [commentLikeLoadingMap, setCommentLikeLoadingMap] = useState<Record<number, boolean>>({})
-  const [error, setError] = useState("")
+  const {
+    commentErr,
+    comments,
+    commentInput,
+    setCommentInput,
 
-  useEffect(() => {
-    const handleKeyDown = (e: KeyboardEvent) => {
-      if (selectedImageIndex === null) return
+    editingCommentId,
+    editingContent,
+    setEditingCommentId,
+    setEditingContent,
 
-      if (e.key === "Escape") {
-        setSelectedImageIndex(null)
-      }
+    commentLikedMap,
+    commentLikeCountMap,
+    commentLikeLoadingMap,
 
-      if (e.key === "ArrowLeft") {
-        showPrevImage()
-      }
-
-      if (e.key === "ArrowRight") {
-        showNextImage()
-      }
-    }
-
-    window.addEventListener("keydown", handleKeyDown)
-
-    return () => {
-      window.removeEventListener("keydown", handleKeyDown)
-    }
-  }, [selectedImageIndex])
-
-  useEffect(() => {
-    async function fetchDevLog() {
-      if (!devLogId) return
-
-      try {
-        setLoading(true)
-        setError("")
-
-        const data = await getDevLog(devLogId)
-        setDevLog(data)
-      } catch (e) {
-        setError(apiErrorMessage(e, "DevLog 조회 실패"))
-      } finally {
-        setLoading(false)
-      }
-    }
-
-    fetchDevLog()
-  }, [devLogId])
-
-  useEffect(() => {
-    const sync = () => setLoggedIn(tokenStore.isLoggedIn())
-    sync()
-    return tokenStore.subscribe(sync)
-  }, [])
-
-  useEffect(() => {
-    ;(async () => {
-      if (!loggedIn) {
-        setMeId(null)
-        return
-      }
-
-      try {
-        const id = await getMeId()
-        setMeId(id)
-      } catch {
-        setMeId(null)
-      }
-    })()
-  }, [loggedIn])
-
-  useEffect(() => {
-    if (!devLog) return
-    setLikeCount(devLog.likeCount)
-  }, [devLog])
-
-  useEffect(() => {
-    ;(async () => {
-      if (!devLogId || !loggedIn) {
-        setLikedByMe(false)
-        return
-      }
-
-      try {
-        const res = await getDevLogLikeStatus(Number(devLogId))
-        setLikedByMe(res.likedByMe)
-        setLikeCount(res.likeCount)
-      } catch {
-        setLikedByMe(false)
-      }
-    })()
-  }, [devLogId, loggedIn, devLog?.likeCount])
-
-  useEffect(() => {
-    if (!id) return
-    fetchComments()
-    }, [id])
+    onCreateComment,
+    onDeleteComment,
+    onUpdateComment,
+    onToggleCommentLike,
+  } = useDevLogComments({
+    devLogId: id,
+    confirm: openConfirm,
+    closeConfirm,
+  })
 
   const closeImageModal = () => setSelectedImageIndex(null)
 
@@ -256,33 +197,6 @@ export function DevLogDetailPage() {
     )
   }
 
-  const onToggleLike = async () => {
-    if (!devLogId || likeLoading) return
-
-    if (!loggedIn) {
-      appToast.info("로그인이 필요합니다.")
-      return
-    }
-
-    try {
-      setLikeLoading(true)
-
-      if (likedByMe) {
-        await unlikeDevLog(Number(devLogId))
-        setLikedByMe(false)
-        setLikeCount((prev) => Math.max(0, prev - 1))
-      } else {
-        await likeDevLog(Number(devLogId))
-        setLikedByMe(true)
-        setLikeCount((prev) => prev + 1)
-      }
-    } catch {
-      appToast.error("좋아요 처리 실패")
-    } finally {
-      setLikeLoading(false)
-    }
-  }
-
   const handleDelete = async () => {
     if (!devLogId) return
 
@@ -297,106 +211,9 @@ export function DevLogDetailPage() {
       appToast.error(apiErrorMessage(e, "DevLog 삭제 실패"))
     } finally {
       setDeleting(false)
-      setconfirmOpen(false)
+      closeConfirm()
     }
   }
-
-  const fetchComments = async () => {
-    if (!id) return
-
-    try {
-        setCommentErr(null)
-
-        const data = await listDevLogComments(id)
-        setComments(data)
-
-        const likedMap: Record<number, boolean> = {}
-        const countMap: Record<number, number> = {}
-
-        data.forEach((c) => {
-        likedMap[c.id] = c.likedByMe
-        countMap[c.id] = c.likeCount
-        })
-
-        setCommentLikedMap(likedMap)
-        setCommentLikeCountMap(countMap)
-    } catch {
-        setCommentErr("댓글을 불러오지 못했습니다.")
-    }
-    }
-
-  const handleCreateComment = async () => {
-    if (!id) return
-    if (!commentInput.trim()) return
-
-    try {
-        await createDevLogComment(id, commentInput.trim())
-        setCommentInput("")
-        await fetchComments()
-    } catch {
-        appToast.error("댓글 작성 실패")
-    }
-    }
-    
-  const handleUpdateComment = async (commentId: number) => {
-    if (!id) return
-
-    try {
-        await updateDevLogComment(id, commentId, editingContent)
-        setEditingCommentId(null)
-        setEditingContent("")
-        await fetchComments()
-    } catch {
-        appToast.error("댓글 수정 실패")
-    }
-    }
-
-  const confirmDeleteComment = async () => {
-    if (!id || selectedCommentId == null) return
-
-    try {
-      await deleteDevLogComment(id, selectedCommentId)
-
-      appToast.success("댓글이 삭제되었습니다.")
-      await fetchComments()
-    } catch {
-      appToast.error("댓글 삭제 실패")
-    } finally {
-      setDeleteCommentConfirmOpen(false)
-      setSelectedCommentId(null)
-    }
-  }
-
-  const handleDeleteComment = async (commentId: number) => {
-     setSelectedCommentId(commentId)
-     setDeleteCommentConfirmOpen(true)
-  }
-  
-  const handleToggleCommentLike = async (commentId: number) => {
-  if (commentLikeLoadingMap[commentId]) return
-
-  setCommentLikeLoadingMap((prev) => ({
-    ...prev,
-        [commentId]: true,
-    }))
-
-    try {
-        if (commentLikedMap[commentId]) {
-        await unlikeDevLogComment(commentId)
-        } else {
-        await likeDevLogComment(commentId)
-        }
-
-        await fetchComments()
-    } catch {
-        appToast.error("좋아요 실패")
-    } finally {
-        setCommentLikeLoadingMap((prev) => ({
-        ...prev,
-        [commentId]: false,
-        }))
-    }
-    }  
 
   const convertToPost = () => {
     if (!devLog) return
@@ -508,7 +325,14 @@ ${devLog.reference ? `[참고한 코드 / 개념]\n${devLog.reference}\n\n` : ""
 
               <button
                 disabled={deleting}
-                onClick={() => setconfirmOpen(true)}
+                onClick={() => {
+                  openConfirm({
+                    title: "DevLog 삭제",
+                    message: "삭제한 DevLog는 복구할 수 없어요. 정말 삭제할까요?",
+                    danger: true,
+                    onConfirm: handleDelete,
+                  })
+                }}
                 className="rounded-xl border border-red-200 px-4 py-2 text-sm font-semibold text-red-600 hover:bg-red-50 disabled:opacity-50"
               >
                 🗑 {deleting ? "삭제 중..." : "삭제"}
@@ -557,87 +381,35 @@ ${devLog.reference ? `[참고한 코드 / 개념]\n${devLog.reference}\n\n` : ""
         editingContent={editingContent}
         setEditingCommentId={setEditingCommentId}
         setEditingContent={setEditingContent}
-        onCreateComment={handleCreateComment}
-        onDeleteComment={handleDeleteComment}
-        onUpdateComment={handleUpdateComment}
+        onCreateComment={onCreateComment}
+        onDeleteComment={onDeleteComment}
+        onUpdateComment={onUpdateComment}
         commentLikedMap={commentLikedMap}
         commentLikeCountMap={commentLikeCountMap}
         commentLikeLoadingMap={commentLikeLoadingMap}
-        onToggleCommentLike={handleToggleCommentLike}
+        onToggleCommentLike={onToggleCommentLike}
         />
-      {selectedImageIndex !== null && devLog.attachments[selectedImageIndex] && (
-        <div
-          className="fixed inset-0 z-[1000] flex items-center justify-center bg-black/80 px-4 py-6"
-          onClick={closeImageModal}
-        >
-          <div
-            className="relative max-h-full w-full max-w-5xl"
-            onClick={(e) => e.stopPropagation()}
-          >
-            <button
-              type="button"
-              onClick={closeImageModal}
-              className="absolute right-0 top-0 z-10 rounded-full bg-white/90 px-4 py-2 text-sm font-semibold text-slate-900 shadow hover:bg-white"
-            >
-              닫기
-            </button>
-
-            {devLog.attachments.length > 1 && (
-              <>
-                <button
-                  type="button"
-                  onClick={showPrevImage}
-                  className="absolute left-0 top-1/2 z-10 -translate-y-1/2 rounded-full bg-white/90 px-4 py-3 text-lg font-bold text-slate-900 shadow hover:bg-white"
-                >
-                  ‹
-                </button>
-
-                <button
-                  type="button"
-                  onClick={showNextImage}
-                  className="absolute right-0 top-1/2 z-10 -translate-y-1/2 rounded-full bg-white/90 px-4 py-3 text-lg font-bold text-slate-900 shadow hover:bg-white"
-                >
-                  ›
-                </button>
-              </>
-            )}
-
-            <img
-              src={fileUrl(devLog.attachments[selectedImageIndex].fileUrl)}
-              alt={devLog.attachments[selectedImageIndex].originalFileName}
-              className="mx-auto max-h-[85vh] max-w-full rounded-2xl object-contain"
-            />
-
-            <div className="mt-3 text-center text-sm text-white/80">
-              {selectedImageIndex + 1} / {devLog.attachments.length}
-            </div>
-          </div>
-        </div>
+      {selectedImageIndex !== null && (
+        <ImageGalleryModal
+          images={devLog.attachments}
+          currentIndex={selectedImageIndex}
+          getImageUrl={fileUrl}
+          onClose={closeImageModal}
+          onPrev={showPrevImage}
+          onNext={showNextImage}
+        />
       )}
       <ConfirmModal
-      open={confirmOpen}
-      title="DevLog 삭제"
-      message="삭제한 DevLog는 복구할 수 없어요. 정말 삭제할까요?"
-      confirmText="삭제"
-      cancelText="취소"
-      danger
-      loading={deleting}
-      onConfirm={handleDelete}
-      onCancel={() => setconfirmOpen(false)}
-    />
-    <ConfirmModal
-      open={deleteCommentConfirmOpen}
-      title="댓글 삭제"
-      message="댓글을 삭제할까요?"
-      confirmText="삭제"
-      cancelText="취소"
-      danger
-      onConfirm={confirmDeleteComment}
-      onCancel={() => {
-        setDeleteCommentConfirmOpen(false)
-        setSelectedCommentId(null)
-      }}
-    />
+        open={open}
+        title={title}
+        message={message}
+        confirmText={danger ? "삭제" : "확인"}
+        cancelText="취소"
+        danger={danger}
+        loading={deleting}
+        onConfirm={() => action?.()}
+        onCancel={closeConfirm}
+      />
     </PageContainer>
   )
   

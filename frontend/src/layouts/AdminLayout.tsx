@@ -1,7 +1,7 @@
 import { useEffect, useState } from "react"
 import { Link, NavLink, Outlet, useLocation, useNavigate } from "react-router-dom"
 import { LogOut, UserCircle2 } from "lucide-react"
-import AppLogo from "../components/common/AppLogo"
+import AppLogo from "../components/common/brand/AppLogo"
 import { logout } from "../api/auth/auth"
 import { tokenStore } from "../api/auth/token"
 import { getAdminDashboardSummary } from "../api/admin/dashboard"
