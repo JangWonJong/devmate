@@ -480,8 +480,10 @@ public class StudyServiceImpl implements StudyService{
 
         study.updateMaxMembers(maxMembers);
 
-        if (study.isClosedByCapacity() && currentMembers < study.getMaxMembers()) {
-            study.reopen();
+        if (study.isRecruiting() && currentMembers >= study.getMaxMembers()) {
+            study.closeByCapacity();
+        } else {
+            reopenStudyIfNeeded(study);
         }
 
         return study.getId();

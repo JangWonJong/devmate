@@ -3,6 +3,7 @@ import { useNavigate, Link } from "react-router-dom"
 import type { PostResponse } from "../../api/post/posts"
 import { actionButtonClass } from "../../utils/button"
 import { ImageGalleryModal } from "../common/image/ImageGalleryModal"
+import { MarkdownViewer } from "../common/markdown/MarkdownViewer"
 
 
 function StatusBadge({ solved }: { solved: boolean }) {
@@ -151,8 +152,8 @@ export default function PostDetailHeader({
           </div>
         </div>
 
-        <div className="mt-6 rounded-3xl bg-slate-50 px-6 py-5 text-base leading-8 text-slate-700">
-          <div className="whitespace-pre-wrap">{post.content}</div>
+        <div className="mt-6 rounded-3xl bg-slate-50 px-6 py-5">
+          <MarkdownViewer content={post.content} />
         </div>
 
         {post.attachments && post.attachments.length > 0 && (

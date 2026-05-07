@@ -3,6 +3,9 @@ export function fileUrl(path: string) {
   return `${baseUrl}${path}`
 }
 
+export function makeFileKey(file: File) {
+  return `${file.name}-${file.size}-${file.lastModified}`
+}
 
 export function validateFiles(files: File[]) {
   const allowedTypes = [

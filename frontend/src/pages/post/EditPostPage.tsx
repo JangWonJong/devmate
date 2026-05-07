@@ -1,20 +1,19 @@
-import React, { useEffect, useMemo, useState } from "react"
-import { useNavigate, useParams } from "react-router-dom"
-import type { PostAttachmentResponse } from "../../api/post/posts"
-import { getPost, updatePost } from "../../api/post/posts"
-import { validateFiles } from "../../utils/file"
-import { PageContainer } from "../../layouts/PageContainer"
-
-function makeFileKey(file: File) {
-  return `${file.name}-${file.size}-${file.lastModified}`
-}
+import React, { useEffect, useMemo, useState, useRef } from 'react'
+import { useNavigate, useParams } from 'react-router-dom'
+import type { PostAttachmentResponse } from '../../api/post/posts'
+import { getPost, updatePost } from '../../api/post/posts'
+import { validateFiles } from '../../utils/file'
+import { PageContainer } from '../../layouts/PageContainer'
+import { makeFileKey } from '../../utils/file'
+import { CodeBlockButtons } from '../../components/common/markdown/CodeBlockButtons'
+import { insertCodeBlockAtCursor } from '../../utils/button'
 
 export function EditPostPage() {
   const nav = useNavigate()
   const { id } = useParams()
 
-  const [title, setTitle] = useState("")
-  const [content, setContent] = useState("")
+  const [title, setTitle] = useState('')
+  const [content, setContent] = useState('')
   const [solved, setSolved] = useState(false)
 
   const [err, setErr] = useState<string | null>(null)
@@ -22,10 +21,14 @@ export function EditPostPage() {
   const [saving, setSaving] = useState(false)
 
   const [files, setFiles] = useState<File[]>([])
-  const [existingFiles, setExistingFiles] = useState<PostAttachmentResponse[]>([])
+  const [existingFiles, setExistingFiles] = useState<PostAttachmentResponse[]>(
+    []
+  )
   const [removedFileIds, setRemovedFileIds] = useState<number[]>([])
 
   const [dragging, setDragging] = useState(false)
+
+  const contentRef = useRef<HTMLTextAreaElement | null>(null)
 
   useEffect(() => {
     ;(async () => {
@@ -41,7 +44,7 @@ export function EditPostPage() {
         setSolved(post.solved)
         setExistingFiles(post.attachments ?? [])
       } catch (e: any) {
-        setErr(e.message ?? "게시글 불러오기 실패")
+        setErr(e.message ?? '게시글 불러오기 실패')
       } finally {
         setLoading(false)
       }
@@ -80,7 +83,7 @@ export function EditPostPage() {
     if (selected.length === 0) return
 
     addFiles(selected)
-    e.currentTarget.value = ""
+    e.currentTarget.value = ''
   }
 
   const handleDragOver = (e: React.DragEvent<HTMLDivElement>) => {
@@ -124,9 +127,9 @@ export function EditPostPage() {
     const t = title.trim()
     const c = content.trim()
 
-    if (!t) return setErr("제목을 입력해 주세요.")
-    if (!c) return setErr("내용을 입력해 주세요.")
-    if (!id) return setErr("잘못된 접근입니다.")
+    if (!t) return setErr('제목을 입력해 주세요.')
+    if (!c) return setErr('내용을 입력해 주세요.')
+    if (!id) return setErr('잘못된 접근입니다.')
 
     const fileError = validateFiles(files)
     if (fileError) return setErr(fileError)
@@ -147,7 +150,7 @@ export function EditPostPage() {
 
       nav(`/posts/${id}`)
     } catch (e: any) {
-      setErr(e.message ?? "수정 실패")
+      setErr(e.message ?? '수정 실패')
     } finally {
       setSaving(false)
     }
@@ -162,7 +165,7 @@ export function EditPostPage() {
   }
 
   return (
-     <PageContainer className="mx-auto max-w-4xl">
+    <PageContainer className="mx-auto max-w-4xl">
       <section className="space-y-3">
         <h1 className="text-4xl font-bold tracking-tight text-slate-900">
           게시글 수정
@@ -185,8 +188,19 @@ export function EditPostPage() {
           </div>
 
           <div className="space-y-2">
-            <label className="text-sm font-semibold text-slate-700">내용</label>
+            <div className="flex items-center justify-between gap-2">
+              <label className="text-sm font-semibold text-slate-700">
+                내용
+              </label>
+
+              <CodeBlockButtons
+                onSelect={(lang) =>
+                  insertCodeBlockAtCursor(contentRef, content, setContent, lang)
+                }
+              />
+            </div>
             <textarea
+              ref={contentRef}
               placeholder="내용을 입력하세요"
               value={content}
               onChange={(e) => setContent(e.target.value)}
@@ -241,8 +255,8 @@ export function EditPostPage() {
               onDragLeave={handleDragLeave}
               className={`flex flex-col items-center justify-center rounded-2xl border-2 border-dashed px-6 py-10 text-center transition ${
                 dragging
-                  ? "border-indigo-400 bg-indigo-50"
-                  : "border-slate-300 bg-slate-50 hover:border-slate-400"
+                  ? 'border-indigo-400 bg-indigo-50'
+                  : 'border-slate-300 bg-slate-50 hover:border-slate-400'
               }`}
             >
               <p className="text-sm font-medium text-slate-700">
@@ -265,7 +279,8 @@ export function EditPostPage() {
             </div>
 
             <p className="text-xs text-slate-500">
-              새 이미지를 추가할 수 있어요. 최대 5장, 각 5MB까지 업로드 가능해요.
+              새 이미지를 추가할 수 있어요. 최대 5장, 각 5MB까지 업로드
+              가능해요.
             </p>
           </div>
 

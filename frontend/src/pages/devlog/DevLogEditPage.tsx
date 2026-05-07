@@ -9,7 +9,8 @@ import { apiErrorMessage } from "../../utils/error"
 import { validateFiles } from "../../utils/file"
 import { insertCodeBlockAtCursor } from "../../utils/button"
 import { Puzzle, Wrench, BookOpen, Lightbulb } from "lucide-react"
-import { CodeBlockButtons, makeFileKey } from "./DevlogCommon"
+import { CodeBlockButtons } from "../../components/common/markdown/CodeBlockButtons"
+import { makeFileKey } from "../../utils/file"
 import { PageContainer } from "../../layouts/PageContainer"
 
 export function DevLogEditPage() {

@@ -5,7 +5,7 @@ import { apiErrorMessage } from "../../utils/error"
 import { validateFiles } from "../../utils/file"
 import { Puzzle, Wrench, BookOpen, Lightbulb } from "lucide-react"
 import { insertCodeBlockAtCursor } from "../../utils/button"
-import { CodeBlockButtons } from "./DevlogCommon"
+import { CodeBlockButtons } from "../../components/common/markdown/CodeBlockButtons"
 import { PageContainer } from "../../layouts/PageContainer"
 
 export function NewDevLogPage() {

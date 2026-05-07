@@ -1,11 +1,11 @@
-import type { ReservationResponse } from "../../api/reservation/reservations"
+import type { ReservationResponse } from '../../api/reservation/reservations'
 import {
   formatTimeRange,
   getRoomReservations,
   getTimelineLabels,
   hhmmToMinutes,
   timeToPercent,
-} from "../../utils/reservationUtils"
+} from '../../utils/reservationUtils'
 
 type Props = {
   items: ReservationResponse[]
@@ -29,15 +29,15 @@ export function ReservationTimeline({
     hhmmToMinutes(previewEndTime) > hhmmToMinutes(previewStartTime)
 
   const getBarStyle = (startTime: string, endTime: string) => {
-  const left = timeToPercent(startTime)
-  const right = timeToPercent(endTime)
-  const width = right - left
+    const left = timeToPercent(startTime)
+    const right = timeToPercent(endTime)
+    const width = right - left
 
-  return {
-    left: `calc(${left}% + 2px)`,
-    width: `calc(${width}% - 4px)`,
+    return {
+      left: `calc(${left}% + 2px)`,
+      width: `calc(${width}% - 4px)`,
+    }
   }
-}
 
   return (
     <div className="rounded-2xl border border-slate-200 bg-slate-50 p-4">
@@ -77,21 +77,21 @@ export function ReservationTimeline({
             className="absolute top-3.5 h-9 rounded-xl border border-indigo-600 bg-indigo-500 shadow-sm hover:bg-indigo-500 transition"
             style={{
               ...getBarStyle(reservation.startTime, reservation.endTime),
-              minWidth: "52px",
+              minWidth: '52px',
             }}
           />
         ))}
 
         {hasPreview && (
-        <div
-          title={`선택 예정: ${formatTimeRange(previewStartTime!, previewEndTime!)}`}
-          className="absolute top-3.5 h-9 rounded-xl border border-dashed border-indigo-500 bg-indigo-100 shadow-sm"
-          style={{
-            ...getBarStyle(previewStartTime!, previewEndTime!),
-            minWidth: "52px",
-          }}
-        />
-      )}
+          <div
+            title={`선택 예정: ${formatTimeRange(previewStartTime!, previewEndTime!)}`}
+            className="absolute top-3.5 h-9 rounded-xl border border-dashed border-indigo-500 bg-indigo-100 shadow-sm"
+            style={{
+              ...getBarStyle(previewStartTime!, previewEndTime!),
+              minWidth: '52px',
+            }}
+          />
+        )}
       </div>
 
       {roomReservations.length > 0 && (
@@ -107,7 +107,9 @@ export function ReservationTimeline({
                 </span>
                 <span className="text-slate-500"> · {reservation.title}</span>
               </div>
-              <div className="shrink-0 text-slate-500">{reservation.memberNickname}</div>
+              <div className="shrink-0 text-slate-500">
+                {reservation.memberNickname}
+              </div>
             </div>
           ))}
         </div>

@@ -1,5 +1,8 @@
-import { useEffect, useState } from "react"
-import { getAnalyticsSummary, type AnalyticsSummaryResponse } from "../../../api/analytics/analytics"
+import { useEffect, useState } from 'react'
+import {
+  getAnalyticsSummary,
+  type AnalyticsSummaryResponse,
+} from '../../../api/analytics/analytics'
 
 type Props = {
   compact?: boolean
@@ -14,7 +17,7 @@ export function VisitorStats({ compact = false }: Props) {
         const data = await getAnalyticsSummary()
         setSummary(data)
       } catch (e) {
-        console.error("analytics summary failed", e)
+        console.error('analytics summary failed', e)
       }
     })()
   }, [])
