@@ -2,6 +2,7 @@ package com.devs.devmate.study.service;
 
 import com.devs.devmate.study.dto.StudyCreateRequest;
 import com.devs.devmate.study.dto.StudyMemberResponse;
+import com.devs.devmate.study.dto.StudyPlaceUpdateRequest;
 import com.devs.devmate.study.dto.StudyResponse;
 
 import java.util.List;
@@ -31,4 +32,6 @@ public interface StudyService {
     Long updateNotice(Long memberId, Long studyId, String notice);
 
     List<StudyResponse> listPopular(Long viewerMemberId, int limit);
+
+    Long updatePlace(Long memberId, Long studyId, StudyPlaceUpdateRequest request);
 }

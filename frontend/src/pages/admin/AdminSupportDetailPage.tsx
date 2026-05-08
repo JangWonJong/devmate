@@ -1,39 +1,39 @@
-import { useEffect, useState } from "react"
-import { useNavigate, useParams } from "react-router-dom"
+import { useEffect, useState } from 'react'
+import { useNavigate, useParams } from 'react-router-dom'
 import {
+  formatInquiryDate,
   getAdminInquiryDetail,
-  replyAdminInquiry,
-  updateAdminInquiryStatus,
   getInquiryStatusLabel,
   getInquiryTypeLabel,
-  formatInquiryDate,
+  replyAdminInquiry,
+  updateAdminInquiryStatus,
   type AdminInquiryDetail,
-} from "../../api/admin/support"
-import { appToast } from "../../lib/toast"
-import { ConfirmModal } from "../../components/common/feedback/ConfirmModal"
-import { useConfirm } from "../../hooks/common/useConfirm"
+} from '../../api/admin/support'
+import { ConfirmModal } from '../../components/common/modal/ConfirmModal'
+import { useConfirm } from '../../hooks/common/useConfirm'
+import { appToast } from '../../lib/toast'
 
-function getStatusBadgeClass(status: AdminInquiryDetail["status"]) {
-  if (status === "RECEIVED") {
-    return "bg-slate-100 text-slate-700 border border-slate-200"
+function getStatusBadgeClass(status: AdminInquiryDetail['status']) {
+  if (status === 'RECEIVED') {
+    return 'bg-slate-100 text-slate-700 border border-slate-200'
   }
 
-  if (status === "IN_PROGRESS") {
-    return "bg-amber-50 text-amber-700 border border-amber-200"
+  if (status === 'IN_PROGRESS') {
+    return 'bg-amber-50 text-amber-700 border border-amber-200'
   }
 
-  return "bg-emerald-50 text-emerald-700 border border-emerald-200"
+  return 'bg-emerald-50 text-emerald-700 border border-emerald-200'
 }
 
 function InquiryStep({
   current,
 }: {
-  current: "RECEIVED" | "IN_PROGRESS" | "RESOLVED"
+  current: 'RECEIVED' | 'IN_PROGRESS' | 'RESOLVED'
 }) {
   const steps = [
-    { key: "RECEIVED", label: "접수됨" },
-    { key: "IN_PROGRESS", label: "처리중" },
-    { key: "RESOLVED", label: "완료됨" },
+    { key: 'RECEIVED', label: '접수됨' },
+    { key: 'IN_PROGRESS', label: '처리중' },
+    { key: 'RESOLVED', label: '완료됨' },
   ] as const
 
   const currentIndex = steps.findIndex((step) => step.key === current)
@@ -47,11 +47,11 @@ function InquiryStep({
           <div key={step.key} className="flex items-center gap-2">
             <div
               className={[
-                "rounded-full px-3 py-1 text-xs font-semibold whitespace-nowrap",
+                'rounded-full px-3 py-1 text-xs font-semibold whitespace-nowrap',
                 active
-                  ? "bg-slate-900 text-white"
-                  : "bg-slate-100 text-slate-400",
-              ].join(" ")}
+                  ? 'bg-slate-900 text-white'
+                  : 'bg-slate-100 text-slate-400',
+              ].join(' ')}
             >
               {step.label}
             </div>
@@ -59,9 +59,9 @@ function InquiryStep({
             {index !== steps.length - 1 && (
               <div
                 className={[
-                  "h-[2px] w-8",
-                  index < currentIndex ? "bg-slate-900" : "bg-slate-200",
-                ].join(" ")}
+                  'h-[2px] w-8',
+                  index < currentIndex ? 'bg-slate-900' : 'bg-slate-200',
+                ].join(' ')}
               />
             )}
           </div>
@@ -76,10 +76,10 @@ export default function AdminSupportDetailPage() {
   const navigate = useNavigate()
 
   const [inquiry, setInquiry] = useState<AdminInquiryDetail | null>(null)
-  const [reply, setReply] = useState("")
+  const [reply, setReply] = useState('')
   const [loading, setLoading] = useState(true)
   const [saving, setSaving] = useState(false)
-  const [error, setError] = useState("")
+  const [error, setError] = useState('')
 
   const {
     open,
@@ -99,18 +99,18 @@ export default function AdminSupportDetailPage() {
     ;(async () => {
       try {
         setLoading(true)
-        setError("")
+        setError('')
 
         const data = await getAdminInquiryDetail(Number(inquiryId))
 
         if (!mounted) return
 
         setInquiry(data)
-        setReply(data.adminReply ?? "")
+        setReply(data.adminReply ?? '')
       } catch (e) {
         console.error(e)
         if (mounted) {
-          setError("문의 상세 정보를 불러오지 못했습니다.")
+          setError('문의 상세 정보를 불러오지 못했습니다.')
         }
       } finally {
         if (mounted) {
@@ -132,15 +132,15 @@ export default function AdminSupportDetailPage() {
 
       await updateAdminInquiryStatus({
         inquiryId: inquiry.id,
-        status: "IN_PROGRESS",
+        status: 'IN_PROGRESS',
       })
 
       const refreshed = await getAdminInquiryDetail(inquiry.id)
       setInquiry(refreshed)
-      setReply(refreshed.adminReply ?? "")
+      setReply(refreshed.adminReply ?? '')
     } catch (e) {
       console.error(e)
-      appToast.error("상태 변경에 실패했습니다.")
+      appToast.error('상태 변경에 실패했습니다.')
     } finally {
       setSaving(false)
     }
@@ -150,18 +150,16 @@ export default function AdminSupportDetailPage() {
     if (!inquiry) return
 
     if (!reply.trim()) {
-      appToast.error("답변 내용을 입력해주세요.")
+      appToast.error('답변 내용을 입력해주세요.')
       return
     }
 
     openConfirm({
-      title: inquiry.adminReply
-        ? "답변 수정"
-        : "답변 등록",
+      title: inquiry.adminReply ? '답변 수정' : '답변 등록',
 
       message: inquiry.adminReply
-        ? "답변을 수정하시겠습니까?"
-        : "답변을 등록하시겠습니까?",
+        ? '답변을 수정하시겠습니까?'
+        : '답변을 등록하시겠습니까?',
 
       onConfirm: async () => {
         try {
@@ -175,16 +173,16 @@ export default function AdminSupportDetailPage() {
           const refreshed = await getAdminInquiryDetail(inquiry.id)
 
           setInquiry(refreshed)
-          setReply(refreshed.adminReply ?? "")
+          setReply(refreshed.adminReply ?? '')
 
           appToast.success(
             inquiry.adminReply
-              ? "답변이 수정되었습니다."
-              : "답변이 등록되었습니다."
+              ? '답변이 수정되었습니다.'
+              : '답변이 등록되었습니다.'
           )
         } catch (e) {
           console.error(e)
-          appToast.error("답변 등록에 실패했습니다.")
+          appToast.error('답변 등록에 실패했습니다.')
         } finally {
           setSaving(false)
           closeConfirm()
@@ -204,7 +202,7 @@ export default function AdminSupportDetailPage() {
   if (error || !inquiry) {
     return (
       <section className="rounded-3xl border border-slate-200 bg-white p-6 shadow-sm text-sm text-rose-500">
-        {error || "문의가 없습니다."}
+        {error || '문의가 없습니다.'}
       </section>
     )
   }
@@ -216,7 +214,7 @@ export default function AdminSupportDetailPage() {
           <div>
             <button
               type="button"
-              onClick={() => navigate("/admin/inquiries")}
+              onClick={() => navigate('/admin/inquiries')}
               className="mb-3 text-sm text-slate-500 transition hover:text-slate-700"
             >
               ← 목록으로
@@ -232,7 +230,7 @@ export default function AdminSupportDetailPage() {
           </div>
 
           <div className="flex flex-wrap gap-2">
-            {inquiry.status === "RECEIVED" && (
+            {inquiry.status === 'RECEIVED' && (
               <button
                 type="button"
                 onClick={handleMarkInProgress}
@@ -250,10 +248,10 @@ export default function AdminSupportDetailPage() {
               className="rounded-2xl bg-slate-900 px-5 py-2.5 text-sm font-semibold text-white transition hover:bg-slate-800 disabled:cursor-not-allowed disabled:opacity-50"
             >
               {saving
-                ? "저장 중..."
+                ? '저장 중...'
                 : inquiry.adminReply
-                  ? "답변 수정"
-                  : "답변 등록"}
+                  ? '답변 수정'
+                  : '답변 등록'}
             </button>
           </div>
         </div>
@@ -267,24 +265,24 @@ export default function AdminSupportDetailPage() {
             <div className="mt-2 flex items-center gap-2">
               <p className="text-sm font-semibold text-slate-900">
                 {inquiry.member
-                  ? inquiry.memberNickname ?? "-"
-                  : inquiry.guestName || "비회원"}
+                  ? (inquiry.memberNickname ?? '-')
+                  : inquiry.guestName || '비회원'}
               </p>
 
               <span
                 className={[
-                  "rounded-full px-2 py-0.5 text-[11px] font-semibold",
+                  'rounded-full px-2 py-0.5 text-[11px] font-semibold',
                   inquiry.member
-                    ? "border border-blue-200 bg-blue-50 text-blue-700"
-                    : "border border-slate-200 bg-white text-slate-500",
-                ].join(" ")}
+                    ? 'border border-blue-200 bg-blue-50 text-blue-700'
+                    : 'border border-slate-200 bg-white text-slate-500',
+                ].join(' ')}
               >
-                {inquiry.member ? "회원" : "비회원"}
+                {inquiry.member ? '회원' : '비회원'}
               </span>
             </div>
 
             <p className="mt-1 text-xs text-slate-500">
-              {inquiry.member ? "회원 문의" : inquiry.guestEmail || "-"}
+              {inquiry.member ? '회원 문의' : inquiry.guestEmail || '-'}
             </p>
 
             {inquiry.member && inquiry.memberId && (
@@ -310,9 +308,9 @@ export default function AdminSupportDetailPage() {
             <div className="mt-2">
               <span
                 className={[
-                  "inline-flex rounded-full px-2.5 py-1 text-xs font-semibold",
+                  'inline-flex rounded-full px-2.5 py-1 text-xs font-semibold',
                   getStatusBadgeClass(inquiry.status),
-                ].join(" ")}
+                ].join(' ')}
               >
                 {getInquiryStatusLabel(inquiry.status)}
               </span>
@@ -322,7 +320,7 @@ export default function AdminSupportDetailPage() {
           <div className="rounded-2xl border border-slate-200 bg-slate-50 px-4 py-4">
             <p className="text-xs font-medium text-slate-500">처리자</p>
             <p className="mt-2 text-sm font-semibold text-slate-900">
-              {inquiry.processedByNickname || "-"}
+              {inquiry.processedByNickname || '-'}
             </p>
           </div>
 
@@ -338,7 +336,7 @@ export default function AdminSupportDetailPage() {
             <p className="mt-2 text-sm font-semibold text-slate-900">
               {inquiry.processedAt
                 ? formatInquiryDate(inquiry.processedAt)
-                : "-"}
+                : '-'}
             </p>
           </div>
         </div>
@@ -350,7 +348,7 @@ export default function AdminSupportDetailPage() {
           {inquiry.content}
         </div>
 
-        {inquiry.status === "RESOLVED" && inquiry.adminReply && (
+        {inquiry.status === 'RESOLVED' && inquiry.adminReply && (
           <div className="mt-6 rounded-2xl border border-emerald-200 bg-emerald-50 px-4 py-4">
             <div className="flex flex-wrap items-center justify-between gap-2">
               <p className="text-sm font-bold text-emerald-800">
@@ -367,12 +365,12 @@ export default function AdminSupportDetailPage() {
             </div>
 
             <div className="mt-3 flex flex-wrap gap-3 text-xs text-emerald-700">
-              <span>담당자: {inquiry.processedByNickname || "-"}</span>
+              <span>담당자: {inquiry.processedByNickname || '-'}</span>
               <span>
-                처리일:{" "}
+                처리일:{' '}
                 {inquiry.processedAt
                   ? formatInquiryDate(inquiry.processedAt)
-                  : "-"}
+                  : '-'}
               </span>
             </div>
           </div>
@@ -381,7 +379,7 @@ export default function AdminSupportDetailPage() {
         <div className="mt-6">
           <div className="mb-2 flex items-center justify-between">
             <p className="text-xs font-medium text-slate-500">
-              {inquiry.adminReply ? "답변 수정" : "관리자 답변"}
+              {inquiry.adminReply ? '답변 수정' : '관리자 답변'}
             </p>
             <p className="text-xs text-slate-400">{reply.length} / 2000</p>
           </div>

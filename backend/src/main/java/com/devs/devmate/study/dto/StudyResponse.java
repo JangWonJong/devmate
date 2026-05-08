@@ -25,6 +25,11 @@ public class StudyResponse {
     private boolean joinedByMe;
     private LocalDateTime createdAt;
 
+    private String placeName;
+    private String address;
+    private Double latitude;
+    private Double longitude;
+
     public static StudyResponse from(
             Study study,
             long currentMembers,
@@ -47,6 +52,10 @@ public class StudyResponse {
                 .currentMembers(currentMembers)
                 .joinedByMe(joinedByMe)
                 .createdAt(study.getCreatedAt())
+                .placeName(study.getPlaceName())
+                .address(study.getAddress())
+                .latitude(study.getLatitude())
+                .longitude(study.getLongitude())
                 .build();
     }
 

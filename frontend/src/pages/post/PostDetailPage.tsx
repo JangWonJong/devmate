@@ -1,29 +1,31 @@
-import { useCallback } from "react"
-import { useNavigate, useParams } from "react-router-dom"
-import { useAuthState } from "../../hooks/auth/useAuthState"
-import { usePostStudySection } from "../../hooks/post/usePostStudySection"
-import { usePostComments } from "../../hooks/post/usePostComments"
-import { usePostReactions } from "../../hooks/post/usePostReactions"
-import { usePostActions } from "../../hooks/post/usePostActions"
-import { usePostDetail } from "../../hooks/post/usePostDetail"
-import { useScrollToHash } from "../../hooks/common/useScrollToHash"
-import { PageContainer } from "../../layouts/PageContainer"
-import PostDetailHeader from "../../components/post/PostDetailHeader"
-import StudyInfoSection from "../../components/study/detail/StudyInfoSection"
-import CommentSection from "../../components/post/CommentSection"
-import { ConfirmModal } from "../../components/common/feedback/ConfirmModal"
-import { InputModal } from "../../components/common/feedback/InputModal"
-import { useConfirm } from "../../hooks/common/useConfirm"
+import { useCallback } from 'react'
+import { useNavigate, useParams } from 'react-router-dom'
+import { ConfirmModal } from '../../components/common/modal/ConfirmModal'
+import { InputModal } from '../../components/common/modal/InputModal'
+import CommentSection from '../../components/post/CommentSection'
+import PostDetailHeader from '../../components/post/PostDetailHeader'
+import StudyInfoSection from '../../components/study/detail/StudyInfoSection'
+import { useAuthState } from '../../hooks/auth/useAuthState'
+import { useConfirm } from '../../hooks/common/useConfirm'
+import { useScrollToHash } from '../../hooks/common/useScrollToHash'
+import { usePostActions } from '../../hooks/post/usePostActions'
+import { usePostComments } from '../../hooks/post/usePostComments'
+import { usePostDetail } from '../../hooks/post/usePostDetail'
+import { usePostReactions } from '../../hooks/post/usePostReactions'
+import { usePostStudySection } from '../../hooks/post/usePostStudySection'
+import { PageContainer } from '../../layouts/PageContainer'
+import { StudyCreateModal } from '../../components/study/modal/StudyCreateModal'
+import { PlaceSelectModal } from '../../components/common/map/PlaceSelectModal'
 
 export function PostDetailPage() {
   const nav = useNavigate()
-  
+
   const navigateToHome = useCallback(() => {
-    nav("/", { replace: true })
+    nav('/', { replace: true })
   }, [nav])
 
   const navigateToPosts = useCallback(() => {
-    nav("/posts", { replace: true })
+    nav('/posts', { replace: true })
   }, [nav])
 
   const { id } = useParams()
@@ -40,12 +42,7 @@ export function PostDetailPage() {
     closeConfirm,
   } = useConfirm()
 
-  const {
-    post,
-    setPost,
-    loading,
-    loadErr,
-  } = usePostDetail({
+  const { post, setPost, loading, loadErr } = usePostDetail({
     postId: id,
     navigateToHome,
   })
@@ -58,16 +55,25 @@ export function PostDetailPage() {
     studyReservations,
     reservationsLoading,
 
+    noticeCreateInput,
     noticeModalOpen,
-    noticeInput,
+    noticeUpdateInput,
+    setNoticeCreateInput,
     setNoticeModalOpen,
-    setNoticeInput,
+    setNoticeUpdateInput,
 
     capacityModalOpen,
     capacityInput,
     capacityMode,
     setCapacityModalOpen,
     setCapacityInput,
+
+    placeNameInput,
+    addressInput,
+    setPlaceNameInput,
+    setAddressInput,
+    setLatitudeInput,
+    setLongitudeInput,
 
     onCreateStudy,
     onJoinStudy,
@@ -78,6 +84,17 @@ export function PostDetailPage() {
     onDelegateLeader,
     submitUpdateNotice,
     submitCapacity,
+
+    placeModalOpen,
+    placeUpdateNameInput,
+    placeUpdateAddressInput,
+    setPlaceModalOpen,
+    setPlaceUpdateNameInput,
+    setPlaceUpdateAddressInput,
+    setPlaceUpdateLatitudeInput,
+    setPlaceUpdateLongitudeInput,
+    onUpdatePlace,
+    submitUpdatePlace,
   } = usePostStudySection({
     post,
     openConfirm,
@@ -124,13 +141,9 @@ export function PostDetailPage() {
     post,
     loggedIn,
   })
+  
 
-  const {
-    busy,
-    actionErr,
-    onSolve,
-    onDeletePost,
-  } = usePostActions({
+  const { busy, actionErr, onSolve, onDeletePost } = usePostActions({
     postId: id,
     setPost,
     navigateToPosts,
@@ -170,7 +183,7 @@ export function PostDetailPage() {
 
   const isMine = meId != null && post.authorId === meId
   const canSolve = isMine && !post.solved
-  const isStudyPost = post.type === "STUDY"
+  const isStudyPost = post.type === 'STUDY'
 
   return (
     <PageContainer className="mx-auto max-w-4xl space-y-8">
@@ -210,6 +223,7 @@ export function PostDetailPage() {
           onUpdateCapacity={onUpdateStudyCapacity}
           onUpdateNotice={onUpdateNotice}
           onDelegateLeader={onDelegateLeader}
+          onUpdatePlace={onUpdatePlace}
         />
       )}
 
@@ -251,7 +265,7 @@ export function PostDetailPage() {
         title="공지 수정"
         message="스터디 공지 내용을 입력하세요."
         placeholder="공지 내용을 입력하세요"
-        defaultValue={noticeInput}
+        defaultValue={noticeUpdateInput}
         multiline
         loading={studyLoading}
         confirmText="저장"
@@ -259,28 +273,55 @@ export function PostDetailPage() {
         onConfirm={submitUpdateNotice}
         onCancel={() => {
           setNoticeModalOpen(false)
-          setNoticeInput("")
+          setNoticeUpdateInput('')
         }}
       />
-
-      <InputModal
+      <StudyCreateModal
         open={capacityModalOpen}
-        title={
-          capacityMode === "create"
-            ? "스터디 생성"
-            : "스터디 정원 수정"
-        }
-        message="최대 인원을 입력하세요."
-        placeholder="예: 4"
-        defaultValue={capacityInput}
+        title={capacityMode === 'create' ? '스터디 생성' : '스터디 정원 수정'}
         loading={studyLoading}
-        confirmText="확인"
-        cancelText="취소"
+        showPlaceFields={capacityMode === 'create'}
+        notice={noticeCreateInput}
+        maxMembers={capacityInput}
+        placeName={placeNameInput}
+        address={addressInput}
+        onChangeNotice={setNoticeCreateInput}
+        onChangeMaxMembers={setCapacityInput}
+        onChangePlaceName={setPlaceNameInput}
+        onChangeAddress={setAddressInput}
+        onSelectPlace={(place) => {
+          setPlaceNameInput(place.placeName)
+          setAddressInput(place.roadAddress || place.address)
+          setLatitudeInput(place.latitude)
+          setLongitudeInput(place.longitude)
+        }}
         onConfirm={submitCapacity}
         onCancel={() => {
+          setNoticeCreateInput('')
           setCapacityModalOpen(false)
-          setCapacityInput("")
+          setCapacityInput('4')
+          setPlaceNameInput('')
+          setAddressInput('')
+          setLatitudeInput(null)
+          setLongitudeInput(null)
         }}
+      />
+      <PlaceSelectModal
+        open={placeModalOpen}
+        title="스터디 장소 수정"
+        loading={studyLoading}
+        placeName={placeUpdateNameInput}
+        address={placeUpdateAddressInput}
+        onChangePlaceName={setPlaceUpdateNameInput}
+        onChangeAddress={setPlaceUpdateAddressInput}
+        onSelectPlace={(place) => {
+          setPlaceUpdateNameInput(place.placeName)
+          setPlaceUpdateAddressInput(place.roadAddress || place.address)
+          setPlaceUpdateLatitudeInput(place.latitude)
+          setPlaceUpdateLongitudeInput(place.longitude)
+        }}
+        onConfirm={submitUpdatePlace}
+        onCancel={() => setPlaceModalOpen(false)}
       />
     </PageContainer>
   )

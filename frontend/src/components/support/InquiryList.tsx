@@ -1,27 +1,24 @@
-import { useEffect, useState } from "react"
-import { useNavigate } from "react-router-dom"
+import { useEffect, useState } from 'react'
+import { useNavigate } from 'react-router-dom'
+import { tokenStore } from '../../api/auth/token'
 import {
+  deleteInquiry,
   formatInquiryDate,
   getInquiryStatusLabel,
   getInquiryStatusStyle,
   getInquiryTypeLabel,
   listMyInquiries,
-  deleteInquiry,
   type Inquiry,
-} from "../../api/support/inquiry"
-import { tokenStore } from "../../api/auth/token"
-import { appToast } from "../../lib/toast"
-import { ConfirmModal } from "../common/feedback/ConfirmModal"
-import { useConfirm } from "../../hooks/common/useConfirm"
-
+} from '../../api/support/inquiry'
+import { useConfirm } from '../../hooks/common/useConfirm'
+import { appToast } from '../../lib/toast'
+import { ConfirmModal } from '../common/modal/ConfirmModal'
 
 type InquiryListProps = {
-  variant?: "compact" | "full"
+  variant?: 'compact' | 'full'
 }
 
-export default function InquiryList({
-  variant = "compact",
-}: InquiryListProps) {
+export default function InquiryList({ variant = 'compact' }: InquiryListProps) {
   const nav = useNavigate()
   const [inquiries, setInquiries] = useState<Inquiry[]>([])
   const [loading, setLoading] = useState(true)
@@ -37,7 +34,7 @@ export default function InquiryList({
     closeConfirm,
   } = useConfirm()
 
-  const isCompact = variant === "compact"
+  const isCompact = variant === 'compact'
 
   const fetchData = async () => {
     if (!tokenStore.isLoggedIn()) {
@@ -71,11 +68,11 @@ export default function InquiryList({
       void fetchData()
     }
 
-    window.addEventListener("inquiry-updated", handleUpdated)
+    window.addEventListener('inquiry-updated', handleUpdated)
 
     return () => {
       unsubscribe()
-      window.removeEventListener("inquiry-updated", handleUpdated)
+      window.removeEventListener('inquiry-updated', handleUpdated)
     }
   }, [])
 
@@ -96,12 +93,14 @@ export default function InquiryList({
   }
 
   return (
-    <div className={`pr-1 ${isCompact ? "space-y-2 overflow-y-auto" : "space-y-3"}`}>
+    <div
+      className={`pr-1 ${isCompact ? 'space-y-2 overflow-y-auto' : 'space-y-3'}`}
+    >
       {inquiries.map((inquiry) => (
         <div
           key={inquiry.id}
           className={`border border-slate-200 bg-white ${
-            isCompact ? "rounded-xl p-3" : "rounded-2xl p-4"
+            isCompact ? 'rounded-xl p-3' : 'rounded-2xl p-4'
           }`}
         >
           <div className="mb-2 flex items-start justify-between gap-3">
@@ -121,26 +120,26 @@ export default function InquiryList({
                 {getInquiryStatusLabel(inquiry.status)}
               </span>
 
-              {inquiry.status === "RECEIVED" && (
+              {inquiry.status === 'RECEIVED' && (
                 <button
                   type="button"
                   onClick={() => {
                     openConfirm({
-                    title: "문의 취소",
-                    message: "문의 내용을 취소할까요?",
-                    danger: true,
-                    onConfirm: async () => {
-                      try {
-                        await deleteInquiry(inquiry.id)
-                        window.dispatchEvent(new Event("inquiry-updated"))
-                        appToast.success("문의가 취소되었습니다.")
-                      } catch {
-                        appToast.error("문의 취소에 실패했습니다.")
-                      } finally {
-                        closeConfirm()
-                      }
-                    },
-                  })
+                      title: '문의 취소',
+                      message: '문의 내용을 취소할까요?',
+                      danger: true,
+                      onConfirm: async () => {
+                        try {
+                          await deleteInquiry(inquiry.id)
+                          window.dispatchEvent(new Event('inquiry-updated'))
+                          appToast.success('문의가 취소되었습니다.')
+                        } catch {
+                          appToast.error('문의 취소에 실패했습니다.')
+                        } finally {
+                          closeConfirm()
+                        }
+                      },
+                    })
                   }}
                   className="inline-flex shrink-0 items-center rounded-full border border-slate-200 bg-white px-2.5 py-1 text-[11px] font-medium text-slate-500 transition hover:border-red-200 hover:bg-red-50 hover:text-red-500"
                 >
@@ -152,13 +151,13 @@ export default function InquiryList({
 
           <div
             className={`break-words text-sm text-slate-700 ${
-              isCompact ? "line-clamp-2" : "whitespace-pre-line"
+              isCompact ? 'line-clamp-2' : 'whitespace-pre-line'
             }`}
           >
             {inquiry.content}
           </div>
 
-          {inquiry.status === "RESOLVED" && inquiry.adminReply && (
+          {inquiry.status === 'RESOLVED' && inquiry.adminReply && (
             <div className="mt-3 rounded-xl bg-slate-50 px-3 py-3">
               <div className="text-xs font-medium text-slate-500">
                 관리자 답변
@@ -179,7 +178,7 @@ export default function InquiryList({
               {isCompact && (
                 <button
                   type="button"
-                  onClick={() => nav("/mypage/inquiries")}
+                  onClick={() => nav('/mypage/inquiries')}
                   className="mt-2 text-xs font-medium text-indigo-600 hover:underline"
                 >
                   자세한 내용은 내 문의에서 확인하기
@@ -200,6 +199,5 @@ export default function InquiryList({
         onCancel={closeConfirm}
       />
     </div>
-    
   )
 }

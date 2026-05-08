@@ -2,6 +2,7 @@ import { useNavigate } from "react-router-dom"
 import type { StudyMemberResponse, StudyResponse } from "../../../api/study/study"
 import type { ReservationResponse } from "../../../api/reservation/reservations"
 import { actionButtonClass } from "../../../utils/button"
+import { KakaoMapPreview } from "../../common/map/KakaoMapPreview"
 
 function studyStatusLabel(status: string) {
   switch (status) {
@@ -82,6 +83,7 @@ type StudyInfoSectionProps = {
   onUpdateCapacity: () => void
   onUpdateNotice: () => void
   onDelegateLeader: (targetMemberId: number) => void
+  onUpdatePlace: () => void
 }
 
 export default function StudyInfoSection({
@@ -101,6 +103,7 @@ export default function StudyInfoSection({
   onUpdateCapacity,
   onUpdateNotice,
   onDelegateLeader,
+  onUpdatePlace
 }: StudyInfoSectionProps) {
   const nav = useNavigate()
 
@@ -159,6 +162,7 @@ export default function StudyInfoSection({
   const canUpdateCapacity = loggedIn && isStudyJoined && isStudyLeader
   const canUpdateNotice = loggedIn && isStudyJoined && isStudyLeader
   const canReserve = loggedIn && isStudyJoined
+  const canUpdatePlace = loggedIn && isStudyJoined && isStudyLeader
 
   return (
     <section className="rounded-[28px] border border-slate-200 bg-white p-8 shadow-sm">
@@ -199,9 +203,11 @@ export default function StudyInfoSection({
         </div>
 
         <div className="rounded-3xl border border-slate-200 bg-slate-50 p-5">
-          <div className="mb-2 text-xl font-bold text-slate-900">스터디 공지</div>
+          <div className="mb-2 text-xl font-bold text-slate-900">
+            스터디 공지
+          </div>
           <div className="whitespace-pre-wrap text-sm leading-7 text-slate-700">
-            {study.notice?.trim() ? study.notice : "등록된 공지가 없어요."}
+            {study.notice?.trim() ? study.notice : '등록된 공지가 없어요.'}
           </div>
         </div>
 
@@ -209,7 +215,9 @@ export default function StudyInfoSection({
           <h3 className="mb-4 text-2xl font-bold text-slate-900">참여 멤버</h3>
 
           {studyMembers.length === 0 ? (
-            <div className="text-sm text-slate-500">참여 중인 멤버가 없습니다.</div>
+            <div className="text-sm text-slate-500">
+              참여 중인 멤버가 없습니다.
+            </div>
           ) : (
             <div className="space-y-3">
               {studyMembers.map((member) => (
@@ -218,9 +226,11 @@ export default function StudyInfoSection({
                   className="flex flex-col gap-3 rounded-2xl border border-slate-200 bg-slate-50 p-4 sm:flex-row sm:items-center sm:justify-between"
                 >
                   <div className="flex items-center gap-2">
-                    <span className="font-medium text-slate-900">{member.nickname}</span>
+                    <span className="font-medium text-slate-900">
+                      {member.nickname}
+                    </span>
 
-                    {member.role === "LEADER" && (
+                    {member.role === 'LEADER' && (
                       <span className="inline-flex rounded-full bg-slate-900 px-2 py-0.5 text-xs font-medium text-white">
                         리더
                       </span>
@@ -228,9 +238,11 @@ export default function StudyInfoSection({
                   </div>
 
                   {isStudyLeader &&
-                    member.role !== "LEADER" &&
+                    member.role !== 'LEADER' &&
                     member.memberId !== meId && (
-                      <ActionButton onClick={() => onDelegateLeader(member.memberId)}>
+                      <ActionButton
+                        onClick={() => onDelegateLeader(member.memberId)}
+                      >
                         리더 위임
                       </ActionButton>
                     )}
@@ -239,14 +251,48 @@ export default function StudyInfoSection({
             </div>
           )}
         </div>
+        {(study.placeName || study.address) && (
+          <div className="rounded-3xl border border-slate-200 bg-slate-50 p-5">
+            <div className="mb-2 text-xl font-bold text-slate-900">
+              📍 스터디 장소
+            </div>
 
+            <div className="space-y-1">
+              {study.placeName && (
+                <p className="font-semibold text-slate-900">
+                  {study.placeName}
+                </p>
+              )}
+
+              {study.address && (
+                <p className="text-sm leading-6 text-slate-500">
+                  {study.address}
+                </p>
+              )}
+            </div>
+
+            {study.latitude != null && study.longitude != null && (
+              <KakaoMapPreview
+                latitude={study.latitude}
+                longitude={study.longitude}
+                placeName={study.placeName}
+              />
+            )}
+          </div>
+        )}
         <div className="rounded-3xl border border-slate-200 bg-white p-5">
-          <h3 className="mb-4 text-2xl font-bold text-slate-900">스터디 예약 현황</h3>
+          <h3 className="mb-4 text-2xl font-bold text-slate-900">
+            스터디 예약 현황
+          </h3>
 
           {reservationsLoading ? (
-            <div className="text-sm text-slate-500">예약 현황을 불러오는 중...</div>
+            <div className="text-sm text-slate-500">
+              예약 현황을 불러오는 중...
+            </div>
           ) : studyReservations.length === 0 ? (
-            <div className="text-sm text-slate-500">등록된 스터디 예약이 없습니다.</div>
+            <div className="text-sm text-slate-500">
+              등록된 스터디 예약이 없습니다.
+            </div>
           ) : (
             <div className="space-y-3">
               {studyReservations.map((reservation) => (
@@ -258,7 +304,8 @@ export default function StudyInfoSection({
                     {reservation.date} · {reservation.roomName}
                   </div>
                   <div className="mt-1 text-sm text-slate-700">
-                    {reservation.startTime.slice(0, 5)} ~ {reservation.endTime.slice(0, 5)}
+                    {reservation.startTime.slice(0, 5)} ~{' '}
+                    {reservation.endTime.slice(0, 5)}
                   </div>
                   <div className="mt-1 text-sm text-slate-500">
                     예약자: {reservation.memberNickname}
@@ -284,7 +331,7 @@ export default function StudyInfoSection({
               <button
                 type="button"
                 onClick={onJoinStudy}
-                className={actionButtonClass("success")}
+                className={actionButtonClass('success')}
               >
                 참가하기
               </button>
@@ -294,7 +341,7 @@ export default function StudyInfoSection({
               <button
                 type="button"
                 onClick={onLeaveStudy}
-                className={actionButtonClass("danger")}
+                className={actionButtonClass('danger')}
               >
                 탈퇴하기
               </button>
@@ -304,7 +351,7 @@ export default function StudyInfoSection({
               <button
                 type="button"
                 onClick={onCloseStudy}
-                className={actionButtonClass("subtle")}
+                className={actionButtonClass('subtle')}
               >
                 모집 마감
               </button>
@@ -314,7 +361,7 @@ export default function StudyInfoSection({
               <button
                 type="button"
                 onClick={onUpdateNotice}
-                className={actionButtonClass("default")}
+                className={actionButtonClass('default')}
               >
                 공지 수정
               </button>
@@ -324,9 +371,19 @@ export default function StudyInfoSection({
               <button
                 type="button"
                 onClick={onUpdateCapacity}
-                className={actionButtonClass("default")}
+                className={actionButtonClass('default')}
               >
                 정원 수정
+              </button>
+            )}
+            
+            {canUpdatePlace && (
+              <button
+                type="button"
+                onClick={onUpdatePlace}
+                className={actionButtonClass('default')}
+              >
+                장소 수정
               </button>
             )}
           </div>

@@ -1,22 +1,20 @@
-import { useState } from "react"
-import { useNavigate, useParams } from "react-router-dom"
-import {
-  deleteDevLog,
-} from "../../api/devlog/devlog"
-import DevLogCommentSection from "../../components/devlog/DevLogCommentSection"
-import { useAuthState } from "../../hooks/auth/useAuthState"
-import { useDevLogDetail } from "../../hooks/devlog/useDevLogDetail"
-import { useDevLogReactions } from "../../hooks/devlog/useDevLogReactions"
-import { useDevLogComments } from "../../hooks/devlog/useDevLogComments"
-import { fileUrl } from "../../utils/file"
-import { apiErrorMessage } from "../../utils/error"
-import { PageContainer } from "../../layouts/PageContainer"
-import { appToast } from "../../lib/toast"
-import { useConfirm } from "../../hooks/common/useConfirm"
-import { ConfirmModal } from "../../components/common/feedback/ConfirmModal"
-import { ImageGalleryModal } from "../../components/common/image/ImageGalleryModal"
-import { buildPostDraftFromDevLog } from "../../utils/devlog/buildPostDraftFromDevLog"
-import { MarkdownViewer } from "../../components/common/markdown/MarkdownViewer"
+import { useState } from 'react'
+import { useNavigate, useParams } from 'react-router-dom'
+import { deleteDevLog } from '../../api/devlog/devlog'
+import { ImageGalleryModal } from '../../components/common/image/ImageGalleryModal'
+import { MarkdownViewer } from '../../components/common/markdown/MarkdownViewer'
+import { ConfirmModal } from '../../components/common/modal/ConfirmModal'
+import DevLogCommentSection from '../../components/devlog/DevLogCommentSection'
+import { useAuthState } from '../../hooks/auth/useAuthState'
+import { useConfirm } from '../../hooks/common/useConfirm'
+import { useDevLogComments } from '../../hooks/devlog/useDevLogComments'
+import { useDevLogDetail } from '../../hooks/devlog/useDevLogDetail'
+import { useDevLogReactions } from '../../hooks/devlog/useDevLogReactions'
+import { PageContainer } from '../../layouts/PageContainer'
+import { appToast } from '../../lib/toast'
+import { buildPostDraftFromDevLog } from '../../utils/devlog/buildPostDraftFromDevLog'
+import { apiErrorMessage } from '../../utils/error'
+import { fileUrl } from '../../utils/file'
 
 function DevLogSection({
   title,
@@ -46,7 +44,9 @@ export function DevLogDetailPage() {
   const { loggedIn, meId } = useAuthState()
 
   const [deleting, setDeleting] = useState(false)
-  const [selectedImageIndex, setSelectedImageIndex] = useState<number | null>(null)
+  const [selectedImageIndex, setSelectedImageIndex] = useState<number | null>(
+    null
+  )
 
   const {
     open,
@@ -58,25 +58,16 @@ export function DevLogDetailPage() {
     closeConfirm,
   } = useConfirm()
 
-  const {
-    devLog,
-    loading,
-    error,
-    setError,
-  } = useDevLogDetail({
+  const { devLog, loading, error, setError } = useDevLogDetail({
     devLogId,
   })
 
-  const {
-    likeCount,
-    likedByMe,
-    likeLoading,
-    onToggleLike,
-  } = useDevLogReactions({
-    devLogId,
-    devLog,
-    loggedIn,
-  })
+  const { likeCount, likedByMe, likeLoading, onToggleLike } =
+    useDevLogReactions({
+      devLogId,
+      devLog,
+      loggedIn,
+    })
 
   const {
     commentErr,
@@ -109,7 +100,11 @@ export function DevLogDetailPage() {
     if (!devLog || selectedImageIndex === null) return
 
     setSelectedImageIndex((prev) =>
-      prev === null ? null : prev === 0 ? devLog.attachments.length - 1 : prev - 1
+      prev === null
+        ? null
+        : prev === 0
+          ? devLog.attachments.length - 1
+          : prev - 1
     )
   }
 
@@ -130,29 +125,29 @@ export function DevLogDetailPage() {
 
     try {
       setDeleting(true)
-      setError("")
+      setError('')
 
       await deleteDevLog(devLogId)
-      appToast.success("DevLog가 삭제되었습니다.")
-      nav("/devlogs")
+      appToast.success('DevLog가 삭제되었습니다.')
+      nav('/devlogs')
     } catch (e) {
-      appToast.error(apiErrorMessage(e, "DevLog 삭제 실패"))
+      appToast.error(apiErrorMessage(e, 'DevLog 삭제 실패'))
     } finally {
       setDeleting(false)
       closeConfirm()
     }
   }
-  
+
   const convertToPost = () => {
     if (!devLog) return
-    
+
     const draft = buildPostDraftFromDevLog(devLog)
 
-    nav("/posts/new", {
+    nav('/posts/new', {
       state: {
         prefilledTitle: draft.title,
         prefilledContent: draft.content,
-        prefilledType: "QUESTION",
+        prefilledType: 'QUESTION',
         fromDevLog: true,
         devLogId: devLog.id,
       },
@@ -197,7 +192,7 @@ export function DevLogDetailPage() {
             </span>
 
             <button
-              onClick={() => nav("/devlogs")}
+              onClick={() => nav('/devlogs')}
               className="shrink-0 rounded-xl border border-slate-300 px-4 py-2 text-sm font-medium text-slate-700 hover:bg-slate-50"
             >
               목록
@@ -213,7 +208,9 @@ export function DevLogDetailPage() {
               {devLog.authorNickname}
             </span>
             <span>·</span>
-            <span>{new Date(devLog.createdAt).toLocaleDateString("ko-KR")}</span>
+            <span>
+              {new Date(devLog.createdAt).toLocaleDateString('ko-KR')}
+            </span>
           </div>
 
           <button
@@ -222,11 +219,11 @@ export function DevLogDetailPage() {
             disabled={likeLoading}
             className={`mt-5 inline-flex items-center gap-2 rounded-xl px-4 py-2 text-sm font-semibold transition disabled:opacity-50 ${
               likedByMe
-                ? "bg-red-50 text-red-600 hover:bg-red-100"
-                : "bg-slate-100 text-slate-600 hover:bg-slate-200"
+                ? 'bg-red-50 text-red-600 hover:bg-red-100'
+                : 'bg-slate-100 text-slate-600 hover:bg-slate-200'
             }`}
           >
-            {likedByMe ? "❤️" : "🤍"} {likeCount}
+            {likedByMe ? '❤️' : '🤍'} {likeCount}
           </button>
         </div>
 
@@ -251,15 +248,16 @@ export function DevLogDetailPage() {
                 disabled={deleting}
                 onClick={() => {
                   openConfirm({
-                    title: "DevLog 삭제",
-                    message: "삭제한 DevLog는 복구할 수 없어요. 정말 삭제할까요?",
+                    title: 'DevLog 삭제',
+                    message:
+                      '삭제한 DevLog는 복구할 수 없어요. 정말 삭제할까요?',
                     danger: true,
                     onConfirm: handleDelete,
                   })
                 }}
                 className="rounded-xl border border-red-200 px-4 py-2 text-sm font-semibold text-red-600 hover:bg-red-50 disabled:opacity-50"
               >
-                🗑 {deleting ? "삭제 중..." : "삭제"}
+                🗑 {deleting ? '삭제 중...' : '삭제'}
               </button>
             </>
           )}
@@ -312,7 +310,7 @@ export function DevLogDetailPage() {
         commentLikeCountMap={commentLikeCountMap}
         commentLikeLoadingMap={commentLikeLoadingMap}
         onToggleCommentLike={onToggleCommentLike}
-        />
+      />
       {selectedImageIndex !== null && (
         <ImageGalleryModal
           images={devLog.attachments}
@@ -327,7 +325,7 @@ export function DevLogDetailPage() {
         open={open}
         title={title}
         message={message}
-        confirmText={danger ? "삭제" : "확인"}
+        confirmText={danger ? '삭제' : '확인'}
         cancelText="취소"
         danger={danger}
         loading={deleting}
@@ -336,5 +334,4 @@ export function DevLogDetailPage() {
       />
     </PageContainer>
   )
-  
 }

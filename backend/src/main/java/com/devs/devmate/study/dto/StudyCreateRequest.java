@@ -10,6 +10,14 @@ public record StudyCreateRequest(
 
         @NotNull
         @Min(2)
-        Integer maxMembers
+        Integer maxMembers,
+
+        String notice,
+
+        String placeName,
+        String address,
+        Double latitude,
+        Double longitude
+
 ) {
 }

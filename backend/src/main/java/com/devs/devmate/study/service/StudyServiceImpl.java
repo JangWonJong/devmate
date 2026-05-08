@@ -12,6 +12,7 @@ import com.devs.devmate.reservation.entity.Reservation;
 import com.devs.devmate.reservation.repository.ReservationRepository;
 import com.devs.devmate.study.dto.StudyCreateRequest;
 import com.devs.devmate.study.dto.StudyMemberResponse;
+import com.devs.devmate.study.dto.StudyPlaceUpdateRequest;
 import com.devs.devmate.study.dto.StudyResponse;
 import com.devs.devmate.study.entity.Study;
 import com.devs.devmate.study.entity.StudyMember;
@@ -206,6 +207,11 @@ public class StudyServiceImpl implements StudyService{
         Study study = Study.builder()
                 .post(post)
                 .maxMembers(request.maxMembers())
+                .notice(request.notice() != null ? request.notice().trim() : null)
+                .placeName(request.placeName())
+                .address(request.address())
+                .latitude(request.latitude())
+                .longitude(request.longitude())
                 .build();
 
         Study savedStudy = studyRepository.save(study);
@@ -530,5 +536,32 @@ public class StudyServiceImpl implements StudyService{
                 .limit(safeLimit)
                 .map(study -> toStudyResponse(study, viewerMemberId))
                 .toList();
+    }
+
+    @Override
+    public Long updatePlace(Long memberId, Long studyId, StudyPlaceUpdateRequest request) {
+        Study study = studyRepository.findById(studyId)
+                .orElseThrow(() -> new BusinessException(ErrorCode.STUDY_NOT_FOUND));
+
+        StudyMember studyMember = studyMemberRepository
+                .findByStudyIdAndMemberIdAndStatus(
+                        studyId,
+                        memberId,
+                        StudyMember.Status.JOINED
+                )
+                .orElseThrow(() -> new BusinessException(ErrorCode.STUDY_MEMBER_NOT_FOUND));
+
+        if (studyMember.getRole() != StudyMember.Role.LEADER) {
+            throw new BusinessException(ErrorCode.FORBIDDEN_STUDY_UPDATE);
+        }
+
+        study.updatePlace(
+                request.placeName() != null ? request.placeName().trim() : null,
+                request.address() != null ? request.address().trim() : null,
+                request.latitude(),
+                request.longitude()
+        );
+
+        return study.getId();
     }
 }

@@ -1,5 +1,5 @@
-import { useEffect, useState } from "react"
-import { useNavigate, useParams } from "react-router-dom"
+import { useEffect, useState } from 'react'
+import { useNavigate, useParams } from 'react-router-dom'
 import {
   formatAdminMemberDate,
   getAdminMemberDetail,
@@ -9,12 +9,12 @@ import {
   updateAdminMemberRole,
   updateAdminMemberStatus,
   type AdminMemberDetail,
-} from "../../api/admin/memberManagement"
-import { getCurrentMemberId } from "../../api/auth/currentUser"
-import { imageUrl } from "../../utils/image"
-import { appToast } from "../../lib/toast"
-import { ConfirmModal } from "../../components/common/feedback/ConfirmModal"
-import { useConfirm } from "../../hooks/common/useConfirm"
+} from '../../api/admin/memberManagement'
+import { getCurrentMemberId } from '../../api/auth/currentUser'
+import { ConfirmModal } from '../../components/common/modal/ConfirmModal'
+import { useConfirm } from '../../hooks/common/useConfirm'
+import { appToast } from '../../lib/toast'
+import { imageUrl } from '../../utils/image'
 
 function InfoCard({ label, value }: { label: string; value: string }) {
   return (
@@ -46,12 +46,12 @@ function ActivityEmpty({ text }: { text: string }) {
 
 function getActionTypeLabel(type: string) {
   switch (type) {
-    case "MEMBER_STATUS_CHANGE":
-      return "상태 변경"
-    case "MEMBER_ROLE_CHANGE":
-      return "권한 변경"
-    case "ADMIN_MEMO_UPDATE":
-      return "메모 수정"
+    case 'MEMBER_STATUS_CHANGE':
+      return '상태 변경'
+    case 'MEMBER_ROLE_CHANGE':
+      return '권한 변경'
+    case 'ADMIN_MEMO_UPDATE':
+      return '메모 수정'
     default:
       return type
   }
@@ -64,27 +64,29 @@ export default function AdminMemberDetailPage() {
   const [member, setMember] = useState<AdminMemberDetail | null>(null)
   const [loading, setLoading] = useState(true)
   const [saving, setSaving] = useState(false)
-  const [adminMemo, setAdminMemo] = useState("")
-  const [actionFilter, setActionFilter] = useState<"ALL" | "STATUS" | "ROLE" | "MEMO">("ALL")
-  const [searchKeyword, setSearchKeyword] = useState("")
+  const [adminMemo, setAdminMemo] = useState('')
+  const [actionFilter, setActionFilter] = useState<
+    'ALL' | 'STATUS' | 'ROLE' | 'MEMO'
+  >('ALL')
+  const [searchKeyword, setSearchKeyword] = useState('')
 
-  const [error, setError] = useState("")
+  const [error, setError] = useState('')
   const [imageError, setImageError] = useState(false)
 
   const {
-      open,
-      title,
-      message,
-      danger,
-      action,
-      confirm: openConfirm,
-      closeConfirm,
-    } = useConfirm()
+    open,
+    title,
+    message,
+    danger,
+    action,
+    confirm: openConfirm,
+    closeConfirm,
+  } = useConfirm()
 
   async function fetchMemberDetail(id: number) {
     const data = await getAdminMemberDetail(id)
     setMember(data)
-    setAdminMemo(data.adminMemo ?? "")
+    setAdminMemo(data.adminMemo ?? '')
   }
 
   useEffect(() => {
@@ -99,19 +101,19 @@ export default function AdminMemberDetailPage() {
     ;(async () => {
       try {
         setLoading(true)
-        setError("")
+        setError('')
 
         const data = await getAdminMemberDetail(Number(memberId))
 
         if (!mounted) return
 
         setMember(data)
-        setAdminMemo(data.adminMemo ?? "")
+        setAdminMemo(data.adminMemo ?? '')
       } catch (e) {
         console.error(e)
 
         if (mounted) {
-          setError("회원 상세 정보를 불러오지 못했습니다.")
+          setError('회원 상세 정보를 불러오지 못했습니다.')
         }
       } finally {
         if (mounted) {
@@ -136,22 +138,28 @@ export default function AdminMemberDetailPage() {
   if (error || !member) {
     return (
       <section className="rounded-3xl border border-slate-200 bg-white p-6 text-sm text-rose-500 shadow-sm">
-        {error || "회원 정보가 없습니다."}
+        {error || '회원 정보가 없습니다.'}
       </section>
     )
   }
 
   const currentMemberId = getCurrentMemberId()
-  const isSelfAdmin = currentMemberId === member.id && member.role === "ADMIN"
-  const isDeletedMember = member.status === "DELETED"
-  const isSuspendedMember = member.status === "SUSPENDED"
+  const isSelfAdmin = currentMemberId === member.id && member.role === 'ADMIN'
+  const isDeletedMember = member.status === 'DELETED'
+  const isSuspendedMember = member.status === 'SUSPENDED'
   const isActionDisabled = saving
 
   const filteredLogs = member.actionLogs.filter((log) => {
-    if (actionFilter !== "ALL") {
-      if (actionFilter === "STATUS" && log.actionType !== "MEMBER_STATUS_CHANGE") return false
-      if (actionFilter === "ROLE" && log.actionType !== "MEMBER_ROLE_CHANGE") return false
-      if (actionFilter === "MEMO" && log.actionType !== "ADMIN_MEMO_UPDATE") return false
+    if (actionFilter !== 'ALL') {
+      if (
+        actionFilter === 'STATUS' &&
+        log.actionType !== 'MEMBER_STATUS_CHANGE'
+      )
+        return false
+      if (actionFilter === 'ROLE' && log.actionType !== 'MEMBER_ROLE_CHANGE')
+        return false
+      if (actionFilter === 'MEMO' && log.actionType !== 'ADMIN_MEMO_UPDATE')
+        return false
     }
 
     if (searchKeyword) {
@@ -168,25 +176,24 @@ export default function AdminMemberDetailPage() {
   async function handleToggleStatus() {
     if (!member) return
 
-    if (member.status === "SUSPENDED") {
-      appToast.info("정지 상태에서는 탈퇴 처리를 할 수 없습니다. 먼저 정지를 해제해주세요.")
+    if (member.status === 'SUSPENDED') {
+      appToast.info(
+        '정지 상태에서는 탈퇴 처리를 할 수 없습니다. 먼저 정지를 해제해주세요.'
+      )
       return
     }
 
-    const nextStatus = member.status === "DELETED" ? "ACTIVE" : "DELETED"
+    const nextStatus = member.status === 'DELETED' ? 'ACTIVE' : 'DELETED'
 
     openConfirm({
-      title:
-        nextStatus === "DELETED"
-          ? "회원 탈퇴 처리"
-          : "회원 복구 처리",
+      title: nextStatus === 'DELETED' ? '회원 탈퇴 처리' : '회원 복구 처리',
 
       message:
-        nextStatus === "DELETED"
-          ? "해당 회원을 탈퇴 처리하시겠습니까?"
-          : "해당 회원을 복구 처리하시겠습니까?",
+        nextStatus === 'DELETED'
+          ? '해당 회원을 탈퇴 처리하시겠습니까?'
+          : '해당 회원을 복구 처리하시겠습니까?',
 
-      danger: nextStatus === "DELETED",
+      danger: nextStatus === 'DELETED',
 
       onConfirm: async () => {
         try {
@@ -196,13 +203,13 @@ export default function AdminMemberDetailPage() {
           await fetchMemberDetail(member.id)
 
           appToast.success(
-            nextStatus === "DELETED"
-              ? "회원이 탈퇴 처리되었습니다."
-              : "회원이 복구되었습니다."
+            nextStatus === 'DELETED'
+              ? '회원이 탈퇴 처리되었습니다.'
+              : '회원이 복구되었습니다.'
           )
         } catch (e) {
           console.error(e)
-          appToast.error("회원 상태 변경에 실패했습니다.")
+          appToast.error('회원 상태 변경에 실패했습니다.')
         } finally {
           setSaving(false)
           closeConfirm()
@@ -215,32 +222,29 @@ export default function AdminMemberDetailPage() {
     if (!member) return
 
     if (isSelfAdmin) {
-      appToast.info("현재 로그인한 관리자 계정은 권한을 변경할 수 없습니다.")
+      appToast.info('현재 로그인한 관리자 계정은 권한을 변경할 수 없습니다.')
       return
     }
 
     if (isDeletedMember) {
-      appToast.info("탈퇴한 회원의 권한은 변경할 수 없습니다.")
+      appToast.info('탈퇴한 회원의 권한은 변경할 수 없습니다.')
       return
     }
 
     if (isSuspendedMember) {
-      appToast.info("정지된 회원의 권한은 변경할 수 없습니다.")
+      appToast.info('정지된 회원의 권한은 변경할 수 없습니다.')
       return
     }
 
-    const nextRole = member.role === "USER" ? "ADMIN" : "USER"
+    const nextRole = member.role === 'USER' ? 'ADMIN' : 'USER'
 
     openConfirm({
-      title:
-        nextRole === "ADMIN"
-          ? "관리자 권한 부여"
-          : "일반 회원 권한 변경",
+      title: nextRole === 'ADMIN' ? '관리자 권한 부여' : '일반 회원 권한 변경',
 
       message:
-        nextRole === "ADMIN"
-          ? "해당 회원에게 관리자 권한을 부여하시겠습니까?"
-          : "해당 회원을 일반 회원 권한으로 변경하시겠습니까?",
+        nextRole === 'ADMIN'
+          ? '해당 회원에게 관리자 권한을 부여하시겠습니까?'
+          : '해당 회원을 일반 회원 권한으로 변경하시겠습니까?',
 
       onConfirm: async () => {
         try {
@@ -250,13 +254,13 @@ export default function AdminMemberDetailPage() {
           await fetchMemberDetail(member.id)
 
           appToast.success(
-            nextRole === "ADMIN"
-              ? "관리자 권한이 부여되었습니다."
-              : "일반 회원 권한으로 변경되었습니다."
+            nextRole === 'ADMIN'
+              ? '관리자 권한이 부여되었습니다.'
+              : '일반 회원 권한으로 변경되었습니다.'
           )
         } catch (e) {
           console.error(e)
-          appToast.error("회원 권한 변경에 실패했습니다.")
+          appToast.error('회원 권한 변경에 실패했습니다.')
         } finally {
           setSaving(false)
           closeConfirm()
@@ -268,22 +272,17 @@ export default function AdminMemberDetailPage() {
   async function handleSuspendMember() {
     if (!member) return
 
-    const nextStatus = member.status === "SUSPENDED"
-      ? "ACTIVE"
-      : "SUSPENDED"
+    const nextStatus = member.status === 'SUSPENDED' ? 'ACTIVE' : 'SUSPENDED'
 
     openConfirm({
-      title:
-        nextStatus === "SUSPENDED"
-          ? "회원 정지 처리"
-          : "회원 정지 해제",
+      title: nextStatus === 'SUSPENDED' ? '회원 정지 처리' : '회원 정지 해제',
 
       message:
-        nextStatus === "SUSPENDED"
-          ? "해당 회원을 정지 처리하시겠습니까?"
-          : "해당 회원의 정지를 해제하시겠습니까?",
+        nextStatus === 'SUSPENDED'
+          ? '해당 회원을 정지 처리하시겠습니까?'
+          : '해당 회원의 정지를 해제하시겠습니까?',
 
-      danger: nextStatus === "SUSPENDED",
+      danger: nextStatus === 'SUSPENDED',
 
       onConfirm: async () => {
         try {
@@ -293,13 +292,13 @@ export default function AdminMemberDetailPage() {
           await fetchMemberDetail(member.id)
 
           appToast.success(
-            nextStatus === "SUSPENDED"
-              ? "회원이 정지 처리되었습니다."
-              : "회원 정지가 해제되었습니다."
+            nextStatus === 'SUSPENDED'
+              ? '회원이 정지 처리되었습니다.'
+              : '회원 정지가 해제되었습니다.'
           )
         } catch (e) {
           console.error(e)
-          appToast.error("회원 정지 상태 변경에 실패했습니다.")
+          appToast.error('회원 정지 상태 변경에 실패했습니다.')
         } finally {
           setSaving(false)
           closeConfirm()
@@ -316,10 +315,10 @@ export default function AdminMemberDetailPage() {
       await updateAdminMemberMemo(member.id, adminMemo.trim())
       await fetchMemberDetail(member.id)
 
-      appToast.success("관리자 메모가 저장되었습니다.")
+      appToast.success('관리자 메모가 저장되었습니다.')
     } catch (e) {
       console.error(e)
-      appToast.error("관리자 메모 저장에 실패했습니다.")
+      appToast.error('관리자 메모 저장에 실패했습니다.')
     } finally {
       setSaving(false)
     }
@@ -332,7 +331,7 @@ export default function AdminMemberDetailPage() {
           <div className="min-w-0 lg:max-w-[360px]">
             <button
               type="button"
-              onClick={() => navigate("/admin/members")}
+              onClick={() => navigate('/admin/members')}
               className="inline-flex items-center gap-2 rounded-xl border border-slate-200 bg-slate-50 px-4 py-2 text-sm font-medium text-slate-700 transition hover:bg-slate-100"
             >
               ← 회원 목록
@@ -360,16 +359,16 @@ export default function AdminMemberDetailPage() {
               className="whitespace-nowrap rounded-2xl border border-slate-200 bg-white px-4 py-2 text-sm font-semibold text-slate-700 transition hover:bg-slate-50 disabled:cursor-not-allowed disabled:opacity-50"
             >
               {saving
-                ? "처리 중..."
+                ? '처리 중...'
                 : isSelfAdmin
-                  ? "본인 권한 변경 불가"
+                  ? '본인 권한 변경 불가'
                   : isDeletedMember
-                    ? "탈퇴 회원 권한 변경 불가"
+                    ? '탈퇴 회원 권한 변경 불가'
                     : isSuspendedMember
-                      ? "정지 회원 변경 불가"
-                      : member.role === "USER"
-                        ? "관리자 권한 부여"
-                        : "일반 회원 권한 변경"}
+                      ? '정지 회원 변경 불가'
+                      : member.role === 'USER'
+                        ? '관리자 권한 부여'
+                        : '일반 회원 권한 변경'}
             </button>
 
             <button
@@ -387,15 +386,15 @@ export default function AdminMemberDetailPage() {
                 disabled={saving}
                 className={
                   isSuspendedMember
-                    ? "whitespace-nowrap rounded-2xl border border-emerald-200 bg-emerald-50 px-4 py-2 text-sm font-semibold text-emerald-700 transition hover:bg-emerald-100 disabled:cursor-not-allowed disabled:opacity-50"
-                    : "whitespace-nowrap rounded-2xl border border-amber-200 bg-amber-50 px-4 py-2 text-sm font-semibold text-amber-700 transition hover:bg-amber-100 disabled:cursor-not-allowed disabled:opacity-50"
+                    ? 'whitespace-nowrap rounded-2xl border border-emerald-200 bg-emerald-50 px-4 py-2 text-sm font-semibold text-emerald-700 transition hover:bg-emerald-100 disabled:cursor-not-allowed disabled:opacity-50'
+                    : 'whitespace-nowrap rounded-2xl border border-amber-200 bg-amber-50 px-4 py-2 text-sm font-semibold text-amber-700 transition hover:bg-amber-100 disabled:cursor-not-allowed disabled:opacity-50'
                 }
               >
                 {saving
-                  ? "처리 중..."
+                  ? '처리 중...'
                   : isSuspendedMember
-                    ? "정지 해제"
-                    : "정지 처리"}
+                    ? '정지 해제'
+                    : '정지 처리'}
               </button>
             )}
 
@@ -405,19 +404,19 @@ export default function AdminMemberDetailPage() {
               disabled={saving || isSuspendedMember}
               className={
                 isSuspendedMember
-                  ? "whitespace-nowrap rounded-2xl border border-slate-200 bg-slate-50 px-4 py-2 text-sm font-semibold text-slate-400 disabled:cursor-not-allowed disabled:opacity-70"
-                  : member.status === "DELETED"
-                    ? "whitespace-nowrap rounded-2xl bg-slate-900 px-4 py-2 text-sm font-semibold text-white transition hover:bg-slate-800 disabled:cursor-not-allowed disabled:opacity-50"
-                    : "whitespace-nowrap rounded-2xl border border-rose-200 bg-rose-50 px-4 py-2 text-sm font-semibold text-rose-700 transition hover:bg-rose-100 disabled:cursor-not-allowed disabled:opacity-50"
+                  ? 'whitespace-nowrap rounded-2xl border border-slate-200 bg-slate-50 px-4 py-2 text-sm font-semibold text-slate-400 disabled:cursor-not-allowed disabled:opacity-70'
+                  : member.status === 'DELETED'
+                    ? 'whitespace-nowrap rounded-2xl bg-slate-900 px-4 py-2 text-sm font-semibold text-white transition hover:bg-slate-800 disabled:cursor-not-allowed disabled:opacity-50'
+                    : 'whitespace-nowrap rounded-2xl border border-rose-200 bg-rose-50 px-4 py-2 text-sm font-semibold text-rose-700 transition hover:bg-rose-100 disabled:cursor-not-allowed disabled:opacity-50'
               }
             >
               {saving
-                ? "처리 중..."
+                ? '처리 중...'
                 : isSuspendedMember
-                  ? "탈퇴 불가"
-                  : member.status === "DELETED"
-                    ? "복구 처리"
-                    : "탈퇴 처리"}
+                  ? '탈퇴 불가'
+                  : member.status === 'DELETED'
+                    ? '복구 처리'
+                    : '탈퇴 처리'}
             </button>
           </div>
         </div>
@@ -455,9 +454,9 @@ export default function AdminMemberDetailPage() {
 
               <span
                 className={[
-                  "rounded-full px-3 py-1 text-xs font-semibold",
+                  'rounded-full px-3 py-1 text-xs font-semibold',
                   getAdminMemberStatusStyle(member.status),
-                ].join(" ")}
+                ].join(' ')}
               >
                 {getAdminMemberStatusLabel(member.status)}
               </span>
@@ -484,10 +483,10 @@ export default function AdminMemberDetailPage() {
 
       <section className="rounded-3xl border border-slate-200 bg-white p-6 shadow-sm">
         <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-3">
-          <InfoCard label="이름" value={member.name || "-"} />
-          <InfoCard label="닉네임" value={member.nickname || "-"} />
-          <InfoCard label="이메일" value={member.email || "-"} />
-          <InfoCard label="전화번호" value={member.phone || "-"} />
+          <InfoCard label="이름" value={member.name || '-'} />
+          <InfoCard label="닉네임" value={member.nickname || '-'} />
+          <InfoCard label="이메일" value={member.email || '-'} />
+          <InfoCard label="전화번호" value={member.phone || '-'} />
           <InfoCard label="권한" value={member.role} />
           <InfoCard
             label="상태"
@@ -506,7 +505,7 @@ export default function AdminMemberDetailPage() {
         <div className="mt-6">
           <p className="text-xs font-medium text-slate-500">소개</p>
           <div className="mt-2 whitespace-pre-wrap rounded-2xl border border-slate-200 bg-slate-50 p-4 text-sm text-slate-700">
-            {member.bio?.trim() ? member.bio : "등록된 소개가 없습니다."}
+            {member.bio?.trim() ? member.bio : '등록된 소개가 없습니다.'}
           </div>
         </div>
       </section>
@@ -599,19 +598,19 @@ export default function AdminMemberDetailPage() {
                     </p>
 
                     <p className="mt-1 text-xs text-slate-400">
-                      {reservation.startTime.slice(0, 5)} ~{" "}
+                      {reservation.startTime.slice(0, 5)} ~{' '}
                       {reservation.endTime.slice(0, 5)}
                     </p>
 
                     <span
                       className={[
-                        "mt-2 inline-flex rounded-full px-2 py-0.5 text-[11px] font-semibold",
-                        reservation.status === "ACTIVE"
-                          ? "border border-emerald-200 bg-emerald-50 text-emerald-700"
-                          : "border border-slate-200 bg-white text-slate-500",
-                      ].join(" ")}
+                        'mt-2 inline-flex rounded-full px-2 py-0.5 text-[11px] font-semibold',
+                        reservation.status === 'ACTIVE'
+                          ? 'border border-emerald-200 bg-emerald-50 text-emerald-700'
+                          : 'border border-slate-200 bg-white text-slate-500',
+                      ].join(' ')}
                     >
-                      {reservation.status === "ACTIVE" ? "예약중" : "취소됨"}
+                      {reservation.status === 'ACTIVE' ? '예약중' : '취소됨'}
                     </span>
                   </div>
                 ))
@@ -636,7 +635,7 @@ export default function AdminMemberDetailPage() {
             disabled={saving}
             className="rounded-2xl bg-slate-900 px-5 py-2.5 text-sm font-semibold text-white transition hover:bg-slate-800 disabled:cursor-not-allowed disabled:opacity-50"
           >
-            {saving ? "저장 중..." : "메모 저장"}
+            {saving ? '저장 중...' : '메모 저장'}
           </button>
         </div>
 
@@ -659,20 +658,20 @@ export default function AdminMemberDetailPage() {
           <div className="mb-4 flex flex-wrap items-center justify-between gap-3">
             <div className="flex flex-wrap gap-2">
               {[
-                { key: "ALL", label: "전체" },
-                { key: "STATUS", label: "상태 변경" },
-                { key: "ROLE", label: "권한 변경" },
-                { key: "MEMO", label: "메모 수정" },
+                { key: 'ALL', label: '전체' },
+                { key: 'STATUS', label: '상태 변경' },
+                { key: 'ROLE', label: '권한 변경' },
+                { key: 'MEMO', label: '메모 수정' },
               ].map((item) => (
                 <button
                   key={item.key}
                   onClick={() => setActionFilter(item.key as any)}
                   className={[
-                    "rounded-full px-3 py-1 text-xs font-semibold",
+                    'rounded-full px-3 py-1 text-xs font-semibold',
                     actionFilter === item.key
-                      ? "bg-slate-900 text-white"
-                      : "border border-slate-200 bg-white text-slate-500 hover:bg-slate-50",
-                  ].join(" ")}
+                      ? 'bg-slate-900 text-white'
+                      : 'border border-slate-200 bg-white text-slate-500 hover:bg-slate-50',
+                  ].join(' ')}
                 >
                   {item.label}
                 </button>
@@ -711,7 +710,7 @@ export default function AdminMemberDetailPage() {
                 </div>
 
                 <p className="mt-2 text-xs text-slate-400">
-                  처리자: {log.adminNickname} ·{" "}
+                  처리자: {log.adminNickname} ·{' '}
                   {formatAdminMemberDate(log.createdAt)}
                 </p>
               </div>
@@ -730,6 +729,5 @@ export default function AdminMemberDetailPage() {
         onCancel={closeConfirm}
       />
     </div>
-    
   )
 }

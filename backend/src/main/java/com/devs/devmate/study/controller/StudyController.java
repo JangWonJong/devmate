@@ -126,4 +126,13 @@ public class StudyController {
                 studyService.updateNotice(memberId, studyId, request.notice())
         );
     }
+
+    @PatchMapping("/{studyId}/place")
+    public ApiResponse<Long> updatePlace(
+            @PathVariable Long studyId,
+            @RequestBody StudyPlaceUpdateRequest request
+    ) {
+        Long memberId = SecurityUtil.currentMemberId();
+        return ApiResponse.ok(studyService.updatePlace(memberId, studyId, request));
+    }
 }

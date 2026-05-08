@@ -38,6 +38,17 @@ public class Study extends BaseEntity {
     @Column(length = 1000)
     private String notice;
 
+    @Column(length = 100)
+    private String placeName;
+
+    @Column(length = 255)
+    private String address;
+
+    private Double latitude;
+
+    private Double longitude;
+
+
     public boolean isRecruiting() {
         return this.status == Status.RECRUITING;
     }
@@ -67,5 +78,12 @@ public class Study extends BaseEntity {
 
     public void updateNotice(String notice) {
         this.notice = notice;
+    }
+
+    public void updatePlace(String placeName, String address, Double latitude, Double longitude) {
+        this.placeName = placeName;
+        this.address = address;
+        this.latitude = latitude;
+        this.longitude = longitude;
     }
 }
