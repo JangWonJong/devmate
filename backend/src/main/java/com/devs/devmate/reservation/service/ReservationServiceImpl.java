@@ -245,6 +245,7 @@ public class ReservationServiceImpl implements ReservationService{
                             .startTime(req.startTime())
                             .endTime(req.endTime())
                             .title(req.title().trim())
+                            .placeDetail(req.placeDetail() == null ? null : req.placeDetail().trim())
                             .status(Reservation.Status.ACTIVE)
                             .build()
             );
@@ -307,6 +308,7 @@ public class ReservationServiceImpl implements ReservationService{
                             .startTime(req.startTime())
                             .endTime(req.endTime())
                             .title(title)
+                            .placeDetail(req.placeDetail() == null ? null : req.placeDetail().trim())
                             .status(Reservation.Status.ACTIVE)
                             .build()
             );

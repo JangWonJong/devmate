@@ -11,6 +11,7 @@ public record ReservationCreateRequest(
         @NotNull LocalDate date,
         @NotNull LocalTime startTime,
         @NotNull LocalTime endTime,
-        @NotBlank String title
+        @NotBlank String title,
+        String placeDetail
         ) {
 }

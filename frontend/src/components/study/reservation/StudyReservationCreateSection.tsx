@@ -1,6 +1,7 @@
 import { CalendarDays, Clock3 } from 'lucide-react'
 import type { ReservationSpaceResponse } from '../../../api/reservation/reservationSpaces'
 import type { AvailabilityResponse } from '../../../api/reservation/reservations'
+import type { StudyResponse } from '../../../api/study/study'
 import {
   addHours,
   canSelectDuration,
@@ -59,9 +60,11 @@ function SlotButton({
 }
 
 type StudyReservationCreateSectionProps = {
+  study: StudyResponse
   date: string
   reservationSpaceId: number | null
   reservationSpaces: ReservationSpaceResponse[]
+  placeDetail: string
   durationHours: number
   selectedTime: string | null
   saving: boolean
@@ -69,15 +72,18 @@ type StudyReservationCreateSectionProps = {
   availabilityLoading: boolean
   onChangeDate: (value: string) => void
   onChangeReservationSpaceId: (reservationSpaceId: number | null) => void
+  onChangePlaceDetail: (value: string) => void
   onChangeDurationHours: (hours: number) => void
   onChangeSelectedTime: (time: string | null) => void
   onCreate: () => void
 }
 
 export default function StudyReservationCreateSection({
+  study,
   date,
   reservationSpaceId,
   reservationSpaces,
+  placeDetail,
   durationHours,
   selectedTime,
   saving,
@@ -85,6 +91,7 @@ export default function StudyReservationCreateSection({
   availabilityLoading,
   onChangeDate,
   onChangeReservationSpaceId,
+  onChangePlaceDetail,
   onChangeDurationHours,
   onChangeSelectedTime,
   onCreate,
@@ -98,7 +105,7 @@ export default function StudyReservationCreateSection({
         </h2>
       </div>
 
-      <div className="grid gap-4 md:grid-cols-3">
+      <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-4">
         <div>
           <div className="mb-2 text-sm font-medium text-slate-500">날짜</div>
           <input
@@ -109,28 +116,56 @@ export default function StudyReservationCreateSection({
           />
         </div>
 
-        <div>
-          <div className="mb-2 text-sm font-medium text-slate-500">
-            예약 공간
+        {study.placeName?.trim() ? (
+          <div>
+            <div className="mb-2 text-sm font-medium text-slate-500">
+              예약 장소
+            </div>
+
+            <div className="flex h-12 w-full items-center rounded-2xl border border-slate-200 bg-slate-50 px-4 text-sm font-semibold text-slate-800">
+              {study.placeName}
+            </div>
           </div>
-          <select
-            value={reservationSpaceId?.toString() ?? ''}
-            onChange={(e) =>
-              onChangeReservationSpaceId(
-                e.target.value ? Number(e.target.value) : null
-              )
-            }
-            className="h-12 w-full rounded-2xl border border-slate-300 bg-white px-4 text-sm text-slate-700 outline-none transition focus:border-indigo-400 focus:ring-4 focus:ring-indigo-100"
-          >
-            <option value="" disabled>
-              공간 선택
-            </option>
-            {reservationSpaces.map((space) => (
-              <option key={space.id} value={space.id}>
-                {space.name}
+        ) : (
+          <div>
+            <div className="mb-2 text-sm font-medium text-slate-500">
+              예약 공간
+            </div>
+
+            <select
+              value={reservationSpaceId?.toString() ?? ''}
+              onChange={(e) =>
+                onChangeReservationSpaceId(
+                  e.target.value ? Number(e.target.value) : null
+                )
+              }
+              className="h-12 w-full rounded-2xl border border-slate-300 bg-white px-4 text-sm text-slate-700 outline-none transition focus:border-indigo-400 focus:ring-4 focus:ring-indigo-100"
+            >
+              <option value="" disabled>
+                공간 선택
               </option>
-            ))}
-          </select>
+
+              {reservationSpaces.map((space) => (
+                <option key={space.id} value={space.id}>
+                  {space.name}
+                </option>
+              ))}
+            </select>
+          </div>
+        )}
+
+        <div className="space-y-2">
+          <label className="text-sm font-medium text-slate-600">
+            상세 위치
+          </label>
+
+          <input
+            type="text"
+            value={placeDetail}
+            onChange={(e) => onChangePlaceDetail(e.target.value)}
+            placeholder="예: 2층 창가 / 예약자명 WJ"
+            className="h-12 w-full rounded-2xl border border-slate-300 bg-white px-4 text-sm text-slate-700 outline-none transition focus:border-indigo-400 focus:ring-4 focus:ring-indigo-100"
+          />
         </div>
 
         <div>
@@ -161,7 +196,7 @@ export default function StudyReservationCreateSection({
           </div>
         ) : !availability ? (
           <div className="col-span-full rounded-2xl border border-slate-200 bg-slate-50 px-4 py-4 text-sm text-slate-500">
-            예약 공간과 날짜를 선택하면 예약 가능 시간을 확인할 수 있어요.
+            예약 장소와 날짜를 선택하면 예약 가능 시간을 확인할 수 있어요.
           </div>
         ) : (
           availability.slots.map((slot) => {

@@ -9,6 +9,7 @@ public record StudyReservationCreateRequest(
         @NotNull Long reservationSpaceId,
         @NotNull LocalDate date,
         @NotNull LocalTime startTime,
-        @NotNull LocalTime endTime
+        @NotNull LocalTime endTime,
+        String placeDetail
         ) {
 }

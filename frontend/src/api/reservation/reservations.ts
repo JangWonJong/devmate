@@ -7,6 +7,7 @@ export type ReservationResponse = {
   reservationSpaceId: number
   reservationSpaceName: string
   reservationSpaceAddress: string | null
+  placeDetail: string | null
   memberId: number
   memberNickname: string
   date: string
@@ -26,6 +27,7 @@ export type ReservationCreateRequest = {
   startTime: string
   endTime: string
   title: string
+  placeDetail?: string
 }
 
 export type ReservationCreateResponse = {
@@ -37,6 +39,7 @@ export type StudyReservationCreateRequest = {
   date: string
   startTime: string
   endTime: string
+  placeDetail?: string
 }
 
 export type AvailabilitySlot = {

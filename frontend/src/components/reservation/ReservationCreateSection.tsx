@@ -109,7 +109,7 @@ export default function ReservationCreateSection({
             예약 현황
           </h2>
           <p className="text-sm text-slate-500">
-            현재 예약 공간 현황을 확인할 수 있어요.
+            현재 예약 현황을 확인할 수 있어요.
           </p>
         </div>
 
@@ -152,7 +152,7 @@ export default function ReservationCreateSection({
 
           <div>
             <div className="mb-2 text-sm font-medium text-slate-500">
-              예약 공간
+              예약 장소
             </div>
             <select
               value={reservationSpaceId?.toString() ?? ''}
@@ -214,7 +214,7 @@ export default function ReservationCreateSection({
             </div>
           ) : !availability ? (
             <div className="col-span-full rounded-2xl border border-slate-200 bg-slate-50 px-4 py-4 text-sm text-slate-500">
-              예약 공간과 날짜를 선택하면 예약 가능 시간을 확인할 수 있어요.
+              예약 장소와 날짜를 선택하면 예약 가능 시간을 확인할 수 있어요.
             </div>
           ) : (
             availability.slots.map((slot) => {

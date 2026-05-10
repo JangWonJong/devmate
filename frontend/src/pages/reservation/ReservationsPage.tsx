@@ -220,7 +220,7 @@ export function ReservationsPage() {
     }
 
     if (!reservationSpaceId) {
-      setErr('예약 공간을 선택하세요')
+      setErr('예약 장소를 선택하세요')
       return
     }
 
@@ -387,7 +387,7 @@ export function ReservationsPage() {
           return
         }
 
-        setErr(apiErrorMessage(e, '예약 공간 목록 조회 실패'))
+        setErr(apiErrorMessage(e, '예약 장소 목록 조회 실패'))
       }
     })()
   }, [])

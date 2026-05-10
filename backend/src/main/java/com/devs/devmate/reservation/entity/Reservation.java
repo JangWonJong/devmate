@@ -40,11 +40,7 @@ public class Reservation extends BaseEntity {
     @JoinColumn(name = "reservation_space_id", nullable = false)
     private ReservationSpace reservationSpace;
 
-    /*@ManyToOne(fetch = FetchType.LAZY, optional = false)
-    @JoinColumn(name = "room_id", nullable = false)
-    private Room room;*/
-
-    @ManyToOne(fetch = FetchType.LAZY, optional = false)
+    @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "study_id")
     private Study study;
 
@@ -59,6 +55,9 @@ public class Reservation extends BaseEntity {
 
     @Column(nullable = false, length = 150)
     private String title;
+
+    @Column(length = 150)
+    private String placeDetail;
 
     @Enumerated(EnumType.STRING)
     @Column(nullable = false)

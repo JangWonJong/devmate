@@ -33,6 +33,7 @@ export function StudyReservationPage() {
     ReservationSpaceResponse[]
   >([])
   const [reservationSpaceId, setReservationSpaceId] = useState<number | null>(null)
+  const [placeDetail, setPlaceDetail] = useState('')
   const [date, setDate] = useState(today())
   const [durationHours, setDurationHours] = useState(1)
   const [selectedTime, setSelectedTime] = useState<string | null>(null)
@@ -101,7 +102,7 @@ export function StudyReservationPage() {
     }
 
     if (!reservationSpaceId) {
-      setErr('예약 공간을 선택하세요.')
+      setErr('예약 장소를 선택하세요.')
       return
     }
 
@@ -119,6 +120,7 @@ export function StudyReservationPage() {
         date,
         startTime: selectedTime,
         endTime: addHours(selectedTime, durationHours),
+        placeDetail,
       })
 
       appToast.success('스터디 예약이 완료되었어요.')
@@ -257,9 +259,11 @@ export function StudyReservationPage() {
             <StudyInfoCard study={study} />
 
             <StudyReservationCreateSection
+              study={study}
               date={date}
               reservationSpaceId={reservationSpaceId}
               reservationSpaces={reservationSpaces}
+              placeDetail={placeDetail}
               durationHours={durationHours}
               selectedTime={selectedTime}
               saving={saving}
@@ -267,6 +271,7 @@ export function StudyReservationPage() {
               availabilityLoading={availabilityLoading}
               onChangeDate={setDate}
               onChangeReservationSpaceId={setReservationSpaceId}
+              onChangePlaceDetail={setPlaceDetail}
               onChangeDurationHours={setDurationHours}
               onChangeSelectedTime={setSelectedTime}
               onCreate={onCreate}
