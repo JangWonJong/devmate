@@ -2,14 +2,16 @@ package com.devs.devmate.reservation.dto;
 
 
 import com.devs.devmate.reservation.entity.Reservation;
+import com.devs.devmate.reservation.entity.ReservationSpace;
 
 import java.time.LocalDate;
 import java.time.LocalTime;
 
 public record ReservationResponse(
         Long id,
-        Long roomId,
-        String roomName,
+        Long reservationSpaceId,
+        String reservationSpaceName,
+        String reservationSpaceAddress,
         Long memberId,
         String memberNickname,
         LocalDate date,
@@ -18,7 +20,9 @@ public record ReservationResponse(
         String title,
         String status,
         Long studyId,
-        Long postId
+        Long postId,
+        Double latitude,
+        Double longitude
 ) {
     public static ReservationResponse from(Reservation reservation) {
         String memberNickname = reservation.getMember().isDeleted()
@@ -30,11 +34,13 @@ public record ReservationResponse(
         Long postId = reservation.getStudy() == null
                 ? null
                 : reservation.getStudy().getPost().getId();
+        ReservationSpace space = reservation.getReservationSpace();
 
         return new ReservationResponse(
                 reservation.getId(),
-                reservation.getRoom().getId(),
-                reservation.getRoom().getName(),
+                space.getId(),
+                space.getName(),
+                space.getAddress(),
                 reservation.getMember().getId(),
                 memberNickname,
                 reservation.getDate(),
@@ -43,7 +49,9 @@ public record ReservationResponse(
                 reservation.getTitle(),
                 reservation.getStatus().name(),
                 studyId,
-                postId
+                postId,
+                space.getLatitude(),
+                space.getLongitude()
         );
     }
 }

@@ -19,18 +19,19 @@ public interface ReservationRepository extends JpaRepository<Reservation, Long> 
 
     @Query("""
         select count(r) > 0 from Reservation r
-            where r.room.id = :roomId
+            where r.reservationSpace.id = :reservationSpaceId
                 and r.date = :date
                 and r.status = :active
                 and r.startTime < :endTime
                 and r.endTime > :startTime
     """)
-    boolean existsRoomOverlap(@Param("roomId") Long roomId,
-                          @Param("date") LocalDate date,
-                          @Param("startTime")LocalTime startTime,
-                          @Param("endTime") LocalTime endTime,
-                          @Param("active")Status active);
-
+    boolean existsReservationSpaceOverlap(
+            @Param("reservationSpaceId") Long reservationSpaceId,
+            @Param("date") LocalDate date,
+            @Param("startTime") LocalTime startTime,
+            @Param("endTime") LocalTime endTime,
+            @Param("active") Status active
+    );
 
     @Query("""
          select count(r) > 0 from Reservation r
@@ -43,12 +44,12 @@ public interface ReservationRepository extends JpaRepository<Reservation, Long> 
     boolean existsMemberOverlap(
             @Param("memberId") Long memberId,
             @Param("date") LocalDate date,
-            @Param("startTime")LocalTime startTime,
+            @Param("startTime") LocalTime startTime,
             @Param("endTime") LocalTime endTime,
-            @Param("active")Status active);
+            @Param("active") Status active
+    );
 
-
-    @EntityGraph(attributePaths = {"room", "member", "study"})
+    @EntityGraph(attributePaths = {"reservationSpace", "member", "study"})
     @Query(value = """
         select distinct r
         from Reservation r
@@ -62,7 +63,7 @@ public interface ReservationRepository extends JpaRepository<Reservation, Long> 
                 or sm.id is not null
           )
     """,
-    countQuery = """
+            countQuery = """
         select count(distinct r.id)
         from Reservation r
         left join StudyMember sm
@@ -74,16 +75,14 @@ public interface ReservationRepository extends JpaRepository<Reservation, Long> 
                 r.member.id = :memberId
                 or sm.id is not null
           )
-    """
-    )
+    """)
     Page<Reservation> findVisibleReservationByMemberIdAndStatus(
             @Param("memberId") Long memberId,
             @Param("status") Status status,
-            Pageable pageable);
+            Pageable pageable
+    );
 
-
-    // 개인 및 내가 참여한 예약
-    @EntityGraph(attributePaths = {"room", "member", "study"})
+    @EntityGraph(attributePaths = {"reservationSpace", "member", "study"})
     @Query(value = """
         select distinct r
         from Reservation r
@@ -98,7 +97,7 @@ public interface ReservationRepository extends JpaRepository<Reservation, Long> 
                 or sm.id is not null
           )
     """,
-    countQuery = """
+            countQuery = """
         select count(distinct r.id)
         from Reservation r
         left join StudyMember sm
@@ -111,57 +110,93 @@ public interface ReservationRepository extends JpaRepository<Reservation, Long> 
                 r.member.id = :memberId
                 or sm.id is not null
           )
-    """
-    )
+    """)
     Page<Reservation> findVisibleReservationByMemberIdAndDateAndStatus(
             @Param("memberId") Long memberId,
             @Param("date") LocalDate date,
             @Param("status") Status status,
             Pageable pageable
     );
-    // 개인예약만
+
     List<Reservation> findByMemberIdAndDateAndStatus(
             Long memberId,
             LocalDate date,
             Status status
     );
 
-    @EntityGraph(attributePaths = {"room", "member"})
-    Page<Reservation> findByRoomIdAndDateAndStatus(Long roomId, LocalDate date, Status status, Pageable pageable);
+    @EntityGraph(attributePaths = {"reservationSpace", "member"})
+    Page<Reservation> findByReservationSpaceIdAndDateAndStatus(
+            Long reservationSpaceId,
+            LocalDate date,
+            Status status,
+            Pageable pageable
+    );
 
-    @EntityGraph(attributePaths = {"room", "member"})
-    Page<Reservation> findByDateAndStatus(LocalDate date, Status status, Pageable pageable);
+    @EntityGraph(attributePaths = {"reservationSpace", "member"})
+    Page<Reservation> findByDateAndStatus(
+            LocalDate date,
+            Status status,
+            Pageable pageable
+    );
 
-    @EntityGraph(attributePaths = {"room", "member", "study"})
-    Page<Reservation> findPageByStudyIdAndStatus(Long studyId, Status status, Pageable pageable);
+    @EntityGraph(attributePaths = {"reservationSpace", "member", "study"})
+    Page<Reservation> findPageByStudyIdAndStatus(
+            Long studyId,
+            Status status,
+            Pageable pageable
+    );
 
-    List<Reservation> findAllByStudyIdAndStatus(Long studyId, Status status);
+    List<Reservation> findAllByStudyIdAndStatus(
+            Long studyId,
+            Status status
+    );
 
-    List<Reservation> findByRoomIdAndDateAndStatus(Long roomId, LocalDate date, Status status);
+    List<Reservation> findByReservationSpaceIdAndDateAndStatus(
+            Long reservationSpaceId,
+            LocalDate date,
+            Status status
+    );
 
-    List<Reservation> findByMemberIdAndStatus(Long memberId, Status status);
+    List<Reservation> findByMemberIdAndStatus(
+            Long memberId,
+            Status status
+    );
 
-    List<Reservation> findByStudyIdAndMemberIdAndStatus(Long studyId, Long MemberId, Status status);
+    List<Reservation> findByStudyIdAndMemberIdAndStatus(
+            Long studyId,
+            Long memberId,
+            Status status
+    );
 
-    long countByMemberIdAndDateAndStatus(Long memberId, LocalDate date, Status status);
+    long countByMemberIdAndDateAndStatus(
+            Long memberId,
+            LocalDate date,
+            Status status
+    );
 
     void deleteAllByStudyId(Long studyId);
 
     @Modifying
     @Query("""
         delete from Reservation r
-                where r.status = :status
-                        and r.date < :cutoffDate
-        """)
+            where r.status = :status
+              and r.date < :cutoffDate
+    """)
     int deleteByStatusAndDateBefore(
             @Param("status") Status status,
             @Param("cutoffDate") LocalDate cutoffDate
-        );
+    );
 
-    void deleteByStatusAndUpdatedAtBefore(Status status, LocalDateTime cutoff);
+    void deleteByStatusAndUpdatedAtBefore(
+            Status status,
+            LocalDateTime cutoff
+    );
 
     long countByMemberId(Long memberId);
 
-    @EntityGraph(attributePaths = {"room"})
-    List<Reservation> findAllByMemberIdOrderByCreatedAtDesc(Long memberId, Pageable pageable);
+    @EntityGraph(attributePaths = {"reservationSpace"})
+    List<Reservation> findAllByMemberIdOrderByCreatedAtDesc(
+            Long memberId,
+            Pageable pageable
+    );
 }

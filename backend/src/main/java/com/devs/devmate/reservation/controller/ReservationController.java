@@ -37,14 +37,14 @@ public class ReservationController {
 
     @GetMapping
     public ApiResponse<Page<ReservationResponse>> list(
-            @RequestParam(required = false) Long roomId,
+            @RequestParam(required = false) Long reservationSpaceId,
             @RequestParam LocalDate date,
             Pageable pageable
     ) {
-        if (roomId == null) {
+        if (reservationSpaceId == null) {
             return ApiResponse.ok(reservationService.listReservationsByDate(date, pageable)); // 네가 만든 메소드명에 맞춰 수정
         }
-        return ApiResponse.ok(reservationService.listRoomReservations(roomId, date, pageable));
+        return ApiResponse.ok(reservationService.listReservationSpaceReservations(reservationSpaceId, date, pageable));
     }
 
 
@@ -69,13 +69,13 @@ public class ReservationController {
 
     @GetMapping(value = "/subscribe", produces = MediaType.TEXT_EVENT_STREAM_VALUE)
     public SseEmitter subscribe(
-            @RequestParam Long roomId,
+            @RequestParam Long reservationSpaceId,
             @RequestParam LocalDate date,
             @RequestParam String token
     ) {
         JwtPrincipal principal = jwtProvider.parseAccessToken(token);
         Long memberId = principal.memberId();
-        return reservationSseService.subscribe(memberId, roomId, date);
+        return reservationSseService.subscribe(memberId, reservationSpaceId, date);
     }
 
 }

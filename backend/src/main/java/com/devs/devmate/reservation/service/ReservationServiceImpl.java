@@ -8,10 +8,10 @@ import com.devs.devmate.member.repository.MemberRepository;
 import com.devs.devmate.notification.service.NotificationService;
 import com.devs.devmate.reservation.dto.*;
 import com.devs.devmate.reservation.entity.Reservation;
-import com.devs.devmate.reservation.entity.Room;
+import com.devs.devmate.reservation.entity.ReservationSpace;
 import com.devs.devmate.reservation.repository.ReservationLockRepository;
 import com.devs.devmate.reservation.repository.ReservationRepository;
-import com.devs.devmate.reservation.repository.RoomRepository;
+import com.devs.devmate.reservation.repository.ReservationSpaceRepository;
 import com.devs.devmate.study.entity.Study;
 import com.devs.devmate.study.entity.StudyMember;
 import com.devs.devmate.study.repository.StudyMemberRepository;
@@ -39,7 +39,7 @@ import java.util.function.Supplier;
 public class ReservationServiceImpl implements ReservationService{
 
     private final ReservationRepository reservationRepository;
-    private final RoomRepository roomRepository;
+    private final ReservationSpaceRepository reservationSpaceRepository;
     private final MemberRepository memberRepository;
     private final StudyRepository studyRepository;
     private final StudyMemberRepository studyMemberRepository;
@@ -48,9 +48,9 @@ public class ReservationServiceImpl implements ReservationService{
     private final ReservationLockRepository lockRepository;
     private final ReservationSseService reservationSseService;
 
-    private Room findRoom(Long roomId) {
-        return roomRepository.findById(roomId)
-                .orElseThrow(() -> new BusinessException(ErrorCode.ROOM_NOT_FOUND));
+    private ReservationSpace findReservationSpace(Long reservationSpaceId) {
+        return reservationSpaceRepository.findById(reservationSpaceId)
+                .orElseThrow(() -> new BusinessException(ErrorCode.RESERVATION_SPACE_NOT_FOUND));
     }
 
     private void validateReservationTime(LocalTime startTime, LocalTime endTime) {
@@ -68,9 +68,9 @@ public class ReservationServiceImpl implements ReservationService{
         }
     }
 
-    private void validateReservationOverlap(Long roomId, LocalDate date, LocalTime startTime, LocalTime endTime) {
-        boolean overlap = reservationRepository.existsRoomOverlap(
-                roomId, date, startTime, endTime,
+    private void validateReservationOverlap(Long reservationSpaceId, LocalDate date, LocalTime startTime, LocalTime endTime) {
+        boolean overlap = reservationRepository.existsReservationSpaceOverlap(
+                reservationSpaceId, date, startTime, endTime,
                 Reservation.Status.ACTIVE
         );
         if (overlap) {
@@ -176,8 +176,8 @@ public class ReservationServiceImpl implements ReservationService{
         }
     }
 
-    private String createLockKey(Long roomId, LocalDate date) {
-        return "reservation:room:" + roomId + ":date:" + date;
+    private String createLockKey(Long reservationSpaceId, LocalDate date) {
+        return "reservation:space:" + reservationSpaceId + ":date:" + date;
     }
 
     private record TimeSlot(LocalTime startTime, LocalTime endTime){}
@@ -197,18 +197,18 @@ public class ReservationServiceImpl implements ReservationService{
         return slots;
     }
 
-    private void sendReservationUpdateAfterCommit(Long roomId, LocalDate date) {
+    private void sendReservationUpdateAfterCommit(Long reservationSpaceId, LocalDate date) {
         if (TransactionSynchronizationManager.isActualTransactionActive()) {
             TransactionSynchronizationManager.registerSynchronization(new TransactionSynchronization() {
                 @Override
                 public void afterCommit() {
-                    reservationSseService.send(roomId, date);
+                    reservationSseService.send(reservationSpaceId, date);
                 }
             });
             return;
 
         }
-        reservationSseService.send(roomId, date);
+        reservationSseService.send(reservationSpaceId, date);
     }
 
     @Override
@@ -218,7 +218,7 @@ public class ReservationServiceImpl implements ReservationService{
         validateNotPastReservation(req.date(), req.startTime());
         validateDailyCreationLimit(memberId, req.date(), req.startTime(), req.endTime());
         validateMemberOverlap(memberId, req.date(), req.startTime(), req.endTime());
-        Room room = findRoom(req.roomId());
+        ReservationSpace reservationSpace = findReservationSpace(req.reservationSpaceId());
 
         Member member = memberRepository.findById(memberId)
                 .orElseThrow(() -> new BusinessException(ErrorCode.MEMBER_NOT_FOUND));
@@ -231,16 +231,16 @@ public class ReservationServiceImpl implements ReservationService{
             throw new BusinessException(ErrorCode.DELETED_MEMBER);
         }
 
-        String lockKey = createLockKey(req.roomId(), req.date());
+        String lockKey = createLockKey(req.reservationSpaceId(), req.date());
 
         return executeWithLock(lockKey, () -> {
             validateReservationOverlap(
-                    room.getId(), req.date(), req.startTime(), req.endTime());
+                    reservationSpace.getId(), req.date(), req.startTime(), req.endTime());
 
             Reservation saved = reservationRepository.save(
                     Reservation.builder()
                             .member(member)
-                            .room(room)
+                            .reservationSpace(reservationSpace)
                             .date(req.date())
                             .startTime(req.startTime())
                             .endTime(req.endTime())
@@ -249,7 +249,7 @@ public class ReservationServiceImpl implements ReservationService{
                             .build()
             );
 
-            sendReservationUpdateAfterCommit(req.roomId(), req.date());
+            sendReservationUpdateAfterCommit(req.reservationSpaceId(), req.date());
 
             return new ReservationCreateResponse(saved.getId());
         });
@@ -278,7 +278,7 @@ public class ReservationServiceImpl implements ReservationService{
                 studyId, memberId, req.date(), req.startTime(), req.endTime()
         );
 
-        Room room = findRoom(req.roomId());
+        ReservationSpace reservationSpace = findReservationSpace(req.reservationSpaceId());
 
         Member member = memberRepository.findById(memberId)
                 .orElseThrow(() -> new BusinessException(ErrorCode.MEMBER_NOT_FOUND));
@@ -287,12 +287,12 @@ public class ReservationServiceImpl implements ReservationService{
             throw new BusinessException(ErrorCode.DELETED_MEMBER);
         }
 
-        String lockKey = createLockKey(req.roomId(), req.date());
+        String lockKey = createLockKey(req.reservationSpaceId(), req.date());
         String title = "[스터디] " + study.getPost().getTitle();
 
         return executeWithLock(lockKey, () -> {
             validateReservationOverlap(
-                    room.getId(),
+                    reservationSpace.getId(),
                     req.date(),
                     req.startTime(),
                     req.endTime()
@@ -301,7 +301,7 @@ public class ReservationServiceImpl implements ReservationService{
             Reservation saved = reservationRepository.save(
                     Reservation.builder()
                             .member(member)
-                            .room(room)
+                            .reservationSpace(reservationSpace)
                             .study(study)
                             .date(req.date())
                             .startTime(req.startTime())
@@ -324,7 +324,7 @@ public class ReservationServiceImpl implements ReservationService{
                 );
             }
 
-            sendReservationUpdateAfterCommit(req.roomId(), req.date());
+            sendReservationUpdateAfterCommit(req.reservationSpaceId(), req.date());
 
             return new ReservationCreateResponse(saved.getId());
         });
@@ -348,13 +348,13 @@ public class ReservationServiceImpl implements ReservationService{
 
     @Override
     @Transactional(readOnly = true)
-    public Page<ReservationResponse> listRoomReservations(Long roomId, LocalDate date, Pageable pageable) {
+    public Page<ReservationResponse> listReservationSpaceReservations(Long reservationSpaceId, LocalDate date, Pageable pageable) {
 
-        roomRepository.findById(roomId)
-                .orElseThrow(() -> new BusinessException(ErrorCode.ROOM_NOT_FOUND));
+        reservationSpaceRepository.findById(reservationSpaceId)
+                .orElseThrow(() -> new BusinessException(ErrorCode.RESERVATION_SPACE_NOT_FOUND));
 
         return reservationRepository
-                .findByRoomIdAndDateAndStatus(roomId, date, Reservation.Status.ACTIVE, pageable)
+                .findByReservationSpaceIdAndDateAndStatus(reservationSpaceId, date, Reservation.Status.ACTIVE, pageable)
                 .map(ReservationResponse::from);
     }
 
@@ -379,16 +379,16 @@ public class ReservationServiceImpl implements ReservationService{
 
         reservation.cancel();
 
-        sendReservationUpdateAfterCommit(reservation.getRoom().getId(), reservation.getDate());
+        sendReservationUpdateAfterCommit(reservation.getReservationSpace().getId(), reservation.getDate());
     }
 
     @Override
-    public AvailabilityResponse getAvailability(Long roomId, Long memberId, LocalDate date) {
-        Room room = roomRepository.findById(roomId)
-                .orElseThrow(() -> new BusinessException(ErrorCode.ROOM_NOT_FOUND));
+    public AvailabilityResponse getAvailability(Long reservationSpaceId, Long memberId, LocalDate date) {
+        ReservationSpace reservationSpace = reservationSpaceRepository.findById(reservationSpaceId)
+                .orElseThrow(() -> new BusinessException(ErrorCode.RESERVATION_SPACE_NOT_FOUND));
 
-        List<Reservation> roomReservations = reservationRepository.findByRoomIdAndDateAndStatus(
-                room.getId(),
+        List<Reservation> spaceReservations = reservationRepository.findByReservationSpaceIdAndDateAndStatus(
+                reservationSpace.getId(),
                 date,
                 Reservation.Status.ACTIVE
         );
@@ -405,7 +405,7 @@ public class ReservationServiceImpl implements ReservationService{
                             date,
                             slot.startTime(),
                             slot.endTime(),
-                            roomReservations,
+                            spaceReservations,
                             myReservations
                     );
 
@@ -418,7 +418,7 @@ public class ReservationServiceImpl implements ReservationService{
                 })
                 .toList();
 
-        return new AvailabilityResponse(room.getId(), date, slots);
+        return new AvailabilityResponse(reservationSpace.getId(), date, slots);
     }
 
     @Override

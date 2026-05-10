@@ -17,14 +17,14 @@ public class ReservationSseServiceImpl implements ReservationSseService{
 
     private static final Long TIMEOUT = 60L * 60 * 1000;
 
-    private String key(Long roomId, LocalDate date) {
-        return "room:" + roomId + ":date:" + date;
+    private String key(Long reservationSpaceId, LocalDate date) {
+        return "reservation:space:" + reservationSpaceId + ":date:" + date;
     }
 
     @Override
-    public SseEmitter subscribe(Long memberId, Long roomId, LocalDate date) {
+    public SseEmitter subscribe(Long memberId, Long reservationSpaceId, LocalDate date) {
 
-        String key = key(roomId, date);
+        String key = key(reservationSpaceId, date);
 
         SseEmitter emitter = new SseEmitter(TIMEOUT);
 
@@ -45,8 +45,8 @@ public class ReservationSseServiceImpl implements ReservationSseService{
     }
 
     @Override
-    public void send(Long roomId, LocalDate date) {
-        String key = key(roomId, date);
+    public void send(Long reservationSpaceId, LocalDate date) {
+        String key = key(reservationSpaceId, date);
 
         List<SseEmitter> list = emitters.get(key);
         if (list == null) return;

@@ -16,7 +16,7 @@ public interface ReservationService {
 
     Page<ReservationResponse> listMyReservationsByDate(Long memberId, LocalDate date, Pageable pageable);
 
-    Page<ReservationResponse> listRoomReservations(Long roomId, LocalDate date, Pageable pageable);
+    Page<ReservationResponse> listReservationSpaceReservations(Long reservationSpaceId, LocalDate date, Pageable pageable);
 
     Page<ReservationResponse> listReservationsByDate(LocalDate date, Pageable pageable);
 
@@ -24,6 +24,6 @@ public interface ReservationService {
 
     void cancel(Long memberId, Long reservationId);
 
-    AvailabilityResponse getAvailability(Long roomId, Long memberId, LocalDate date);
+    AvailabilityResponse getAvailability(Long reservationSpaceId, Long memberId, LocalDate date);
 
 }

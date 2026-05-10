@@ -47,8 +47,9 @@ public enum ErrorCode {
     FILE_SIZE_EXCEEDED(HttpStatus.BAD_REQUEST, "POST_400_2", "파일 용량이 너무 큽니다."),
     INVALID_POST_TYPE(HttpStatus.BAD_REQUEST, "POST_400_3", "게시글 타입을 찾을 수 없습니다."),
     FILE_DELETE_FAILED(HttpStatus.INTERNAL_SERVER_ERROR, "POST_500_2", "파일 삭제에 실패했습니다."),
-    // ROOM
-    ROOM_NOT_FOUND(HttpStatus.NOT_FOUND, "ROOM_404", "스터디룸을 찾을 수 없습니다."),
+
+    // RESERVATION_SPACE
+    RESERVATION_SPACE_NOT_FOUND(HttpStatus.NOT_FOUND, "RESERVATION_SPACE_404", "예약 장소를 찾을 수 없습니다."),
 
     // RESERVATION
     RESERVATION_NOT_FOUND(HttpStatus.NOT_FOUND, "RESERVATION_404", "예약을 찾을 수 없습니다."),

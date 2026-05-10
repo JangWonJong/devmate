@@ -20,7 +20,7 @@ import java.time.LocalTime;
 @Builder
 @Table(name = "reservations",
         indexes = {
-            @Index(name = "idx_res_room_date", columnList = "room_id,res_date"),
+            @Index(name = "idx_res_space_date", columnList = "reservation_space_id,res_date"),
             @Index(name = "idx_res_member_date", columnList = "member_id,res_date"),
             @Index(name = "idx_res_study_date", columnList = "study_id,res_date")
         })
@@ -36,12 +36,16 @@ public class Reservation extends BaseEntity {
     @JoinColumn(name = "member_id", nullable = false)
     private Member member;
 
-    @ManyToOne(fetch = FetchType.LAZY, optional = false)
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "reservation_space_id", nullable = false)
+    private ReservationSpace reservationSpace;
+
+    /*@ManyToOne(fetch = FetchType.LAZY, optional = false)
     @JoinColumn(name = "room_id", nullable = false)
-    private Room room;
+    private Room room;*/
 
     @ManyToOne(fetch = FetchType.LAZY, optional = false)
-    @JoinColumn(name = "study_id", nullable = false)
+    @JoinColumn(name = "study_id")
     private Study study;
 
     @Column(name = "res_date", nullable = false)

@@ -16,14 +16,14 @@ public class ReservationAvailabilityEvaluator {
             LocalDate date,
             LocalTime startTime,
             LocalTime endTime,
-            List<Reservation> roomReservations,
+            List<Reservation> spaceReservations,
             List<Reservation> myReservations
     ) {
         if (isPastTime(date, startTime)) {
             return AvailabilityEvaluationResult.fail("PAST_TIME");
         }
 
-        if (hasConflict(startTime, endTime, roomReservations)) {
+        if (hasConflict(startTime, endTime, spaceReservations)) {
             return AvailabilityEvaluationResult.fail("ALREADY_RESERVED");
         }
 

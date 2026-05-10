@@ -6,8 +6,8 @@ import java.time.LocalDate;
 
 public interface ReservationSseService {
 
-    SseEmitter subscribe(Long memberId, Long roomId, LocalDate date);
+    SseEmitter subscribe(Long memberId, Long reservationSpaceId, LocalDate date);
 
-    void send(Long roomId, LocalDate date);
+    void send(Long reservationSpaceId, LocalDate date);
 
 }

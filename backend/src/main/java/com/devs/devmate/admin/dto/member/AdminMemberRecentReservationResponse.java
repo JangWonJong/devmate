@@ -13,7 +13,7 @@ public class AdminMemberRecentReservationResponse {
 
     private Long id;
     private String title;
-    private String roomName;
+    private String reservationSpaceName;
     private LocalDate date;
     private LocalTime startTime;
     private LocalTime endTime;
@@ -23,7 +23,7 @@ public class AdminMemberRecentReservationResponse {
         return AdminMemberRecentReservationResponse.builder()
                 .id(reservation.getId())
                 .title(reservation.getTitle())
-                .roomName(reservation.getRoom().getName())
+                .reservationSpaceName(reservation.getReservationSpace().getName())
                 .date(reservation.getDate())
                 .startTime(reservation.getStartTime())
                 .endTime(reservation.getEndTime())
