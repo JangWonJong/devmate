@@ -3,14 +3,14 @@ import { addHours } from "../../../utils/reservationUtils"
 import { ReservationTimeline } from "../../../pages/reservation/ReservationTimeline"
 
 type StudyReservationStatusSectionProps = {
-  roomId: number | null
+  reservationSpaceId: number | null
   items: ReservationResponse[]
   selectedTime: string | null
   durationHours: number
 }
 
 export default function StudyReservationStatusSection({
-  roomId,
+  reservationSpaceId,
   items,
   selectedTime,
   durationHours,
@@ -26,9 +26,11 @@ export default function StudyReservationStatusSection({
 
       <ReservationTimeline
         items={items}
-        roomId={roomId}
+        reservationSpaceId={reservationSpaceId}
         previewStartTime={selectedTime}
-        previewEndTime={selectedTime ? addHours(selectedTime, durationHours) : null}
+        previewEndTime={
+          selectedTime ? addHours(selectedTime, durationHours) : null
+        }
       />
     </section>
   )

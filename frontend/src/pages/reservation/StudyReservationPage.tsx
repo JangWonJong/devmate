@@ -1,23 +1,26 @@
+import { ChevronLeft } from 'lucide-react'
 import { useCallback, useEffect, useState } from 'react'
 import { useNavigate, useParams } from 'react-router-dom'
-import { ChevronLeft } from 'lucide-react'
-import { listRooms, type RoomResponse } from '../../api/reservation/rooms'
+import { tokenStore } from '../../api/auth/token'
+import {
+  listReservationSpaces,
+  type ReservationSpaceResponse,
+} from '../../api/reservation/reservationSpaces'
 import {
   createStudyReservation,
-  getRoomAvailability,
+  getReservationSpaceAvailability,
   listReservations,
   type AvailabilityResponse,
   type ReservationResponse,
 } from '../../api/reservation/reservations'
 import { getStudy, type StudyResponse } from '../../api/study/study'
-import { apiErrorMessage } from '../../utils/error'
-import { addHours, today } from '../../utils/reservationUtils'
 import StudyInfoCard from '../../components/study/reservation/StudyInfoCard'
 import StudyReservationCreateSection from '../../components/study/reservation/StudyReservationCreateSection'
 import StudyReservationStatusSection from '../../components/study/reservation/StudyReservationStatusSection'
-import { tokenStore } from '../../api/auth/token'
 import { PageContainer } from '../../layouts/PageContainer'
 import { appToast } from '../../lib/toast'
+import { apiErrorMessage } from '../../utils/error'
+import { addHours, today } from '../../utils/reservationUtils'
 
 export function StudyReservationPage() {
   const nav = useNavigate()
@@ -26,8 +29,10 @@ export function StudyReservationPage() {
   const parsedStudyId = Number(studyId)
 
   const [study, setStudy] = useState<StudyResponse | null>(null)
-  const [rooms, setRooms] = useState<RoomResponse[]>([])
-  const [roomId, setRoomId] = useState<number | null>(null)
+  const [reservationSpaces, setReservationSpaces] = useState<
+    ReservationSpaceResponse[]
+  >([])
+  const [reservationSpaceId, setReservationSpaceId] = useState<number | null>(null)
   const [date, setDate] = useState(today())
   const [durationHours, setDurationHours] = useState(1)
   const [selectedTime, setSelectedTime] = useState<string | null>(null)
@@ -48,24 +53,27 @@ export function StudyReservationPage() {
 
     const page = await listReservations({
       date,
-      roomId,
+      reservationSpaceId,
       page: 0,
       size: 50,
       sort: 'startTime,asc',
     })
 
     setItems(page.content)
-  }, [date, roomId])
+  }, [date, reservationSpaceId])
 
   const refreshAvailability = useCallback(async () => {
-    if (!roomId || !date) {
+    if (!reservationSpaceId || !date) {
       setAvailability(null)
       return
     }
 
     try {
       setAvailabilityLoading(true)
-      const res = await getRoomAvailability(roomId, date)
+      const res = await getReservationSpaceAvailability(
+        reservationSpaceId,
+        date
+      )
       setAvailability(res)
     } catch (e: any) {
       setAvailability(null)
@@ -73,18 +81,18 @@ export function StudyReservationPage() {
     } finally {
       setAvailabilityLoading(false)
     }
-  }, [roomId, date])
+  }, [reservationSpaceId, date])
 
   const loadAll = useCallback(async () => {
     const page = await listReservations({
       date,
-      roomId,
+      reservationSpaceId,
       page: 0,
       size: 50,
       sort: 'startTime,asc',
     })
     setItems(page.content)
-  }, [date, roomId])
+  }, [date, reservationSpaceId])
 
   const onCreate = async () => {
     if (!parsedStudyId || Number.isNaN(parsedStudyId)) {
@@ -92,8 +100,8 @@ export function StudyReservationPage() {
       return
     }
 
-    if (!roomId) {
-      setErr('방을 선택하세요.')
+    if (!reservationSpaceId) {
+      setErr('예약 공간을 선택하세요.')
       return
     }
 
@@ -107,7 +115,7 @@ export function StudyReservationPage() {
       setErr(null)
 
       await createStudyReservation(parsedStudyId, {
-        roomId,
+        reservationSpaceId,
         date,
         startTime: selectedTime,
         endTime: addHours(selectedTime, durationHours),
@@ -127,13 +135,13 @@ export function StudyReservationPage() {
   }
 
   useEffect(() => {
-    if (!roomId || !date) return
+    if (!reservationSpaceId || !date) return
 
     const token = tokenStore.getAccess()
     if (!token) return
 
     const es = new EventSource(
-      `${import.meta.env.VITE_API_BASE_URL}/api/reservations/subscribe?roomId=${roomId}&date=${date}&token=${encodeURIComponent(token)}`
+      `${import.meta.env.VITE_API_BASE_URL}/api/reservations/subscribe?reservationSpaceId=${reservationSpaceId}&date=${date}&token=${encodeURIComponent(token)}`
     )
 
     es.onmessage = () => {
@@ -144,7 +152,7 @@ export function StudyReservationPage() {
     return () => {
       es.close()
     }
-  }, [roomId, date, refreshAvailability, loadAll])
+  }, [reservationSpaceId, date, refreshAvailability, loadAll])
 
   useEffect(() => {
     ;(async () => {
@@ -158,16 +166,16 @@ export function StudyReservationPage() {
         setLoading(true)
         setErr(null)
 
-        const [studyRes, roomRes] = await Promise.all([
+        const [studyRes, spaceRes] = await Promise.all([
           getStudy(parsedStudyId),
-          listRooms(),
+          listReservationSpaces(),
         ])
 
         setStudy(studyRes)
-        setRooms(roomRes)
+        setReservationSpaces(spaceRes)
 
-        if (roomRes.length > 0) {
-          setRoomId((prev) => (prev == null ? roomRes[0].id : prev))
+        if (spaceRes.length > 0) {
+          setReservationSpaceId((prev) => (prev == null ? spaceRes[0].id : prev))
         }
       } catch (e: any) {
         setErr(apiErrorMessage(e, '스터디 예약 페이지 조회 실패'))
@@ -194,7 +202,7 @@ export function StudyReservationPage() {
 
   useEffect(() => {
     setSelectedTime(null)
-  }, [date, roomId, durationHours])
+  }, [date, reservationSpaceId, durationHours])
 
   if (loading) {
     return (
@@ -250,15 +258,15 @@ export function StudyReservationPage() {
 
             <StudyReservationCreateSection
               date={date}
-              roomId={roomId}
-              rooms={rooms}
+              reservationSpaceId={reservationSpaceId}
+              reservationSpaces={reservationSpaces}
               durationHours={durationHours}
               selectedTime={selectedTime}
               saving={saving}
               availability={availability}
               availabilityLoading={availabilityLoading}
               onChangeDate={setDate}
-              onChangeRoomId={setRoomId}
+              onChangeReservationSpaceId={setReservationSpaceId}
               onChangeDurationHours={setDurationHours}
               onChangeSelectedTime={setSelectedTime}
               onCreate={onCreate}
@@ -266,7 +274,7 @@ export function StudyReservationPage() {
           </div>
 
           <StudyReservationStatusSection
-            roomId={roomId}
+            reservationSpaceId={reservationSpaceId}
             items={items}
             selectedTime={selectedTime}
             durationHours={durationHours}

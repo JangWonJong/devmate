@@ -68,7 +68,7 @@ export default function ReservationCard({
   return (
     <div
       className={`rounded-3xl border border-slate-200 bg-white p-5 shadow-sm transition hover:shadow-md ${
-        statusLabel === "지난 예약" ? "opacity-75" : ""
+        statusLabel === '지난 예약' ? 'opacity-75' : ''
       }`}
     >
       <div className="flex flex-col gap-4">
@@ -93,8 +93,8 @@ export default function ReservationCard({
             </div>
 
             <div className="mt-2 flex flex-wrap items-center gap-2 text-sm text-slate-500">
-              <span>{reservation.roomName}</span>
-              {scope === "all" && <span>· {reservation.memberNickname}</span>}
+              <span>{reservation.reservationSpaceName}</span>
+              {scope === 'all' && <span>· {reservation.memberNickname}</span>}
               <span>· {reservation.date}</span>
             </div>
           </div>

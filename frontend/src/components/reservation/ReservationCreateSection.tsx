@@ -1,13 +1,16 @@
-import { CalendarDays, Clock3 } from "lucide-react"
-import type { RoomResponse } from "../../api/reservation/rooms"
-import type { AvailabilityResponse, ReservationResponse } from "../../api/reservation/reservations"
+import { CalendarDays, Clock3 } from 'lucide-react'
+import type { ReservationSpaceResponse } from '../../api/reservation/reservationSpaces'
+import type {
+  AvailabilityResponse,
+  ReservationResponse,
+} from '../../api/reservation/reservations'
+import { ReservationTimeline } from '../../pages/reservation/ReservationTimeline'
 import {
   addHours,
   canSelectDuration,
   getAvailabilityReasonText,
   hhmm,
-} from "../../utils/reservationUtils"
-import { ReservationTimeline } from "../../pages/reservation/ReservationTimeline"
+} from '../../utils/reservationUtils'
 
 function SlotButton({
   disabled,
@@ -30,28 +33,30 @@ function SlotButton({
       title={description}
       className={`rounded-2xl border px-3 py-4 text-left transition ${
         selected
-          ? "border-indigo-600 bg-indigo-600 text-white shadow-sm"
+          ? 'border-indigo-600 bg-indigo-600 text-white shadow-sm'
           : disabled
-          ? "cursor-not-allowed border-slate-200 bg-slate-50 text-slate-400"
-          : "border-slate-200 bg-white hover:border-indigo-300 hover:bg-indigo-50 hover:shadow-sm"
+            ? 'cursor-not-allowed border-slate-200 bg-slate-50 text-slate-400'
+            : 'border-slate-200 bg-white hover:border-indigo-300 hover:bg-indigo-50 hover:shadow-sm'
       }`}
     >
-      <div className={`text-lg font-bold ${selected ? "text-white" : "text-slate-800"}`}>
+      <div
+        className={`text-lg font-bold ${selected ? 'text-white' : 'text-slate-800'}`}
+      >
         {hhmm(time)}
       </div>
 
       <div
         className={`mt-2 min-h-[20px] text-xs leading-5 ${
           selected
-            ? "text-indigo-100"
+            ? 'text-indigo-100'
             : disabled
-            ? description.includes("이미") || description.includes("예약")
-              ? "text-rose-500"
-              : "text-amber-500"
-            : "text-transparent"
+              ? description.includes('이미') || description.includes('예약')
+                ? 'text-rose-500'
+                : 'text-amber-500'
+              : 'text-transparent'
         }`}
       >
-        {description || " "}
+        {description || ' '}
       </div>
     </button>
   )
@@ -59,8 +64,8 @@ function SlotButton({
 
 type ReservationCreateSectionProps = {
   date: string
-  roomId: number | null
-  rooms: RoomResponse[]
+  reservationSpaceId: number | null
+  reservationSpaces: ReservationSpaceResponse[]
   durationHours: number
   title: string
   selectedTime: string | null
@@ -70,7 +75,7 @@ type ReservationCreateSectionProps = {
   availability: AvailabilityResponse | null
   availabilityLoading: boolean
   onChangeDate: (date: string) => void
-  onChangeRoomId: (roomId: number | null) => void
+  onChangeReservationSpaceId: (reservationSpaceId: number | null) => void
   onChangeDurationHours: (hours: number) => void
   onChangeTitle: (value: string) => void
   onChangeSelectedTime: (time: string | null) => void
@@ -79,8 +84,8 @@ type ReservationCreateSectionProps = {
 
 export default function ReservationCreateSection({
   date,
-  roomId,
-  rooms,
+  reservationSpaceId,
+  reservationSpaces,
   durationHours,
   title,
   selectedTime,
@@ -90,7 +95,7 @@ export default function ReservationCreateSection({
   availability,
   availabilityLoading,
   onChangeDate,
-  onChangeRoomId,
+  onChangeReservationSpaceId,
   onChangeDurationHours,
   onChangeTitle,
   onChangeSelectedTime,
@@ -104,16 +109,18 @@ export default function ReservationCreateSection({
             예약 현황
           </h2>
           <p className="text-sm text-slate-500">
-            현재 스터디룸 예약 상태를 확인할 수 있어요.
+            현재 예약 공간 현황을 확인할 수 있어요.
           </p>
         </div>
 
         <div className="mt-4">
           <ReservationTimeline
             items={items}
-            roomId={roomId}
+            reservationSpaceId={reservationSpaceId}
             previewStartTime={selectedTime}
-            previewEndTime={selectedTime ? addHours(selectedTime, durationHours) : null}
+            previewEndTime={
+              selectedTime ? addHours(selectedTime, durationHours) : null
+            }
           />
         </div>
       </section>
@@ -144,25 +151,33 @@ export default function ReservationCreateSection({
           </div>
 
           <div>
-            <div className="mb-2 text-sm font-medium text-slate-500">스터디룸</div>
+            <div className="mb-2 text-sm font-medium text-slate-500">
+              예약 공간
+            </div>
             <select
-              value={roomId?.toString() ?? ""}
-              onChange={(e) => onChangeRoomId(e.target.value ? Number(e.target.value) : null)}
+              value={reservationSpaceId?.toString() ?? ''}
+              onChange={(e) =>
+                onChangeReservationSpaceId(
+                  e.target.value ? Number(e.target.value) : null
+                )
+              }
               className="h-12 w-full rounded-2xl border border-slate-300 bg-white px-4 text-sm text-slate-700 outline-none transition focus:border-indigo-400 focus:ring-4 focus:ring-indigo-100"
             >
               <option value="" disabled>
-                방 선택
+                공간 선택
               </option>
-              {rooms.map((room) => (
-                <option key={room.id} value={room.id}>
-                  {room.name}
+              {reservationSpaces.map((space) => (
+                <option key={space.id} value={space.id}>
+                  {space.name}
                 </option>
               ))}
             </select>
           </div>
 
           <div>
-            <div className="mb-2 text-sm font-medium text-slate-500">예약 시간</div>
+            <div className="mb-2 text-sm font-medium text-slate-500">
+              예약 시간
+            </div>
             <select
               value={durationHours}
               onChange={(e) => onChangeDurationHours(Number(e.target.value))}
@@ -176,7 +191,9 @@ export default function ReservationCreateSection({
         </div>
 
         <div className="mt-4">
-          <div className="mb-2 text-sm font-medium text-slate-500">예약 제목</div>
+          <div className="mb-2 text-sm font-medium text-slate-500">
+            예약 제목
+          </div>
           <input
             value={title}
             onChange={(e) => onChangeTitle(e.target.value)}
@@ -197,7 +214,7 @@ export default function ReservationCreateSection({
             </div>
           ) : !availability ? (
             <div className="col-span-full rounded-2xl border border-slate-200 bg-slate-50 px-4 py-4 text-sm text-slate-500">
-              방과 날짜를 선택하면 예약 가능 시간을 확인할 수 있어요.
+              예약 공간과 날짜를 선택하면 예약 가능 시간을 확인할 수 있어요.
             </div>
           ) : (
             availability.slots.map((slot) => {
@@ -211,8 +228,8 @@ export default function ReservationCreateSection({
               const description = isServerUnavailable
                 ? getAvailabilityReasonText(slot.reason)
                 : unavailable
-                ? `${durationHours}시간 연속 선택 불가`
-                : ""
+                  ? `${durationHours}시간 연속 선택 불가`
+                  : ''
 
               return (
                 <SlotButton
@@ -238,19 +255,19 @@ export default function ReservationCreateSection({
             </div>
             <div
               className={`mt-1 text-sm font-semibold ${
-                selectedTime ? "text-indigo-600" : "text-slate-600"
+                selectedTime ? 'text-indigo-600' : 'text-slate-600'
               }`}
             >
               {selectedTime ? (
                 <>
-                  선택한 시간:{" "}
+                  선택한 시간:{' '}
                   <span className="font-bold">
                     {selectedTime} ~ {addHours(selectedTime, durationHours)}
-                  </span>{" "}
+                  </span>{' '}
                   ({durationHours}시간)
                 </>
               ) : (
-                "시간을 선택하세요"
+                '시간을 선택하세요'
               )}
             </div>
           </div>

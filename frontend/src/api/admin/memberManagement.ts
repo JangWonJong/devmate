@@ -67,11 +67,11 @@ export type AdminMemberRecentInquiry = {
 export type AdminMemberRecentReservation = {
   id: number
   title: string
-  roomName: string
+  reservationSpaceName: string
   date: string
   startTime: string
   endTime: string
-  status: "ACTIVE" | "CANCELED"
+  status: 'ACTIVE' | 'CANCELED'
 }
 
 export async function listAdminMembers(

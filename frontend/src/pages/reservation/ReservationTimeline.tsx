@@ -1,7 +1,7 @@
 import type { ReservationResponse } from '../../api/reservation/reservations'
 import {
   formatTimeRange,
-  getRoomReservations,
+  getReservationSpaceReservations,
   getTimelineLabels,
   hhmmToMinutes,
   timeToPercent,
@@ -9,18 +9,21 @@ import {
 
 type Props = {
   items: ReservationResponse[]
-  roomId: number | null
+  reservationSpaceId: number | null
   previewStartTime?: string | null
   previewEndTime?: string | null
 }
 
 export function ReservationTimeline({
   items,
-  roomId,
+  reservationSpaceId,
   previewStartTime,
   previewEndTime,
 }: Props) {
-  const roomReservations = getRoomReservations(items, roomId)
+  const reservationSpaceReservations = getReservationSpaceReservations(
+    items,
+    reservationSpaceId
+  )
   const timelineLabels = getTimelineLabels()
 
   const hasPreview =
@@ -64,13 +67,13 @@ export function ReservationTimeline({
           />
         ))}
 
-        {roomReservations.length === 0 && !hasPreview ? (
+        {reservationSpaceReservations.length === 0 && !hasPreview ? (
           <div className="absolute inset-0 flex items-center justify-center text-sm text-slate-400">
             예약된 일정이 없습니다
           </div>
         ) : null}
 
-        {roomReservations.map((reservation) => (
+        {reservationSpaceReservations.map((reservation) => (
           <div
             key={reservation.id}
             title={`${formatTimeRange(reservation.startTime, reservation.endTime)} · ${reservation.title}`}
@@ -94,9 +97,9 @@ export function ReservationTimeline({
         )}
       </div>
 
-      {roomReservations.length > 0 && (
+      {reservationSpaceReservations.length > 0 && (
         <div className="mt-4 grid gap-2">
-          {roomReservations.map((reservation) => (
+          {reservationSpaceReservations.map((reservation) => (
             <div
               key={`list-${reservation.id}`}
               className="flex items-center justify-between gap-3 rounded-xl border border-slate-200 bg-white px-3 py-2 text-sm"

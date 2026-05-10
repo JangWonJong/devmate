@@ -6,12 +6,15 @@ import {
   type AvailabilityResponse,
   cancelReservation,
   createReservation,
-  getRoomAvailability,
+  getReservationSpaceAvailability,
   listMyReservations,
   listReservations,
   type ReservationResponse,
 } from '../../api/reservation/reservations'
-import { listRooms, type RoomResponse } from '../../api/reservation/rooms'
+import {
+  listReservationSpaces,
+  type ReservationSpaceResponse,
+} from '../../api/reservation/reservationSpaces'
 import { ConfirmModal } from '../../components/common/modal/ConfirmModal'
 import ReservationCreateSection from '../../components/reservation/ReservationCreateSection'
 import ReservationListSection from '../../components/reservation/ReservationListSection'
@@ -123,8 +126,12 @@ export function ReservationsPage() {
     [sp, setSp]
   )
 
-  const [rooms, setRooms] = useState<RoomResponse[]>([])
-  const [roomId, setRoomId] = useState<number | null>(null)
+  const [reservationSpaces, setReservationSpaces] = useState<
+    ReservationSpaceResponse[]
+  >([])
+  const [reservationSpaceId, setReservationSpaceId] = useState<number | null>(
+    null
+  )
   const [durationHours, setDurationHours] = useState<number>(1)
   const [mineDate, setMineDate] = useState<string>('')
 
@@ -153,14 +160,17 @@ export function ReservationsPage() {
   } = useConfirm()
 
   const refreshAvailability = useCallback(async () => {
-    if (scope !== 'all' || !roomId || !date) {
+    if (scope !== 'all' || !reservationSpaceId || !date) {
       setAvailability(null)
       return
     }
 
     try {
       setAvailabilityLoading(true)
-      const res = await getRoomAvailability(roomId, date)
+      const res = await getReservationSpaceAvailability(
+        reservationSpaceId,
+        date
+      )
       setAvailability(res)
     } catch (e: any) {
       const status = e?.response?.status
@@ -175,18 +185,18 @@ export function ReservationsPage() {
     } finally {
       setAvailabilityLoading(false)
     }
-  }, [scope, roomId, date])
+  }, [scope, reservationSpaceId, date])
 
   const loadAll = useCallback(async () => {
     const page = await listReservations({
       date,
-      roomId,
+      reservationSpaceId,
       page: 0,
       size: 50,
       sort: 'startTime,asc',
     })
     setItems(page.content)
-  }, [date, roomId])
+  }, [date, reservationSpaceId])
 
   const loadMine = useCallback(async () => {
     const page = await listMyReservations({
@@ -209,8 +219,8 @@ export function ReservationsPage() {
       return
     }
 
-    if (!roomId) {
-      setErr('방을 선택하세요')
+    if (!reservationSpaceId) {
+      setErr('예약 공간을 선택하세요')
       return
     }
 
@@ -230,7 +240,7 @@ export function ReservationsPage() {
       setErr(null)
 
       await createReservation({
-        roomId,
+        reservationSpaceId,
         date,
         startTime: selectedTime,
         endTime: addHours(selectedTime, durationHours),
@@ -339,13 +349,13 @@ export function ReservationsPage() {
   }, [loggedIn])
 
   useEffect(() => {
-    if (scope !== 'all' || !roomId || !date) return
+    if (scope !== 'all' || !reservationSpaceId || !date) return
 
     const token = tokenStore.getAccess()
     if (!token) return
 
     const es = new EventSource(
-      `${import.meta.env.VITE_API_BASE_URL}/api/reservations/subscribe?roomId=${roomId}&date=${date}&token=${encodeURIComponent(token)}`
+      `${import.meta.env.VITE_API_BASE_URL}/api/reservations/subscribe?reservationSpaceId=${reservationSpaceId}&date=${date}&token=${encodeURIComponent(token)}`
     )
 
     es.onmessage = (e) => {
@@ -357,27 +367,27 @@ export function ReservationsPage() {
     return () => {
       es.close()
     }
-  }, [scope, roomId, date, refreshAvailability, loadAll])
+  }, [scope, reservationSpaceId, date, refreshAvailability, loadAll])
 
   useEffect(() => {
     ;(async () => {
       try {
         setErr(null)
-        const res = await listRooms()
-        setRooms(res)
+        const res = await listReservationSpaces()
+        setReservationSpaces(res)
         if (res.length > 0) {
-          setRoomId((prev) => (prev == null ? res[0].id : prev))
+          setReservationSpaceId((prev) => (prev == null ? res[0].id : prev))
         }
       } catch (e: any) {
         const status = e?.response?.status
 
         if (status === 401 || status === 403) {
-          setRooms([])
-          setRoomId(null)
+          setReservationSpaces([])
+          setReservationSpaceId(null)
           return
         }
 
-        setErr(apiErrorMessage(e, '방 목록 조회 실패'))
+        setErr(apiErrorMessage(e, '예약 공간 목록 조회 실패'))
       }
     })()
   }, [])
@@ -412,7 +422,7 @@ export function ReservationsPage() {
 
   useEffect(() => {
     setSelectedTime(null)
-  }, [date, roomId, scope, durationHours])
+  }, [date, reservationSpaceId, scope, durationHours])
 
   const emptyText = useMemo(() => {
     if (scope === 'mine') {
@@ -434,7 +444,7 @@ export function ReservationsPage() {
             개인 예약
           </h1>
           <p className="mt-2 text-lg leading-8 text-slate-600">
-            스터디룸 예약 현황을 확인하고 원하는 시간대를 선택해보세요.
+            예약 현황을 확인하고 원하는 시간대를 선택해보세요.
           </p>
         </div>
 
@@ -533,8 +543,8 @@ export function ReservationsPage() {
         <div className="grid gap-6 xl:grid-cols-[minmax(0,1fr)_360px] xl:items-start">
           <ReservationCreateSection
             date={date}
-            roomId={roomId}
-            rooms={rooms}
+            reservationSpaceId={reservationSpaceId}
+            reservationSpaces={reservationSpaces}
             durationHours={durationHours}
             title={title}
             selectedTime={selectedTime}
@@ -544,7 +554,7 @@ export function ReservationsPage() {
             availability={availability}
             availabilityLoading={availabilityLoading}
             onChangeDate={(value) => setQuery({ date: value })}
-            onChangeRoomId={setRoomId}
+            onChangeReservationSpaceId={setReservationSpaceId}
             onChangeDurationHours={setDurationHours}
             onChangeTitle={setTitle}
             onChangeSelectedTime={setSelectedTime}

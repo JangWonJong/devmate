@@ -301,7 +301,7 @@ export default function StudyInfoSection({
                   className="rounded-2xl border border-slate-200 bg-slate-50 p-4"
                 >
                   <div className="text-base font-semibold text-slate-900">
-                    {reservation.date} · {reservation.roomName}
+                    {reservation.date} · {reservation.reservationSpaceName}
                   </div>
                   <div className="mt-1 text-sm text-slate-700">
                     {reservation.startTime.slice(0, 5)} ~{' '}
@@ -376,7 +376,7 @@ export default function StudyInfoSection({
                 정원 수정
               </button>
             )}
-            
+
             {canUpdatePlace && (
               <button
                 type="button"

@@ -60,7 +60,7 @@ export default function HeroSection({
 
           <p className="mt-6 max-w-2xl text-lg leading-8 text-slate-600">
             DevMine는 개발자들이 고민을 공유하고 댓글과 채택으로 해결하며,
-            스터디를 모집하고 참여하고, 스터디룸 예약까지 이어갈 수 있는
+            스터디를 모집하고 참여하고, 스터디 장소 예약까지 이어갈 수 있는
             서비스입니다.
           </p>
 

@@ -80,12 +80,12 @@ http.interceptors.response.use(
     }
 
     const isPublicGet =
-      method === "GET" &&
-      (url.startsWith("/api/members") ||
-        url.startsWith("/api/posts") ||
-        url.startsWith("/api/studies") ||
-        url.startsWith("/api/rooms") ||
-        url.startsWith("/api/reservations"))
+      method === 'GET' &&
+      (url.startsWith('/api/members') ||
+        url.startsWith('/api/posts') ||
+        url.startsWith('/api/studies') ||
+        url.startsWith('/api/reservation-spaces') ||
+        url.startsWith('/api/reservations'))
 
     if (status !== 401 && status !== 403) {
       return Promise.reject(err)

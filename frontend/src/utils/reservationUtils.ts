@@ -50,33 +50,33 @@ export function isOverlapping(
 
 export function canReserveStartTime(
   items: ReservationResponse[],
-  roomId: number | null,
+  reservationSpaceId: number | null,
   startTime: string,
   durationHours: number
 ) {
-  if (!roomId) return false
+  if (!reservationSpaceId) return false
 
   const endTime = addHours(startTime, durationHours)
 
-  if (hhmmToMinutes(endTime) > hhmmToMinutes("22:00")) {
+  if (hhmmToMinutes(endTime) > hhmmToMinutes('22:00')) {
     return false
   }
 
   return !items.some(
-    (r) =>
-      r.roomId === roomId &&
-      isOverlapping(startTime, endTime, r.startTime, r.endTime)
+    (space) =>
+      space.reservationSpaceId === reservationSpaceId &&
+      isOverlapping(startTime, endTime, space.startTime, space.endTime)
   )
 }
 
-export function getRoomReservations(
+export function getReservationSpaceReservations(
   items: ReservationResponse[],
-  roomId: number | null
+  reservationSpaceId: number | null
 ) {
-  if (!roomId) return []
+  if (!reservationSpaceId) return []
 
   return items
-    .filter((r) => r.roomId === roomId)
+    .filter((space) => space.reservationSpaceId === reservationSpaceId)
     .sort((a, b) => hhmmToMinutes(a.startTime) - hhmmToMinutes(b.startTime))
 }
 

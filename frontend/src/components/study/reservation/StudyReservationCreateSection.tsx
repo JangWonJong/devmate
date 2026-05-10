@@ -1,12 +1,12 @@
-import { CalendarDays, Clock3 } from "lucide-react"
-import type { RoomResponse } from "../../../api/reservation/rooms"
-import type { AvailabilityResponse } from "../../../api/reservation/reservations"
+import { CalendarDays, Clock3 } from 'lucide-react'
+import type { ReservationSpaceResponse } from '../../../api/reservation/reservationSpaces'
+import type { AvailabilityResponse } from '../../../api/reservation/reservations'
 import {
   addHours,
   canSelectDuration,
   getSlotDescription,
   hhmm,
-} from "../../../utils/reservationUtils"
+} from '../../../utils/reservationUtils'
 
 function SlotButton({
   disabled,
@@ -29,28 +29,30 @@ function SlotButton({
       title={description}
       className={`rounded-2xl border px-3 py-4 text-left transition ${
         selected
-          ? "border-indigo-600 bg-indigo-600 text-white shadow-sm"
+          ? 'border-indigo-600 bg-indigo-600 text-white shadow-sm'
           : disabled
-          ? "cursor-not-allowed border-slate-200 bg-slate-50 text-slate-400"
-          : "border-slate-200 bg-white hover:border-indigo-300 hover:bg-indigo-50 hover:shadow-sm"
+            ? 'cursor-not-allowed border-slate-200 bg-slate-50 text-slate-400'
+            : 'border-slate-200 bg-white hover:border-indigo-300 hover:bg-indigo-50 hover:shadow-sm'
       }`}
     >
-      <div className={`text-lg font-bold ${selected ? "text-white" : "text-slate-800"}`}>
+      <div
+        className={`text-lg font-bold ${selected ? 'text-white' : 'text-slate-800'}`}
+      >
         {hhmm(time)}
       </div>
 
       <div
         className={`mt-2 min-h-[20px] text-xs leading-5 ${
           selected
-            ? "text-indigo-100"
+            ? 'text-indigo-100'
             : disabled
-            ? description.includes("이미")
-              ? "text-rose-500"
-              : "text-amber-500"
-            : "text-transparent"
+              ? description.includes('이미')
+                ? 'text-rose-500'
+                : 'text-amber-500'
+              : 'text-transparent'
         }`}
       >
-        {description || " "}
+        {description || ' '}
       </div>
     </button>
   )
@@ -58,15 +60,15 @@ function SlotButton({
 
 type StudyReservationCreateSectionProps = {
   date: string
-  roomId: number | null
-  rooms: RoomResponse[]
+  reservationSpaceId: number | null
+  reservationSpaces: ReservationSpaceResponse[]
   durationHours: number
   selectedTime: string | null
   saving: boolean
   availability: AvailabilityResponse | null
   availabilityLoading: boolean
   onChangeDate: (value: string) => void
-  onChangeRoomId: (roomId: number | null) => void
+  onChangeReservationSpaceId: (reservationSpaceId: number | null) => void
   onChangeDurationHours: (hours: number) => void
   onChangeSelectedTime: (time: string | null) => void
   onCreate: () => void
@@ -74,15 +76,15 @@ type StudyReservationCreateSectionProps = {
 
 export default function StudyReservationCreateSection({
   date,
-  roomId,
-  rooms,
+  reservationSpaceId,
+  reservationSpaces,
   durationHours,
   selectedTime,
   saving,
   availability,
   availabilityLoading,
   onChangeDate,
-  onChangeRoomId,
+  onChangeReservationSpaceId,
   onChangeDurationHours,
   onChangeSelectedTime,
   onCreate,
@@ -108,27 +110,33 @@ export default function StudyReservationCreateSection({
         </div>
 
         <div>
-          <div className="mb-2 text-sm font-medium text-slate-500">스터디룸</div>
+          <div className="mb-2 text-sm font-medium text-slate-500">
+            예약 공간
+          </div>
           <select
-            value={roomId?.toString() ?? ""}
+            value={reservationSpaceId?.toString() ?? ''}
             onChange={(e) =>
-              onChangeRoomId(e.target.value ? Number(e.target.value) : null)
+              onChangeReservationSpaceId(
+                e.target.value ? Number(e.target.value) : null
+              )
             }
             className="h-12 w-full rounded-2xl border border-slate-300 bg-white px-4 text-sm text-slate-700 outline-none transition focus:border-indigo-400 focus:ring-4 focus:ring-indigo-100"
           >
             <option value="" disabled>
-              방 선택
+              공간 선택
             </option>
-            {rooms.map((room) => (
-              <option key={room.id} value={room.id}>
-                {room.name}
+            {reservationSpaces.map((space) => (
+              <option key={space.id} value={space.id}>
+                {space.name}
               </option>
             ))}
           </select>
         </div>
 
         <div>
-          <div className="mb-2 text-sm font-medium text-slate-500">예약 시간</div>
+          <div className="mb-2 text-sm font-medium text-slate-500">
+            예약 시간
+          </div>
           <select
             value={durationHours}
             onChange={(e) => onChangeDurationHours(Number(e.target.value))}
@@ -153,7 +161,7 @@ export default function StudyReservationCreateSection({
           </div>
         ) : !availability ? (
           <div className="col-span-full rounded-2xl border border-slate-200 bg-slate-50 px-4 py-4 text-sm text-slate-500">
-            방과 날짜를 선택하면 예약 가능 시간을 확인할 수 있어요.
+            예약 공간과 날짜를 선택하면 예약 가능 시간을 확인할 수 있어요.
           </div>
         ) : (
           availability.slots.map((slot) => {
@@ -194,19 +202,19 @@ export default function StudyReservationCreateSection({
           </div>
           <div
             className={`mt-1 text-sm font-semibold ${
-              selectedTime ? "text-indigo-600" : "text-slate-600"
+              selectedTime ? 'text-indigo-600' : 'text-slate-600'
             }`}
           >
             {selectedTime ? (
               <>
-                선택한 시간:{" "}
+                선택한 시간:{' '}
                 <span className="font-bold">
                   {selectedTime} ~ {addHours(selectedTime, durationHours)}
-                </span>{" "}
+                </span>{' '}
                 ({durationHours}시간)
               </>
             ) : (
-              "시간을 선택하세요"
+              '시간을 선택하세요'
             )}
           </div>
         </div>

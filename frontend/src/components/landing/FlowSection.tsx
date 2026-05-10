@@ -1,23 +1,23 @@
 const steps = [
   {
-    number: "01",
-    title: "고민을 올립니다",
-    description: "개발 중 막힌 문제나 학습 고민을 공유합니다.",
+    number: '01',
+    title: '고민을 올립니다',
+    description: '개발 중 막힌 문제나 학습 고민을 공유합니다.',
   },
   {
-    number: "02",
-    title: "답변을 받고 해결합니다",
-    description: "댓글과 채택으로 핵심 해결책을 정리합니다.",
+    number: '02',
+    title: '답변을 받고 해결합니다',
+    description: '댓글과 채택으로 핵심 해결책을 정리합니다.',
   },
   {
-    number: "03",
-    title: "스터디를 모집합니다",
-    description: "비슷한 관심사를 가진 사람들과 연결됩니다.",
+    number: '03',
+    title: '스터디를 모집합니다',
+    description: '비슷한 관심사를 가진 사람들과 연결됩니다.',
   },
   {
-    number: "04",
-    title: "공간을 예약하고 진행합니다",
-    description: "스터디룸을 예약하고 실제 모임으로 이어집니다.",
+    number: '04',
+    title: '공간을 예약하고 진행합니다',
+    description: '스터디와 협업이 실제 모임으로 이어집니다.',
   },
 ]
 

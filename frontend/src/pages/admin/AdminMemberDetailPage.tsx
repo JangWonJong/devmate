@@ -594,7 +594,7 @@ export default function AdminMemberDetailPage() {
                     </p>
 
                     <p className="mt-2 text-xs text-slate-500">
-                      {reservation.roomName} · {reservation.date}
+                      {reservation.reservationSpaceName} · {reservation.date}
                     </p>
 
                     <p className="mt-1 text-xs text-slate-400">

@@ -17,7 +17,7 @@ const items = [
     icon: <CalendarCheck className="h-6 w-6" />,
     title: "바로 실행하기",
     description:
-      "예약 가능한 시간을 확인하고 스터디룸을 예약해 실제 모임까지 연결할 수 있습니다.",
+      "예약 가능한 시간을 확인하고 장소를 예약해 실제 모임까지 연결할 수 있습니다.",
   },
 ]
 
