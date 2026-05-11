@@ -1,6 +1,6 @@
 package com.devs.devmate.admin.dto.member;
 
-import com.devs.devmate.reservation.entity.Reservation;
+import com.devs.devmate.reservation.command.entity.Reservation;
 import lombok.Builder;
 import lombok.Getter;
 

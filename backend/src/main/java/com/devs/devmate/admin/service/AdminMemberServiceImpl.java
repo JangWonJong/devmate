@@ -16,7 +16,7 @@ import com.devs.devmate.member.entity.Member;
 import com.devs.devmate.member.entity.MemberStatus;
 import com.devs.devmate.member.entity.Role;
 import com.devs.devmate.post.repository.PostRepository;
-import com.devs.devmate.reservation.repository.ReservationRepository;
+import com.devs.devmate.reservation.command.repository.ReservationRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;

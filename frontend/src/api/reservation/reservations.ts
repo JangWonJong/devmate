@@ -6,6 +6,7 @@ export type ReservationResponse = {
   id: number
   reservationSpaceId: number
   reservationSpaceName: string
+  providerType: 'INTERNAL' | 'USER_INPUT' | 'PARTNER'
   reservationSpaceAddress: string | null
   placeDetail: string | null
   memberId: number
@@ -17,6 +18,8 @@ export type ReservationResponse = {
   status: string
   studyId: number | null
   postId: number | null
+  studyPlaceName: string | null
+  studyAddress: string | null
   latitude: number | null
   longitude: number | null
 }

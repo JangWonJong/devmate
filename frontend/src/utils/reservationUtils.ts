@@ -1,10 +1,13 @@
-import type { AvailabilitySlot, ReservationResponse } from "../api/reservation/reservations"
+import type {
+  AvailabilitySlot,
+  ReservationResponse,
+} from '../api/reservation/reservations'
 
 const TIMELINE_START_HOUR = 9
 const TIMELINE_END_HOUR = 22
 
 export function hhmmToMinutes(time: string) {
-  const [h, m] = time.slice(0, 5).split(":").map(Number)
+  const [h, m] = time.slice(0, 5).split(':').map(Number)
   return h * 60 + m
 }
 
@@ -15,21 +18,21 @@ export function hhmm(time: string) {
 export function today() {
   const d = new Date()
   const yyyy = d.getFullYear()
-  const mm = String(d.getMonth() + 1).padStart(2, "0")
-  const dd = String(d.getDate()).padStart(2, "0")
+  const mm = String(d.getMonth() + 1).padStart(2, '0')
+  const dd = String(d.getDate()).padStart(2, '0')
   return `${yyyy}-${mm}-${dd}`
 }
 
 export function addHours(time: string, hours: number) {
-  const [h, m] = time.split(":").map(Number)
+  const [h, m] = time.split(':').map(Number)
   const nextHour = h + hours
-  return `${String(nextHour).padStart(2, "0")}:${String(m).padStart(2, "0")}`
+  return `${String(nextHour).padStart(2, '0')}:${String(m).padStart(2, '0')}`
 }
 
 export function makeTimeSlots() {
   const slots: string[] = []
   for (let hour = TIMELINE_START_HOUR; hour <= TIMELINE_END_HOUR - 1; hour++) {
-    slots.push(`${String(hour).padStart(2, "0")}:00`)
+    slots.push(`${String(hour).padStart(2, '0')}:00`)
   }
   return slots
 }
@@ -82,27 +85,27 @@ export function getReservationSpaceReservations(
 
 export function getAvailabilityReasonText(reason: string | null) {
   switch (reason) {
-    case "PAST_TIME":
-      return "지난 시간"
-    case "ALREADY_RESERVED":
-      return "이미 예약됨"
-    case "MY_CONFLICT":
-      return "내 예약과 겹침"
-    case "DAILY_COUNT_LIMIT":
-      return "하루 예약 횟수 초과"
+    case 'PAST_TIME':
+      return '지난 시간'
+    case 'ALREADY_RESERVED':
+      return '이미 예약됨'
+    case 'MY_CONFLICT':
+      return '내 예약과 겹침'
+    case 'DAILY_COUNT_LIMIT':
+      return '하루 예약 횟수 초과'
     default:
-      return ""
+      return ''
   }
 }
 
 export function getStudyStatusText(status: string) {
   switch (status) {
-    case "RECRUITING":
-      return "모집중"
-    case "CLOSED_BY_CAPACITY":
-      return "정원 마감"
-    case "CLOSED":
-      return "모집 종료"
+    case 'RECRUITING':
+      return '모집중'
+    case 'CLOSED_BY_CAPACITY':
+      return '정원 마감'
+    case 'CLOSED':
+      return '모집 종료'
     default:
       return status
   }
@@ -137,7 +140,7 @@ export function getSlotDescription(
     return `${durationHours}시간 연속 선택 불가`
   }
 
-  return ""
+  return ''
 }
 
 export function formatTimeRange(startTime: string, endTime: string) {
@@ -155,6 +158,34 @@ export function timeToPercent(time: string) {
 
 export function getTimelineLabels() {
   return [9, 12, 15, 18, 21].map(
-    (hour) => `${String(hour).padStart(2, "0")}:00`
+    (hour) => `${String(hour).padStart(2, '0')}:00`
   )
+}
+
+export function getReservationDisplayPlaceName(
+  reservation: ReservationResponse
+) {
+  if (reservation.studyPlaceName?.trim()) {
+    return reservation.studyPlaceName
+  }
+
+  if (reservation.providerType === 'INTERNAL') {
+    return 'DevMine 강남점'
+  }
+
+  return reservation.reservationSpaceName
+}
+
+export function getReservationDisplayPlaceDetail(
+  reservation: ReservationResponse
+) {
+  if (reservation.placeDetail?.trim()) {
+    return reservation.placeDetail
+  }
+
+  if (reservation.providerType === 'INTERNAL') {
+    return reservation.reservationSpaceName
+  }
+
+  return null
 }

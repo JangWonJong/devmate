@@ -3,10 +3,10 @@ package com.devs.devmate.study.controller;
 
 import com.devs.devmate.global.common.ApiResponse;
 import com.devs.devmate.global.security.SecurityUtil;
-import com.devs.devmate.reservation.dto.ReservationCreateResponse;
-import com.devs.devmate.reservation.dto.ReservationResponse;
-import com.devs.devmate.reservation.dto.StudyReservationCreateRequest;
-import com.devs.devmate.reservation.service.ReservationService;
+import com.devs.devmate.reservation.command.dto.ReservationCreateResponse;
+import com.devs.devmate.reservation.command.dto.ReservationResponse;
+import com.devs.devmate.reservation.command.dto.StudyReservationCreateRequest;
+import com.devs.devmate.reservation.command.service.ReservationService;
 import com.devs.devmate.study.dto.*;
 import com.devs.devmate.study.service.StudyService;
 import jakarta.validation.Valid;

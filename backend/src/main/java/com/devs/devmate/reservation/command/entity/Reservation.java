@@ -1,0 +1,75 @@
+package com.devs.devmate.reservation.command.entity;
+
+
+import com.devs.devmate.global.entity.BaseEntity;
+import com.devs.devmate.member.entity.Member;
+import com.devs.devmate.reservation.space.entity.ReservationSpace;
+import com.devs.devmate.study.entity.Study;
+import jakarta.persistence.*;
+import lombok.AllArgsConstructor;
+import lombok.Builder;
+import lombok.Getter;
+import lombok.NoArgsConstructor;
+
+import java.time.LocalDate;
+import java.time.LocalTime;
+
+@Entity
+@Getter
+@NoArgsConstructor
+@AllArgsConstructor
+@Builder
+@Table(name = "reservations",
+        indexes = {
+            @Index(name = "idx_res_space_date", columnList = "reservation_space_id,res_date"),
+            @Index(name = "idx_res_member_date", columnList = "member_id,res_date"),
+            @Index(name = "idx_res_study_date", columnList = "study_id,res_date")
+        })
+public class Reservation extends BaseEntity {
+
+    public enum Status { ACTIVE, CANCELED }
+
+    @Id
+    @GeneratedValue(strategy = GenerationType.IDENTITY)
+    private Long id;
+
+    @ManyToOne(fetch = FetchType.LAZY, optional = false)
+    @JoinColumn(name = "member_id", nullable = false)
+    private Member member;
+
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "reservation_space_id", nullable = false)
+    private ReservationSpace reservationSpace;
+
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "study_id")
+    private Study study;
+
+    @Column(name = "res_date", nullable = false)
+    private LocalDate date;
+
+    @Column(name = "start_time", nullable = false)
+    private LocalTime startTime;
+
+    @Column(name = "end_time", nullable = false)
+    private LocalTime endTime;
+
+    @Column(nullable = false, length = 150)
+    private String title;
+
+    @Column(length = 150)
+    private String placeDetail;
+
+    @Enumerated(EnumType.STRING)
+    @Column(nullable = false)
+    @Builder.Default
+    private Status status = Status.ACTIVE;
+
+    public void cancel() {
+        this.status = Status.CANCELED;
+    }
+
+    public boolean isCanceled() {
+        return this.status == Status.CANCELED;
+    }
+}

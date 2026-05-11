@@ -17,7 +17,7 @@ import com.devs.devmate.post.entity.Post;
 import com.devs.devmate.post.entity.PostAttachment;
 import com.devs.devmate.post.repository.PostAttachmentRepository;
 import com.devs.devmate.post.repository.PostRepository;
-import com.devs.devmate.reservation.repository.ReservationRepository;
+import com.devs.devmate.reservation.command.repository.ReservationRepository;
 import com.devs.devmate.study.repository.StudyMemberRepository;
 import com.devs.devmate.study.repository.StudyRepository;
 import com.fasterxml.jackson.core.type.TypeReference;

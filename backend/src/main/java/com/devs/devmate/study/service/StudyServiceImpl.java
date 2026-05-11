@@ -2,14 +2,13 @@ package com.devs.devmate.study.service;
 
 import com.devs.devmate.global.exception.BusinessException;
 import com.devs.devmate.global.exception.ErrorCode;
-import com.devs.devmate.global.security.SecurityUtil;
 import com.devs.devmate.member.entity.Member;
 import com.devs.devmate.member.repository.MemberRepository;
 import com.devs.devmate.notification.service.NotificationService;
 import com.devs.devmate.post.entity.Post;
 import com.devs.devmate.post.repository.PostRepository;
-import com.devs.devmate.reservation.entity.Reservation;
-import com.devs.devmate.reservation.repository.ReservationRepository;
+import com.devs.devmate.reservation.command.entity.Reservation;
+import com.devs.devmate.reservation.command.repository.ReservationRepository;
 import com.devs.devmate.study.dto.StudyCreateRequest;
 import com.devs.devmate.study.dto.StudyMemberResponse;
 import com.devs.devmate.study.dto.StudyPlaceUpdateRequest;

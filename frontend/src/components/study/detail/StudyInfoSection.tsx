@@ -3,6 +3,7 @@ import type { StudyMemberResponse, StudyResponse } from "../../../api/study/stud
 import type { ReservationResponse } from "../../../api/reservation/reservations"
 import { actionButtonClass } from "../../../utils/button"
 import { KakaoMapPreview } from "../../common/map/KakaoMapPreview"
+import { getReservationDisplayPlaceDetail, getReservationDisplayPlaceName } from "../../../utils/reservationUtils"
 
 function studyStatusLabel(status: string) {
   switch (status) {
@@ -295,23 +296,47 @@ export default function StudyInfoSection({
             </div>
           ) : (
             <div className="space-y-3">
-              {studyReservations.map((reservation) => (
-                <div
-                  key={reservation.id}
-                  className="rounded-2xl border border-slate-200 bg-slate-50 p-4"
-                >
-                  <div className="text-base font-semibold text-slate-900">
-                    {reservation.date} · {reservation.reservationSpaceName}
+              {studyReservations.map((reservation) => {
+                const displayPlaceName = getReservationDisplayPlaceName(reservation)
+                const displayPlaceDetail =
+                  getReservationDisplayPlaceDetail(reservation)
+
+                return (
+                  <div
+                    key={reservation.id}
+                    className="rounded-2xl border border-slate-200 bg-slate-50 p-4"
+                  >
+                    <div className="text-base font-semibold text-slate-900">
+                      {reservation.date}
+                    </div>
+
+                    <div className="mt-1 text-sm text-slate-700">
+                      {reservation.startTime.slice(0, 5)} ~{' '}
+                      {reservation.endTime.slice(0, 5)}
+                    </div>
+
+                    <div className="mt-2 grid gap-1 text-sm text-slate-500">
+                      <div>
+                        예약 장소:{' '}
+                        <span className="font-medium text-slate-700">
+                          {displayPlaceName}
+                        </span>
+                      </div>
+
+                      {displayPlaceDetail && (
+                        <div>
+                          상세 위치:{' '}
+                          <span className="font-medium text-slate-700">
+                            {displayPlaceDetail}
+                          </span>
+                        </div>
+                      )}
+
+                      <div>예약자: {reservation.memberNickname}</div>
+                    </div>
                   </div>
-                  <div className="mt-1 text-sm text-slate-700">
-                    {reservation.startTime.slice(0, 5)} ~{' '}
-                    {reservation.endTime.slice(0, 5)}
-                  </div>
-                  <div className="mt-1 text-sm text-slate-500">
-                    예약자: {reservation.memberNickname}
-                  </div>
-                </div>
-              ))}
+                )
+              })}
             </div>
           )}
         </div>
