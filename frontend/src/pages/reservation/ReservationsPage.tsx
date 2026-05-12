@@ -12,12 +12,15 @@ import {
   type ReservationResponse,
 } from '../../api/reservation/reservations'
 import {
+  createUserInputReservationSpace,
   listReservationSpaces,
+  type PlaceSelection,
   type ReservationSpaceResponse,
 } from '../../api/reservation/reservationSpaces'
 import { ConfirmModal } from '../../components/common/modal/ConfirmModal'
-import ReservationCreateSection from '../../components/reservation/ReservationCreateSection'
-import ReservationListSection from '../../components/reservation/ReservationListSection'
+import ReservationCreateSection from '../../components/reservation/create/ReservationCreateSection'
+import ReservationListSection from '../../components/reservation/list/ReservationListSection'
+import { PlaceSelectModal } from '../../components/common/map/PlaceSelectModal'
 import { useConfirm } from '../../hooks/common/useConfirm'
 import { PageContainer } from '../../layouts/PageContainer'
 import { appToast } from '../../lib/toast'
@@ -25,6 +28,7 @@ import { apiErrorMessage } from '../../utils/error'
 import { addHours, today } from '../../utils/reservationUtils'
 
 type Scope = 'all' | 'mine'
+type ReservationPlaceMode = 'EXTERNAL' | 'INTERNAL'
 
 type Query = {
   scope?: Scope
@@ -149,6 +153,18 @@ export function ReservationsPage() {
   )
   const [availabilityLoading, setAvailabilityLoading] = useState(false)
 
+  const [selectedPlace, setSelectedPlace] = useState<PlaceSelection | null>(
+    null
+  )
+  const [placeDetail, setPlaceDetail] = useState('')
+  const [placeModalOpen, setPlaceModalOpen] = useState(false)
+  const [placeMode, setPlaceMode] = useState<ReservationPlaceMode>('INTERNAL')
+  const [placeNameInput, setPlaceNameInput] = useState('')
+  const [addressInput, setAddressInput] = useState('')
+  const [latitudeInput, setLatitudeInput] = useState<number | null>(null)
+  const [longitudeInput, setLongitudeInput] = useState<number | null>(null)
+  const [externalPlaceIdInput, setExternalPlaceIdInput] = useState('')
+
   const {
     open,
     title: confirmTitle,
@@ -160,7 +176,12 @@ export function ReservationsPage() {
   } = useConfirm()
 
   const refreshAvailability = useCallback(async () => {
-    if (scope !== 'all' || !reservationSpaceId || !date) {
+    if (
+      scope !== 'all' ||
+      placeMode !== 'INTERNAL' ||
+      !reservationSpaceId ||
+      !date
+    ) {
       setAvailability(null)
       return
     }
@@ -185,18 +206,20 @@ export function ReservationsPage() {
     } finally {
       setAvailabilityLoading(false)
     }
-  }, [scope, reservationSpaceId, date])
+  }, [scope, placeMode, reservationSpaceId, date])
 
   const loadAll = useCallback(async () => {
     const page = await listReservations({
       date,
-      reservationSpaceId,
+      reservationSpaceId:
+        placeMode === 'INTERNAL' ? reservationSpaceId : undefined,
       page: 0,
       size: 50,
       sort: 'startTime,asc',
     })
+
     setItems(page.content)
-  }, [date, reservationSpaceId])
+  }, [date, reservationSpaceId, placeMode])
 
   const loadMine = useCallback(async () => {
     const page = await listMyReservations({
@@ -219,12 +242,8 @@ export function ReservationsPage() {
       return
     }
 
-    if (!reservationSpaceId) {
-      setErr('예약 장소를 선택하세요')
-      return
-    }
-
     const t = title.trim()
+
     if (!t) {
       setErr('예약 제목을 입력하세요')
       return
@@ -239,29 +258,61 @@ export function ReservationsPage() {
       setBusy(true)
       setErr(null)
 
+      const resolvedReservationSpaceId =
+        placeMode === 'EXTERNAL'
+          ? selectedPlace
+            ? (
+                await createUserInputReservationSpace({
+                  name: selectedPlace.name,
+                  address: selectedPlace.address,
+                  latitude: selectedPlace.latitude,
+                  longitude: selectedPlace.longitude,
+                  externalPlaceId: selectedPlace.externalPlaceId,
+                })
+              ).id
+            : null
+          : reservationSpaceId
+
+      if (!resolvedReservationSpaceId) {
+        setErr('예약 장소를 선택하세요')
+        return
+      }
+
       await createReservation({
-        reservationSpaceId,
+        reservationSpaceId: resolvedReservationSpaceId,
         date,
         startTime: selectedTime,
         endTime: addHours(selectedTime, durationHours),
         title: t,
+        placeDetail: placeDetail.trim() || undefined,
       })
 
       appToast.success('예약이 완료되었어요')
+
       setTitle('')
       setSelectedTime(null)
       setDurationHours(1)
 
-      if (scope === 'mine') {
-        await loadMine()
-      } else {
-        await loadAll()
-        await refreshAvailability()
-      }
+      setSelectedPlace(null)
+      setPlaceDetail('')
+      setPlaceModalOpen(false)
+
+      setPlaceNameInput('')
+      setAddressInput('')
+      setLatitudeInput(null)
+      setLongitudeInput(null)
+      setExternalPlaceIdInput('')
+
+      await loadAll()
+      await refreshAvailability()
     } catch (e: any) {
       const status = e?.response?.status
-      if (status === 409) setErr('이미 예약된 시간대입니다.')
-      else setErr(apiErrorMessage(e, '예약 생성 실패'))
+
+      if (status === 409) {
+        setErr('이미 예약된 시간대입니다.')
+      } else {
+        setErr(apiErrorMessage(e, '예약 생성 실패'))
+      }
     } finally {
       setBusy(false)
     }
@@ -349,7 +400,14 @@ export function ReservationsPage() {
   }, [loggedIn])
 
   useEffect(() => {
-    if (scope !== 'all' || !reservationSpaceId || !date) return
+    if (
+      scope !== 'all' ||
+      placeMode !== 'INTERNAL' ||
+      !reservationSpaceId ||
+      !date
+    ) {
+      return
+    }
 
     const token = tokenStore.getAccess()
     if (!token) return
@@ -367,7 +425,7 @@ export function ReservationsPage() {
     return () => {
       es.close()
     }
-  }, [scope, reservationSpaceId, date, refreshAvailability, loadAll])
+  }, [scope, placeMode, reservationSpaceId, date, refreshAvailability, loadAll])
 
   useEffect(() => {
     ;(async () => {
@@ -422,7 +480,11 @@ export function ReservationsPage() {
 
   useEffect(() => {
     setSelectedTime(null)
-  }, [date, reservationSpaceId, scope, durationHours])
+  }, [date, reservationSpaceId, scope, durationHours, placeMode])
+
+  useEffect(() => {
+    void refreshAvailability()
+  }, [refreshAvailability])
 
   const emptyText = useMemo(() => {
     if (scope === 'mine') {
@@ -553,6 +615,15 @@ export function ReservationsPage() {
             items={items}
             availability={availability}
             availabilityLoading={availabilityLoading}
+            selectedPlace={selectedPlace}
+            placeDetail={placeDetail}
+            placeModalOpen={placeModalOpen}
+            placeMode={placeMode}
+            onChangeSelectedPlace={setSelectedPlace}
+            onChangePlaceDetail={setPlaceDetail}
+            onOpenPlaceModal={() => setPlaceModalOpen(true)}
+            onClosePlaceModal={() => setPlaceModalOpen(false)}
+            onChangePlaceMode={setPlaceMode}
             onChangeDate={(value) => setQuery({ date: value })}
             onChangeReservationSpaceId={setReservationSpaceId}
             onChangeDurationHours={setDurationHours}
@@ -586,6 +657,41 @@ export function ReservationsPage() {
         danger={danger}
         onConfirm={() => action?.()}
         onCancel={closeConfirm}
+      />
+
+      <PlaceSelectModal
+        open={placeModalOpen}
+        title="예약 장소 선택"
+        loading={busy}
+        placeName={placeNameInput}
+        address={addressInput}
+        onChangePlaceName={setPlaceNameInput}
+        onChangeAddress={setAddressInput}
+        onSelectPlace={(place) => {
+          setPlaceNameInput(place.placeName)
+          setAddressInput(place.roadAddress || place.address)
+          setLatitudeInput(place.latitude)
+          setLongitudeInput(place.longitude)
+          setExternalPlaceIdInput(place.id)
+        }}
+        onConfirm={() => {
+          if (!placeNameInput.trim()) {
+            setErr('예약 장소를 선택하거나 입력하세요')
+            return
+          }
+
+          setSelectedPlace({
+            name: placeNameInput.trim(),
+            address: addressInput.trim(),
+            latitude: latitudeInput ?? 0,
+            longitude: longitudeInput ?? 0,
+            externalPlaceId:
+              externalPlaceIdInput || `${placeNameInput}-${addressInput}`,
+          })
+
+          setPlaceModalOpen(false)
+        }}
+        onCancel={() => setPlaceModalOpen(false)}
       />
     </PageContainer>
   )

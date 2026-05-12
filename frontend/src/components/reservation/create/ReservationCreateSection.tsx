@@ -1,66 +1,16 @@
-import { CalendarDays, Clock3 } from 'lucide-react'
-import type { ReservationSpaceResponse } from '../../api/reservation/reservationSpaces'
+import { CalendarDays } from 'lucide-react'
+import type { PlaceSelection, ReservationSpaceResponse } from '../../../api/reservation/reservationSpaces'
 import type {
   AvailabilityResponse,
   ReservationResponse,
-} from '../../api/reservation/reservations'
-import { ReservationTimeline } from '../../pages/reservation/ReservationTimeline'
+} from '../../../api/reservation/reservations'
 import {
   addHours,
-  canSelectDuration,
-  getAvailabilityReasonText,
-  hhmm,
-} from '../../utils/reservationUtils'
-
-function SlotButton({
-  disabled,
-  selected,
-  time,
-  description,
-  onClick,
-}: {
-  disabled: boolean
-  selected: boolean
-  time: string
-  description: string
-  onClick: () => void
-}) {
-  return (
-    <button
-      type="button"
-      disabled={disabled}
-      onClick={onClick}
-      title={description}
-      className={`rounded-2xl border px-3 py-4 text-left transition ${
-        selected
-          ? 'border-indigo-600 bg-indigo-600 text-white shadow-sm'
-          : disabled
-            ? 'cursor-not-allowed border-slate-200 bg-slate-50 text-slate-400'
-            : 'border-slate-200 bg-white hover:border-indigo-300 hover:bg-indigo-50 hover:shadow-sm'
-      }`}
-    >
-      <div
-        className={`text-lg font-bold ${selected ? 'text-white' : 'text-slate-800'}`}
-      >
-        {hhmm(time)}
-      </div>
-
-      <div
-        className={`mt-2 min-h-[20px] text-xs leading-5 ${
-          selected
-            ? 'text-indigo-100'
-            : disabled
-              ? description.includes('이미') || description.includes('예약')
-                ? 'text-rose-500'
-                : 'text-amber-500'
-              : 'text-transparent'
-        }`}
-      >
-        {description || ' '}
-      </div>
-    </button>
-  )
-}
+} from '../../../utils/reservationUtils'
+import { ReservationTimeline } from '../realtime/ReservationTimeline'
+import ReservationPlaceSelector from '../place/ReservationPlaceSelector'
+import InternalReservationSlotSelector from '../slot/InternalReservationSlotSelector'
+import ExternalReservationTimeSelector from '../slot/ExternalReservationTimeSelector'
 
 type ReservationCreateSectionProps = {
   date: string
@@ -74,12 +24,22 @@ type ReservationCreateSectionProps = {
   items: ReservationResponse[]
   availability: AvailabilityResponse | null
   availabilityLoading: boolean
+  selectedPlace: PlaceSelection | null
+  placeDetail: string
+  placeModalOpen: boolean
+  placeMode: 'EXTERNAL' | 'INTERNAL'
+
   onChangeDate: (date: string) => void
   onChangeReservationSpaceId: (reservationSpaceId: number | null) => void
   onChangeDurationHours: (hours: number) => void
   onChangeTitle: (value: string) => void
   onChangeSelectedTime: (time: string | null) => void
   onCreate: () => void
+  onChangeSelectedPlace: (place: PlaceSelection | null) => void
+  onChangePlaceDetail: (value: string) => void
+  onOpenPlaceModal: () => void
+  onClosePlaceModal: () => void
+  onChangePlaceMode: (mode: 'EXTERNAL' | 'INTERNAL') => void
 }
 
 export default function ReservationCreateSection({
@@ -94,12 +54,22 @@ export default function ReservationCreateSection({
   items,
   availability,
   availabilityLoading,
+  selectedPlace,
+  placeDetail,
+  placeModalOpen,
+  placeMode,
+
   onChangeDate,
   onChangeReservationSpaceId,
   onChangeDurationHours,
   onChangeTitle,
   onChangeSelectedTime,
   onCreate,
+  onChangeSelectedPlace,
+  onChangePlaceDetail,
+  onOpenPlaceModal,
+  onClosePlaceModal,
+  onChangePlaceMode,
 }: ReservationCreateSectionProps) {
   return (
     <div className="space-y-8">
@@ -139,9 +109,10 @@ export default function ReservationCreateSection({
           </div>
         )}
 
-        <div className="grid gap-4 md:grid-cols-[180px_140px_minmax(220px,1fr)]">
+        <div className="grid gap-4 md:grid-cols-2">
           <div>
             <div className="mb-2 text-sm font-medium text-slate-500">날짜</div>
+
             <input
               type="date"
               value={date}
@@ -152,32 +123,9 @@ export default function ReservationCreateSection({
 
           <div>
             <div className="mb-2 text-sm font-medium text-slate-500">
-              예약 장소
-            </div>
-            <select
-              value={reservationSpaceId?.toString() ?? ''}
-              onChange={(e) =>
-                onChangeReservationSpaceId(
-                  e.target.value ? Number(e.target.value) : null
-                )
-              }
-              className="h-12 w-full rounded-2xl border border-slate-300 bg-white px-4 text-sm text-slate-700 outline-none transition focus:border-indigo-400 focus:ring-4 focus:ring-indigo-100"
-            >
-              <option value="" disabled>
-                공간 선택
-              </option>
-              {reservationSpaces.map((space) => (
-                <option key={space.id} value={space.id}>
-                  {space.name}
-                </option>
-              ))}
-            </select>
-          </div>
-
-          <div>
-            <div className="mb-2 text-sm font-medium text-slate-500">
               예약 시간
             </div>
+
             <select
               value={durationHours}
               onChange={(e) => onChangeDurationHours(Number(e.target.value))}
@@ -188,6 +136,23 @@ export default function ReservationCreateSection({
               <option value={3}>3시간</option>
             </select>
           </div>
+        </div>
+
+        <div className="mt-4">
+          <ReservationPlaceSelector
+            reservationSpaceId={reservationSpaceId}
+            reservationSpaces={reservationSpaces}
+            selectedPlace={selectedPlace}
+            placeDetail={placeDetail}
+            placeModalOpen={placeModalOpen}
+            placeMode={placeMode}
+            onChangeReservationSpaceId={onChangeReservationSpaceId}
+            onChangeSelectedPlace={onChangeSelectedPlace}
+            onChangePlaceDetail={onChangePlaceDetail}
+            onOpenPlaceModal={onOpenPlaceModal}
+            onClosePlaceModal={onClosePlaceModal}
+            onChangePlaceMode={onChangePlaceMode}
+          />
         </div>
 
         <div className="mt-4">
@@ -202,51 +167,21 @@ export default function ReservationCreateSection({
           />
         </div>
 
-        <div className="mb-3 mt-6 flex items-center gap-2 text-sm font-medium text-slate-500">
-          <Clock3 className="h-4 w-4" />
-          <span>시간 선택 (1시간 단위)</span>
-        </div>
-
-        <div className="grid grid-cols-2 gap-3 sm:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5">
-          {availabilityLoading ? (
-            <div className="col-span-full rounded-2xl border border-slate-200 bg-slate-50 px-4 py-4 text-sm text-slate-500">
-              예약 가능 시간을 불러오는 중이에요.
-            </div>
-          ) : !availability ? (
-            <div className="col-span-full rounded-2xl border border-slate-200 bg-slate-50 px-4 py-4 text-sm text-slate-500">
-              예약 장소와 날짜를 선택하면 예약 가능 시간을 확인할 수 있어요.
-            </div>
-          ) : (
-            availability.slots.map((slot) => {
-              const unavailable = !canSelectDuration(
-                availability.slots,
-                slot.startTime,
-                durationHours
-              )
-              const isServerUnavailable = !slot.available
-              const selected = selectedTime === slot.startTime
-              const description = isServerUnavailable
-                ? getAvailabilityReasonText(slot.reason)
-                : unavailable
-                  ? `${durationHours}시간 연속 선택 불가`
-                  : ''
-
-              return (
-                <SlotButton
-                  key={`${slot.startTime}-${slot.endTime}`}
-                  disabled={unavailable || isServerUnavailable || busy}
-                  selected={selected}
-                  time={slot.startTime}
-                  description={description}
-                  onClick={() => {
-                    if (unavailable || isServerUnavailable || busy) return
-                    onChangeSelectedTime(slot.startTime)
-                  }}
-                />
-              )
-            })
-          )}
-        </div>
+        {placeMode === 'INTERNAL' ? (
+          <InternalReservationSlotSelector
+            availability={availability}
+            availabilityLoading={availabilityLoading}
+            durationHours={durationHours}
+            selectedTime={selectedTime}
+            busy={busy}
+            onChangeSelectedTime={onChangeSelectedTime}
+          />
+        ) : (
+          <ExternalReservationTimeSelector
+            selectedTime={selectedTime}
+            onChangeSelectedTime={onChangeSelectedTime}
+          />
+        )}
 
         <div className="mt-6 flex flex-col gap-4 rounded-2xl border border-slate-200 bg-slate-50 p-4 md:flex-row md:items-center md:justify-between">
           <div>

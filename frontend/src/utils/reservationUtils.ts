@@ -176,16 +176,18 @@ export function getReservationDisplayPlaceName(
   return reservation.reservationSpaceName
 }
 
-export function getReservationDisplayPlaceDetail(
-  reservation: ReservationResponse
-) {
+export function getReservationDisplayPlaceDetail(reservation: {
+  providerType?: string | null
+  placeDetail?: string | null
+  reservationSpaceName?: string | null
+}) {
   if (reservation.placeDetail?.trim()) {
     return reservation.placeDetail
   }
 
   if (reservation.providerType === 'INTERNAL') {
-    return reservation.reservationSpaceName
+    return reservation.reservationSpaceName ?? ''
   }
 
-  return null
+  return ''
 }

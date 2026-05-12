@@ -1,6 +1,6 @@
-import type { ReservationResponse } from "../../../api/reservation/reservations"
-import { addHours } from "../../../utils/reservationUtils"
-import { ReservationTimeline } from "../../../pages/reservation/ReservationTimeline"
+import type { ReservationResponse } from '../../../api/reservation/reservations'
+import { addHours } from '../../../utils/reservationUtils'
+import { ReservationTimeline } from '../../reservation/realtime/ReservationTimeline'
 
 type StudyReservationStatusSectionProps = {
   reservationSpaceId: number | null

@@ -1,7 +1,7 @@
-import type { ReservationResponse } from "../../api/reservation/reservations"
-import ReservationCard from "./ReservationCard"
+import type { ReservationResponse } from '../../../api/reservation/reservations'
+import ReservationCard from '../create/ReservationCard'
 
-type Scope = "all" | "mine"
+type Scope = 'all' | 'mine'
 
 type ReservationListSectionProps = {
   title: string
@@ -44,7 +44,9 @@ export default function ReservationListSection({
         <div className="space-y-5">
           {Object.entries(groupedItems).map(([groupDate, reservations]) => (
             <div key={groupDate} className="space-y-3">
-              <div className="text-sm font-semibold text-slate-500">{groupDate}</div>
+              <div className="text-sm font-semibold text-slate-500">
+                {groupDate}
+              </div>
 
               <div className="space-y-3">
                 {reservations.map((reservation) => (
