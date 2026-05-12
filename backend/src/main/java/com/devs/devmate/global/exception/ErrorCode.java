@@ -50,7 +50,7 @@ public enum ErrorCode {
 
     // RESERVATION_SPACE
     RESERVATION_SPACE_NOT_FOUND(HttpStatus.NOT_FOUND, "RESERVATION_SPACE_404", "예약 장소를 찾을 수 없습니다."),
-
+    RESERVATION_SPACE_NOT_RESERVABLE(HttpStatus.BAD_REQUEST, "RESERVATION_SPACE_400", "예약 가능한 공간이 아닙니다."),
     // RESERVATION
     RESERVATION_NOT_FOUND(HttpStatus.NOT_FOUND, "RESERVATION_404", "예약을 찾을 수 없습니다."),
     RESERVATION_TIME_INVALID(HttpStatus.BAD_REQUEST, "RESERVATION_400", "예약 시간을 확인해주세요."),

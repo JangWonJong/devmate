@@ -9,6 +9,11 @@ import com.devs.devmate.post.entity.Post;
 import com.devs.devmate.post.repository.PostRepository;
 import com.devs.devmate.reservation.command.entity.Reservation;
 import com.devs.devmate.reservation.command.repository.ReservationRepository;
+import com.devs.devmate.reservation.space.dto.ReservationSpaceCreateRequest;
+import com.devs.devmate.reservation.space.dto.ReservationSpaceResponse;
+import com.devs.devmate.reservation.space.entity.ReservationSpace;
+import com.devs.devmate.reservation.space.repository.ReservationSpaceRepository;
+import com.devs.devmate.reservation.space.service.ReservationSpaceService;
 import com.devs.devmate.study.dto.StudyCreateRequest;
 import com.devs.devmate.study.dto.StudyMemberResponse;
 import com.devs.devmate.study.dto.StudyPlaceUpdateRequest;
@@ -41,6 +46,8 @@ public class StudyServiceImpl implements StudyService{
     private final MemberRepository memberRepository;
     private final ReservationRepository reservationRepository;
     private final NotificationService notificationService;
+    private final ReservationSpaceRepository reservationSpaceRepository;
+    private final ReservationSpaceService reservationSpaceService;
 
     private String findLeaderNickname(Long studyId) {
         return studyMemberRepository.findByStudyIdAndStatus(studyId, StudyMember.Status.JOINED)
@@ -554,12 +561,58 @@ public class StudyServiceImpl implements StudyService{
             throw new BusinessException(ErrorCode.FORBIDDEN_STUDY_UPDATE);
         }
 
+        String placeName =
+                request.placeName() != null ? request.placeName().trim() : null;
+
+        String address =
+                request.address() != null ? request.address().trim() : null;
+
         study.updatePlace(
                 request.placeName() != null ? request.placeName().trim() : null,
                 request.address() != null ? request.address().trim() : null,
                 request.latitude(),
                 request.longitude()
         );
+
+        List<Reservation> studyReservations =
+                reservationRepository.findAllByStudyIdAndStatus(
+                        studyId,
+                        Reservation.Status.ACTIVE
+                );
+
+        if (placeName != null && !placeName.isBlank()) {
+            ReservationSpace nextReservationSpace;
+
+            boolean externalPlace = address != null && !address.isBlank();
+
+            if (externalPlace) {
+                ReservationSpaceResponse spaceResponse =
+                        reservationSpaceService.createUserInputSpace(
+                                new ReservationSpaceCreateRequest(
+                                        placeName,
+                                        address,
+                                        request.latitude(),
+                                        request.longitude(),
+                                        request.externalPlaceId() != null
+                                                ? request.externalPlaceId()
+                                                : placeName + "-" + address
+                                )
+                        );
+
+                nextReservationSpace = reservationSpaceRepository.findById(spaceResponse.id())
+                        .orElseThrow(() -> new BusinessException(ErrorCode.RESERVATION_SPACE_NOT_FOUND));
+            } else {
+                nextReservationSpace = reservationSpaceRepository.findByName(placeName)
+                        .orElseThrow(() -> new BusinessException(ErrorCode.RESERVATION_SPACE_NOT_FOUND));
+            }
+
+            for (Reservation reservation : studyReservations) {
+                reservation.updatePlace(
+                        nextReservationSpace,
+                        null
+                );
+            }
+        }
 
         return study.getId();
     }

@@ -43,4 +43,8 @@ public class ReservationSpace extends BaseEntity {
     @Column(nullable = false)
     @Builder.Default
     private boolean active = true;
+
+    public boolean isReservableSpace() {
+        return this.providerType == ReservationSpaceType.INTERNAL;
+    }
 }

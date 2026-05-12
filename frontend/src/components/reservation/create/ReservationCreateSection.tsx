@@ -9,8 +9,8 @@ import {
 } from '../../../utils/reservationUtils'
 import { ReservationTimeline } from '../realtime/ReservationTimeline'
 import ReservationPlaceSelector from '../place/ReservationPlaceSelector'
-import InternalReservationSlotSelector from '../slot/InternalReservationSlotSelector'
-import ExternalReservationTimeSelector from '../slot/ExternalReservationTimeSelector'
+import ReservationTimeSelector from '../slot/ReservationTimeSelector'
+
 
 type ReservationCreateSectionProps = {
   date: string
@@ -167,21 +167,15 @@ export default function ReservationCreateSection({
           />
         </div>
 
-        {placeMode === 'INTERNAL' ? (
-          <InternalReservationSlotSelector
-            availability={availability}
-            availabilityLoading={availabilityLoading}
-            durationHours={durationHours}
-            selectedTime={selectedTime}
-            busy={busy}
-            onChangeSelectedTime={onChangeSelectedTime}
-          />
-        ) : (
-          <ExternalReservationTimeSelector
-            selectedTime={selectedTime}
-            onChangeSelectedTime={onChangeSelectedTime}
-          />
-        )}
+        <ReservationTimeSelector
+          mode={placeMode}
+          availability={availability}
+          availabilityLoading={availabilityLoading}
+          durationHours={durationHours}
+          selectedTime={selectedTime}
+          busy={busy}
+          onChangeSelectedTime={onChangeSelectedTime}
+        />
 
         <div className="mt-6 flex flex-col gap-4 rounded-2xl border border-slate-200 bg-slate-50 p-4 md:flex-row md:items-center md:justify-between">
           <div>

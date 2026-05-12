@@ -1,63 +1,9 @@
-import { CalendarDays, Clock3 } from 'lucide-react'
+import { CalendarDays } from 'lucide-react'
 import type { ReservationSpaceResponse } from '../../../api/reservation/reservationSpaces'
 import type { AvailabilityResponse } from '../../../api/reservation/reservations'
 import type { StudyResponse } from '../../../api/study/study'
-import {
-  addHours,
-  canSelectDuration,
-  getSlotDescription,
-  hhmm,
-} from '../../../utils/reservationUtils'
-
-function SlotButton({
-  disabled,
-  selected,
-  time,
-  description,
-  onClick,
-}: {
-  disabled: boolean
-  selected: boolean
-  time: string
-  description: string
-  onClick: () => void
-}) {
-  return (
-    <button
-      type="button"
-      disabled={disabled}
-      onClick={onClick}
-      title={description}
-      className={`rounded-2xl border px-3 py-4 text-left transition ${
-        selected
-          ? 'border-indigo-600 bg-indigo-600 text-white shadow-sm'
-          : disabled
-            ? 'cursor-not-allowed border-slate-200 bg-slate-50 text-slate-400'
-            : 'border-slate-200 bg-white hover:border-indigo-300 hover:bg-indigo-50 hover:shadow-sm'
-      }`}
-    >
-      <div
-        className={`text-lg font-bold ${selected ? 'text-white' : 'text-slate-800'}`}
-      >
-        {hhmm(time)}
-      </div>
-
-      <div
-        className={`mt-2 min-h-[20px] text-xs leading-5 ${
-          selected
-            ? 'text-indigo-100'
-            : disabled
-              ? description.includes('이미')
-                ? 'text-rose-500'
-                : 'text-amber-500'
-              : 'text-transparent'
-        }`}
-      >
-        {description || ' '}
-      </div>
-    </button>
-  )
-}
+import { addHours } from '../../../utils/reservationUtils'
+import ReservationTimeSelector from '../../reservation/slot/ReservationTimeSelector'
 
 type StudyReservationCreateSectionProps = {
   study: StudyResponse
@@ -65,6 +11,7 @@ type StudyReservationCreateSectionProps = {
   reservationSpaceId: number | null
   reservationSpaces: ReservationSpaceResponse[]
   placeDetail: string
+  placeMode: 'INTERNAL' | 'EXTERNAL'
   durationHours: number
   selectedTime: string | null
   saving: boolean
@@ -84,6 +31,7 @@ export default function StudyReservationCreateSection({
   reservationSpaceId,
   reservationSpaces,
   placeDetail,
+  placeMode,
   durationHours,
   selectedTime,
   saving,
@@ -96,6 +44,11 @@ export default function StudyReservationCreateSection({
   onChangeSelectedTime,
   onCreate,
 }: StudyReservationCreateSectionProps) {
+  
+  const internalSpaces = reservationSpaces.filter(
+    (space) => space.providerType === 'INTERNAL'
+  )
+
   return (
     <section className="rounded-[28px] border border-slate-200 bg-white p-6 shadow-sm">
       <div className="mb-5 flex items-center gap-2">
@@ -145,7 +98,7 @@ export default function StudyReservationCreateSection({
                 공간 선택
               </option>
 
-              {reservationSpaces.map((space) => (
+              {internalSpaces.map((space) => (
                 <option key={space.id} value={space.id}>
                   {space.name}
                 </option>
@@ -163,7 +116,11 @@ export default function StudyReservationCreateSection({
             type="text"
             value={placeDetail}
             onChange={(e) => onChangePlaceDetail(e.target.value)}
-            placeholder="예: 2층 창가 / 예약자명 WJ"
+            placeholder={
+              placeMode === 'EXTERNAL'
+                ? '예: 지하 1층 / 창가 좌석'
+                : '예: 2층 창가 / 예약'
+            }
             className="h-12 w-full rounded-2xl border border-slate-300 bg-white px-4 text-sm text-slate-700 outline-none transition focus:border-indigo-400 focus:ring-4 focus:ring-indigo-100"
           />
         </div>
@@ -184,51 +141,15 @@ export default function StudyReservationCreateSection({
         </div>
       </div>
 
-      <div className="mb-3 mt-6 flex items-center gap-2 text-sm font-medium text-slate-500">
-        <Clock3 className="h-4 w-4" />
-        <span>시간 선택 (1시간 단위)</span>
-      </div>
-
-      <div className="grid grid-cols-2 gap-3 sm:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5">
-        {availabilityLoading ? (
-          <div className="col-span-full rounded-2xl border border-slate-200 bg-slate-50 px-4 py-4 text-sm text-slate-500">
-            예약 가능 시간을 불러오는 중이에요.
-          </div>
-        ) : !availability ? (
-          <div className="col-span-full rounded-2xl border border-slate-200 bg-slate-50 px-4 py-4 text-sm text-slate-500">
-            예약 장소와 날짜를 선택하면 예약 가능 시간을 확인할 수 있어요.
-          </div>
-        ) : (
-          availability.slots.map((slot) => {
-            const unavailable = !canSelectDuration(
-              availability.slots,
-              slot.startTime,
-              durationHours
-            )
-            const isServerUnavailable = !slot.available
-            const selected = selectedTime === slot.startTime
-            const description = getSlotDescription(
-              slot,
-              availability.slots,
-              durationHours
-            )
-
-            return (
-              <SlotButton
-                key={`${slot.startTime}-${slot.endTime}`}
-                disabled={unavailable || isServerUnavailable || saving}
-                selected={selected}
-                time={slot.startTime}
-                description={description}
-                onClick={() => {
-                  if (unavailable || isServerUnavailable || saving) return
-                  onChangeSelectedTime(slot.startTime)
-                }}
-              />
-            )
-          })
-        )}
-      </div>
+      <ReservationTimeSelector
+        mode={placeMode}
+        availability={availability}
+        availabilityLoading={availabilityLoading}
+        durationHours={durationHours}
+        selectedTime={selectedTime}
+        busy={saving}
+        onChangeSelectedTime={onChangeSelectedTime}
+      />
 
       <div className="mt-6 flex flex-col gap-4 rounded-2xl border border-slate-200 bg-slate-50 p-4 md:flex-row md:items-center md:justify-between">
         <div>

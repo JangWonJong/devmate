@@ -3,6 +3,7 @@ import { useCallback, useEffect, useState } from 'react'
 import { useNavigate, useParams } from 'react-router-dom'
 import { tokenStore } from '../../api/auth/token'
 import {
+  createUserInputReservationSpace,
   listReservationSpaces,
   type ReservationSpaceResponse,
 } from '../../api/reservation/reservationSpaces'
@@ -49,22 +50,24 @@ export function StudyReservationPage() {
 
   const [err, setErr] = useState<string | null>(null)
 
+  const isExternalStudyPlace = Boolean(study?.placeName?.trim())
+
   const loadReservations = useCallback(async () => {
     if (!date) return
 
     const page = await listReservations({
       date,
-      reservationSpaceId,
+      reservationSpaceId: isExternalStudyPlace ? undefined : reservationSpaceId,
       page: 0,
       size: 50,
       sort: 'startTime,asc',
     })
 
-    setItems(page.content)
-  }, [date, reservationSpaceId])
+    setItems(page.content.filter((item) => item.studyId === parsedStudyId))
+  }, [date, reservationSpaceId, isExternalStudyPlace, parsedStudyId])
 
   const refreshAvailability = useCallback(async () => {
-    if (!reservationSpaceId || !date) {
+    if (isExternalStudyPlace || !reservationSpaceId || !date) {
       setAvailability(null)
       return
     }
@@ -82,27 +85,23 @@ export function StudyReservationPage() {
     } finally {
       setAvailabilityLoading(false)
     }
-  }, [reservationSpaceId, date])
+  }, [reservationSpaceId, date, isExternalStudyPlace])
 
   const loadAll = useCallback(async () => {
     const page = await listReservations({
       date,
-      reservationSpaceId,
+      reservationSpaceId: isExternalStudyPlace ? undefined : reservationSpaceId,
       page: 0,
       size: 50,
       sort: 'startTime,asc',
     })
-    setItems(page.content)
-  }, [date, reservationSpaceId])
+
+    setItems(page.content.filter((item) => item.studyId === parsedStudyId))
+  }, [date, reservationSpaceId, isExternalStudyPlace, parsedStudyId])
 
   const onCreate = async () => {
     if (!parsedStudyId || Number.isNaN(parsedStudyId)) {
       setErr('잘못된 스터디 정보예요.')
-      return
-    }
-
-    if (!reservationSpaceId) {
-      setErr('예약 장소를 선택하세요.')
       return
     }
 
@@ -115,12 +114,37 @@ export function StudyReservationPage() {
       setSaving(true)
       setErr(null)
 
+      let resolvedReservationSpaceId = reservationSpaceId
+
+      if (isExternalStudyPlace) {
+        if (!study?.placeName?.trim()) {
+          setErr('스터디 장소 정보가 없어요.')
+          return
+        }
+
+        const createdSpace = await createUserInputReservationSpace({
+          name: study.placeName.trim(),
+          address: study.address ?? '',
+          latitude: study.latitude ?? 0,
+          longitude: study.longitude ?? 0,
+          externalPlaceId:
+            `${study.placeName}-${study.address ?? ''}`,
+        })
+
+        resolvedReservationSpaceId = createdSpace.id
+      }
+
+      if (!resolvedReservationSpaceId) {
+        setErr('예약 장소를 선택하세요.')
+        return
+      }
+
       await createStudyReservation(parsedStudyId, {
-        reservationSpaceId,
+        reservationSpaceId: resolvedReservationSpaceId,
         date,
         startTime: selectedTime,
         endTime: addHours(selectedTime, durationHours),
-        placeDetail,
+        placeDetail: placeDetail.trim() || undefined,
       })
 
       appToast.success('스터디 예약이 완료되었어요.')
@@ -137,7 +161,7 @@ export function StudyReservationPage() {
   }
 
   useEffect(() => {
-    if (!reservationSpaceId || !date) return
+    if (isExternalStudyPlace || !reservationSpaceId || !date) return
 
     const token = tokenStore.getAccess()
     if (!token) return
@@ -154,7 +178,7 @@ export function StudyReservationPage() {
     return () => {
       es.close()
     }
-  }, [reservationSpaceId, date, refreshAvailability, loadAll])
+  }, [isExternalStudyPlace, reservationSpaceId, date, refreshAvailability, loadAll])
 
   useEffect(() => {
     ;(async () => {
@@ -176,8 +200,14 @@ export function StudyReservationPage() {
         setStudy(studyRes)
         setReservationSpaces(spaceRes)
 
-        if (spaceRes.length > 0) {
-          setReservationSpaceId((prev) => (prev == null ? spaceRes[0].id : prev))
+        const internalSpaces = spaceRes.filter(
+          (space) => space.providerType === 'INTERNAL'
+        )
+
+        if (internalSpaces.length > 0) {
+          setReservationSpaceId((prev) =>
+            prev == null ? internalSpaces[0].id : prev
+          )
         }
       } catch (e: any) {
         setErr(apiErrorMessage(e, '스터디 예약 페이지 조회 실패'))
@@ -221,7 +251,7 @@ export function StudyReservationPage() {
       </div>
     )
   }
-
+  
   return (
     <PageContainer>
       <div className="mx-auto w-full max-w-6xl space-y-6">
@@ -264,6 +294,7 @@ export function StudyReservationPage() {
               reservationSpaceId={reservationSpaceId}
               reservationSpaces={reservationSpaces}
               placeDetail={placeDetail}
+              placeMode={isExternalStudyPlace ? 'EXTERNAL' : 'INTERNAL'}
               durationHours={durationHours}
               selectedTime={selectedTime}
               saving={saving}

@@ -219,6 +219,67 @@ public class ReservationServiceImpl implements ReservationService{
         reservationSseService.send(reservationSpaceId, date);
     }
 
+    private Reservation savePersonalReservation(
+            Member member,
+            ReservationSpace reservationSpace,
+            ReservationCreateRequest req
+    ) {
+        return reservationRepository.save(
+                Reservation.builder()
+                        .member(member)
+                        .reservationSpace(reservationSpace)
+                        .date(req.date())
+                        .startTime(req.startTime())
+                        .endTime(req.endTime())
+                        .title(req.title().trim())
+                        .placeDetail(req.placeDetail() == null ? null : req.placeDetail().trim())
+                        .status(Reservation.Status.ACTIVE)
+                        .build()
+        );
+    }
+
+    private Reservation saveStudyReservation(
+            Member member,
+            ReservationSpace reservationSpace,
+            Study study,
+            String title,
+            StudyReservationCreateRequest req
+    ) {
+        return reservationRepository.save(
+                Reservation.builder()
+                        .member(member)
+                        .reservationSpace(reservationSpace)
+                        .study(study)
+                        .date(req.date())
+                        .startTime(req.startTime())
+                        .endTime(req.endTime())
+                        .title(title)
+                        .placeDetail(req.placeDetail() == null ? null : req.placeDetail().trim())
+                        .status(Reservation.Status.ACTIVE)
+                        .build()
+        );
+    }
+
+    private void notifyStudyReservationCreated(
+            Long studyId,
+            Member member,
+            Study study
+    ) {
+        List<StudyMember> joinedMembers = studyMemberRepository.findByStudyIdAndStatus(
+                studyId, StudyMember.Status.JOINED
+        );
+
+        for (StudyMember studyMember : joinedMembers) {
+            notificationService.createStudyReservationCreated(
+                    studyMember.getMember(),
+                    member,
+                    study.getPost().getId(),
+                    study.getPost().getTitle()
+            );
+        }
+    }
+
+
     @Override
     public ReservationCreateResponse create(Long memberId, ReservationCreateRequest req) {
 
@@ -239,24 +300,22 @@ public class ReservationServiceImpl implements ReservationService{
             throw new BusinessException(ErrorCode.DELETED_MEMBER);
         }
 
+        if (!reservationSpace.isReservableSpace()) {
+            Reservation saved = savePersonalReservation(member, reservationSpace, req);
+            return new ReservationCreateResponse(saved.getId());
+        }
+
         String lockKey = createLockKey(req.reservationSpaceId(), req.date());
 
         return executeWithLock(lockKey, () -> {
             validateReservationOverlap(
-                    reservationSpace.getId(), req.date(), req.startTime(), req.endTime());
-
-            Reservation saved = reservationRepository.save(
-                    Reservation.builder()
-                            .member(member)
-                            .reservationSpace(reservationSpace)
-                            .date(req.date())
-                            .startTime(req.startTime())
-                            .endTime(req.endTime())
-                            .title(req.title().trim())
-                            .placeDetail(req.placeDetail() == null ? null : req.placeDetail().trim())
-                            .status(Reservation.Status.ACTIVE)
-                            .build()
+                    reservationSpace.getId(),
+                    req.date(),
+                    req.startTime(),
+                    req.endTime()
             );
+
+            Reservation saved = savePersonalReservation(member, reservationSpace, req);
 
             sendReservationUpdateAfterCommit(req.reservationSpaceId(), req.date());
 
@@ -283,11 +342,17 @@ public class ReservationServiceImpl implements ReservationService{
             throw new BusinessException(ErrorCode.FORBIDDEN_STUDY_RESERVATION);
         }
 
-        validateStudyMembersReservationConflict(
-                studyId, memberId, req.date(), req.startTime(), req.endTime()
-        );
-
         ReservationSpace reservationSpace = findReservationSpace(req.reservationSpaceId());
+
+        if (reservationSpace.isReservableSpace()) {
+            validateStudyMembersReservationConflict(
+                    studyId,
+                    memberId,
+                    req.date(),
+                    req.startTime(),
+                    req.endTime()
+            );
+        }
 
         Member member = memberRepository.findById(memberId)
                 .orElseThrow(() -> new BusinessException(ErrorCode.MEMBER_NOT_FOUND));
@@ -296,8 +361,23 @@ public class ReservationServiceImpl implements ReservationService{
             throw new BusinessException(ErrorCode.DELETED_MEMBER);
         }
 
-        String lockKey = createLockKey(req.reservationSpaceId(), req.date());
         String title = "[스터디] " + study.getPost().getTitle();
+
+        if (!reservationSpace.isReservableSpace()) {
+            Reservation saved = saveStudyReservation(
+                    member,
+                    reservationSpace,
+                    study,
+                    title,
+                    req
+            );
+
+            notifyStudyReservationCreated(studyId, member, study);
+
+            return new ReservationCreateResponse(saved.getId());
+        }
+
+        String lockKey = createLockKey(req.reservationSpaceId(), req.date());
 
         return executeWithLock(lockKey, () -> {
             validateReservationOverlap(
@@ -307,32 +387,15 @@ public class ReservationServiceImpl implements ReservationService{
                     req.endTime()
             );
 
-            Reservation saved = reservationRepository.save(
-                    Reservation.builder()
-                            .member(member)
-                            .reservationSpace(reservationSpace)
-                            .study(study)
-                            .date(req.date())
-                            .startTime(req.startTime())
-                            .endTime(req.endTime())
-                            .title(title)
-                            .placeDetail(req.placeDetail() == null ? null : req.placeDetail().trim())
-                            .status(Reservation.Status.ACTIVE)
-                            .build()
+            Reservation saved = saveStudyReservation(
+                    member,
+                    reservationSpace,
+                    study,
+                    title,
+                    req
             );
 
-            List<StudyMember> joinedMembers = studyMemberRepository.findByStudyIdAndStatus(
-                    studyId, StudyMember.Status.JOINED
-            );
-
-            for (StudyMember studyMember : joinedMembers) {
-                notificationService.createStudyReservationCreated(
-                        studyMember.getMember(),
-                        member,
-                        study.getPost().getId(),
-                        study.getPost().getTitle()
-                );
-            }
+            notifyStudyReservationCreated(studyId, member, study);
 
             sendReservationUpdateAfterCommit(req.reservationSpaceId(), req.date());
 
@@ -378,6 +441,7 @@ public class ReservationServiceImpl implements ReservationService{
 
     @Override
     public void cancel(Long memberId, Long reservationId) {
+
         Reservation reservation = reservationRepository.findById(reservationId)
                 .orElseThrow(() -> new BusinessException(ErrorCode.RESERVATION_NOT_FOUND));
 
@@ -389,13 +453,23 @@ public class ReservationServiceImpl implements ReservationService{
 
         reservation.cancel();
 
-        sendReservationUpdateAfterCommit(reservation.getReservationSpace().getId(), reservation.getDate());
+        if (reservation.getReservationSpace().isReservableSpace()) {
+            sendReservationUpdateAfterCommit(
+                    reservation.getReservationSpace().getId(),
+                    reservation.getDate()
+            );
+        }
     }
 
     @Override
     public AvailabilityResponse getAvailability(Long reservationSpaceId, Long memberId, LocalDate date) {
+
         ReservationSpace reservationSpace = reservationSpaceRepository.findById(reservationSpaceId)
                 .orElseThrow(() -> new BusinessException(ErrorCode.RESERVATION_SPACE_NOT_FOUND));
+
+        if (!reservationSpace.isReservableSpace()) {
+            throw new BusinessException(ErrorCode.RESERVATION_SPACE_NOT_RESERVABLE);
+        }
 
         List<Reservation> spaceReservations = reservationRepository.findByReservationSpaceIdAndDateAndStatus(
                 reservationSpace.getId(),

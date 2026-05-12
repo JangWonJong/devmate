@@ -12,4 +12,6 @@ public interface ReservationSpaceRepository extends JpaRepository<ReservationSpa
     List<ReservationSpace> findByActiveTrue();
 
     Optional<ReservationSpace> findByExternalPlaceId(String externalPlaceId);
+
+    Optional<ReservationSpace> findByName(String name);
 }

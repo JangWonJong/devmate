@@ -72,4 +72,9 @@ public class Reservation extends BaseEntity {
     public boolean isCanceled() {
         return this.status == Status.CANCELED;
     }
+
+    public void updatePlace(ReservationSpace reservationSpace, String placeDetail) {
+        this.reservationSpace = reservationSpace;
+        this.placeDetail = placeDetail;
+    }
 }

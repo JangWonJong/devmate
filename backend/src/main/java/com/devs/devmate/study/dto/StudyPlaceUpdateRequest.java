@@ -4,6 +4,7 @@ public record StudyPlaceUpdateRequest(
         String placeName,
         String address,
         Double latitude,
-        Double longitude
+        Double longitude,
+        String externalPlaceId
 ) {
 }
