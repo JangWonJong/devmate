@@ -14,6 +14,7 @@ type ReservationListSectionProps = {
   getReservationStatus: (date: string, endTime: string) => string
   isCancelable: (date: string, startTime: string) => boolean
   onCancel: (id: number) => void
+  onEdit: (reservation: ReservationResponse) => void
   onMoveToStudyPost: (postId: number | null) => void
 }
 
@@ -28,6 +29,7 @@ export default function ReservationListSection({
   getReservationStatus,
   isCancelable,
   onCancel,
+  onEdit,
   onMoveToStudyPost,
 }: ReservationListSectionProps) {
   return (
@@ -59,6 +61,7 @@ export default function ReservationListSection({
                     getReservationStatus={getReservationStatus}
                     isCancelable={isCancelable}
                     onCancel={onCancel}
+                    onEdit={onEdit}
                     onMoveToStudyPost={onMoveToStudyPost}
                   />
                 ))}

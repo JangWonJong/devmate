@@ -10,10 +10,7 @@ import com.devs.devmate.reservation.availability.AvailabilityEvaluationResult;
 import com.devs.devmate.reservation.availability.ReservationAvailabilityEvaluator;
 import com.devs.devmate.reservation.availability.dto.AvailabilityResponse;
 import com.devs.devmate.reservation.availability.dto.AvailabilitySlotResponse;
-import com.devs.devmate.reservation.command.dto.ReservationCreateRequest;
-import com.devs.devmate.reservation.command.dto.ReservationCreateResponse;
-import com.devs.devmate.reservation.command.dto.ReservationResponse;
-import com.devs.devmate.reservation.command.dto.StudyReservationCreateRequest;
+import com.devs.devmate.reservation.command.dto.*;
 import com.devs.devmate.reservation.command.entity.Reservation;
 import com.devs.devmate.reservation.space.entity.ReservationSpace;
 import com.devs.devmate.reservation.command.repository.ReservationLockRepository;
@@ -122,6 +119,64 @@ public class ReservationServiceImpl implements ReservationService{
 
         if (now.isAfter(cancelDeadline)) {
             throw new BusinessException(ErrorCode.RESERVATION_CANCEL_NOT_ALLOWED);
+        }
+    }
+
+    private void validateUpdatable(Reservation reservation) {
+
+        LocalDateTime reservationStart = LocalDateTime.of(
+                reservation.getDate(),
+                reservation.getStartTime()
+        );
+
+        LocalDateTime deadline = reservationStart.minusHours(1);
+
+        if (LocalDateTime.now().isAfter(deadline)) {
+            throw new BusinessException(ErrorCode.RESERVATION_UPDATE_NOT_ALLOWED);
+        }
+    }
+
+    private void validateReservationOverlapExcludingSelf(
+            Long reservationId,
+            Long reservationSpaceId,
+            LocalDate date,
+            LocalTime startTime,
+            LocalTime endTime
+    ) {
+        boolean overlap =
+                reservationRepository.existsReservationSpaceOverlapExcludingSelf(
+                        reservationId,
+                        reservationSpaceId,
+                        date,
+                        startTime,
+                        endTime,
+                        Reservation.Status.ACTIVE
+                );
+
+        if (overlap) {
+            throw new BusinessException(ErrorCode.RESERVATION_OVERLAP);
+        }
+    }
+
+    private void validateMemberOverlapExcludingSelf(
+            Long reservationId,
+            Long memberId,
+            LocalDate date,
+            LocalTime startTime,
+            LocalTime endTime
+    ) {
+        boolean overlap =
+                reservationRepository.existsMemberOverlapExcludingSelf(
+                        reservationId,
+                        memberId,
+                        date,
+                        startTime,
+                        endTime,
+                        Reservation.Status.ACTIVE
+                );
+
+        if (overlap) {
+            throw new BusinessException(ErrorCode.MEMBER_RESERVATION_TIME_CONFLICT);
         }
     }
 
@@ -459,6 +514,77 @@ public class ReservationServiceImpl implements ReservationService{
                     reservation.getDate()
             );
         }
+    }
+
+    @Override
+    public void update(Long memberId, Long reservationId, ReservationUpdateRequest request) {
+        Reservation reservation = reservationRepository.findById(reservationId)
+                .orElseThrow(() -> new BusinessException(ErrorCode.RESERVATION_NOT_FOUND));
+
+        if (!reservation.getMember().getId().equals(memberId)) {
+            throw new BusinessException(ErrorCode.FORBIDDEN_RESERVATION);
+        }
+
+        validateUpdatable(reservation);
+
+        validateReservationTime(request.startTime(), request.endTime());
+        validateNotPastReservation(request.date(), request.startTime());
+
+        validateMemberOverlapExcludingSelf(
+                reservation.getId(),
+                memberId,
+                request.date(),
+                request.startTime(),
+                request.endTime()
+        );
+
+        if (reservation.getReservationSpace().isReservableSpace()) {
+
+            String lockKey = createLockKey(
+                    reservation.getReservationSpace().getId(),
+                    request.date()
+            );
+
+            executeWithLock(lockKey, () -> {
+
+                validateReservationOverlapExcludingSelf(
+                        reservation.getId(),
+                        reservation.getReservationSpace().getId(),
+                        request.date(),
+                        request.startTime(),
+                        request.endTime()
+                );
+
+                reservation.update(
+                        request.date(),
+                        request.startTime(),
+                        request.endTime(),
+                        request.title().trim(),
+                        request.placeDetail() == null
+                                ? null
+                                : request.placeDetail().trim()
+                );
+
+                sendReservationUpdateAfterCommit(
+                        reservation.getReservationSpace().getId(),
+                        request.date()
+                );
+
+                return null;
+            });
+
+            return;
+        }
+
+        reservation.update(
+                request.date(),
+                request.startTime(),
+                request.endTime(),
+                request.title().trim(),
+                request.placeDetail() == null
+                        ? null
+                        : request.placeDetail().trim()
+        );
     }
 
     @Override

@@ -8,6 +8,7 @@ import com.devs.devmate.global.security.SecurityUtil;
 import com.devs.devmate.reservation.command.dto.ReservationCreateRequest;
 import com.devs.devmate.reservation.command.dto.ReservationCreateResponse;
 import com.devs.devmate.reservation.command.dto.ReservationResponse;
+import com.devs.devmate.reservation.command.dto.ReservationUpdateRequest;
 import com.devs.devmate.reservation.command.service.ReservationService;
 import com.devs.devmate.reservation.sse.ReservationSseService;
 import jakarta.validation.Valid;
@@ -76,6 +77,18 @@ public class ReservationController {
         JwtPrincipal principal = jwtProvider.parseAccessToken(token);
         Long memberId = principal.memberId();
         return reservationSseService.subscribe(memberId, reservationSpaceId, date);
+    }
+
+    @PatchMapping("/{id}")
+    public ApiResponse<Void> update(
+            @PathVariable Long id,
+            @RequestBody @Valid ReservationUpdateRequest request
+    ) {
+        Long memberId = SecurityUtil.currentMemberId();
+
+        reservationService.update(memberId, id, request);
+
+        return ApiResponse.ok();
     }
 
 }

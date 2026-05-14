@@ -51,6 +51,7 @@ public enum ErrorCode {
     // RESERVATION_SPACE
     RESERVATION_SPACE_NOT_FOUND(HttpStatus.NOT_FOUND, "RESERVATION_SPACE_404", "예약 장소를 찾을 수 없습니다."),
     RESERVATION_SPACE_NOT_RESERVABLE(HttpStatus.BAD_REQUEST, "RESERVATION_SPACE_400", "예약 가능한 공간이 아닙니다."),
+
     // RESERVATION
     RESERVATION_NOT_FOUND(HttpStatus.NOT_FOUND, "RESERVATION_404", "예약을 찾을 수 없습니다."),
     RESERVATION_TIME_INVALID(HttpStatus.BAD_REQUEST, "RESERVATION_400", "예약 시간을 확인해주세요."),
@@ -61,6 +62,7 @@ public enum ErrorCode {
     RESERVATION_CANCEL_NOT_ALLOWED(HttpStatus.BAD_REQUEST, "RESERVATION_400_4", "예약 시작 1시간 전까지만 취소할 수 있습니다."),
     RESERVATION_DAILY_LIMIT_EXCEEDED(HttpStatus.BAD_REQUEST, "RESERVATION_400_5", "하루 최대 3개의 예약만 가능합니다."),
     RESERVATION_DAILY_HOURS_EXCEEDED(HttpStatus.BAD_REQUEST, "RESERVATION_400_6", "하루 총 예약 가능 시간은 최대 5시간입니다."),
+    RESERVATION_UPDATE_NOT_ALLOWED(HttpStatus.BAD_REQUEST, "RESERVATION_400_7","예약 수정 가능 시간이 지났습니다."),
     MEMBER_RESERVATION_TIME_CONFLICT(HttpStatus.CONFLICT, "RESERVATION_409_2", "동일 시간대에 다른 예약이 이미 존재합니다."),
     RESERVATION_CONFLICT(HttpStatus.CONFLICT, "RESERVATION_409_3","동시에 예약 요청이 발생했습니다. 잠시 후 다시 시도해주세요."),
 

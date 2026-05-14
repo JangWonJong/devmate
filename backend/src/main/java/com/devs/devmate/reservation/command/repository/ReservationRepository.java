@@ -118,6 +118,43 @@ public interface ReservationRepository extends JpaRepository<Reservation, Long> 
             Pageable pageable
     );
 
+    @Query("""
+    select count(r) > 0 from Reservation r
+        where r.id <> :reservationId
+          and r.reservationSpace.id = :reservationSpaceId
+          and r.date = :date
+          and r.status = :active
+          and r.startTime < :endTime
+          and r.endTime > :startTime
+""")
+    boolean existsReservationSpaceOverlapExcludingSelf(
+            @Param("reservationId") Long reservationId,
+            @Param("reservationSpaceId") Long reservationSpaceId,
+            @Param("date") LocalDate date,
+            @Param("startTime") LocalTime startTime,
+            @Param("endTime") LocalTime endTime,
+            @Param("active") Status active
+    );
+
+    @Query("""
+     select count(r) > 0 from Reservation r
+        where r.id <> :reservationId
+          and r.member.id = :memberId
+          and r.date = :date
+          and r.status = :active
+          and r.startTime < :endTime
+          and r.endTime > :startTime
+""")
+    boolean existsMemberOverlapExcludingSelf(
+            @Param("reservationId") Long reservationId,
+            @Param("memberId") Long memberId,
+            @Param("date") LocalDate date,
+            @Param("startTime") LocalTime startTime,
+            @Param("endTime") LocalTime endTime,
+            @Param("active") Status active
+    );
+
+
     List<Reservation> findByMemberIdAndDateAndStatus(
             Long memberId,
             LocalDate date,

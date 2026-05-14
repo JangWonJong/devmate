@@ -77,4 +77,12 @@ public class Reservation extends BaseEntity {
         this.reservationSpace = reservationSpace;
         this.placeDetail = placeDetail;
     }
+
+    public void update( LocalDate date, LocalTime startTime, LocalTime endTime, String title, String placeDetail ) {
+        this.date = date;
+        this.startTime = startTime;
+        this.endTime = endTime;
+        this.title = title;
+        this.placeDetail = placeDetail;
+    }
 }

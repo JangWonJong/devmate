@@ -9,6 +9,7 @@ import {
   getReservationSpaceAvailability,
   listMyReservations,
   listReservations,
+  updateReservation,
   type ReservationResponse,
 } from '../../api/reservation/reservations'
 import {
@@ -20,6 +21,7 @@ import {
 import { ConfirmModal } from '../../components/common/modal/ConfirmModal'
 import ReservationCreateSection from '../../components/reservation/create/ReservationCreateSection'
 import ReservationListSection from '../../components/reservation/list/ReservationListSection'
+import ReservationEditModal from '../../components/reservation/edit/ReservationEditModal'
 import { PlaceSelectModal } from '../../components/common/map/PlaceSelectModal'
 import { useConfirm } from '../../hooks/common/useConfirm'
 import { PageContainer } from '../../layouts/PageContainer'
@@ -164,6 +166,8 @@ export function ReservationsPage() {
   const [latitudeInput, setLatitudeInput] = useState<number | null>(null)
   const [longitudeInput, setLongitudeInput] = useState<number | null>(null)
   const [externalPlaceIdInput, setExternalPlaceIdInput] = useState('')
+  const [editingReservation, setEditingReservation] =
+    useState<ReservationResponse | null>(null)
 
   const {
     open,
@@ -349,6 +353,43 @@ export function ReservationsPage() {
     })
   }
 
+  const onUpdate = async (payload: {
+    date: string
+    startTime: string
+    endTime: string
+    title: string
+    placeDetail?: string
+  }) => {
+    if (!editingReservation) return
+
+    try {
+      setBusy(true)
+
+      await updateReservation(editingReservation.id, payload)
+
+      appToast.success('예약이 수정되었어요')
+
+      setEditingReservation(null)
+
+      if (scope === 'mine') {
+        await loadMine()
+      } else {
+        await loadAll()
+        await refreshAvailability()
+      }
+    } catch (e: any) {
+      const status = e?.response?.status
+
+      if (status === 409) {
+        setErr('이미 예약된 시간대입니다.')
+      } else {
+        setErr(apiErrorMessage(e, '예약 수정 실패'))
+      }
+    } finally {
+      setBusy(false)
+    }
+  }
+
   const groupedItems = useMemo(() => {
     return items.reduce<Record<string, ReservationResponse[]>>((acc, item) => {
       if (!acc[item.date]) acc[item.date] = []
@@ -503,7 +544,7 @@ export function ReservationsPage() {
             personal Reservation
           </p>
           <h1 className="mt-2 text-4xl font-bold tracking-tight text-slate-900">
-            개인 예약
+            예약
           </h1>
           <p className="mt-2 text-lg leading-8 text-slate-600">
             예약 현황을 확인하고 원하는 시간대를 선택해보세요.
@@ -598,6 +639,7 @@ export function ReservationsPage() {
             getReservationStatus={getReservationStatus}
             isCancelable={isCancelable}
             onCancel={onCancel}
+            onEdit={setEditingReservation}
             onMoveToStudyPost={onMoveToStudyPost}
           />
         </>
@@ -643,6 +685,7 @@ export function ReservationsPage() {
             getReservationStatus={getReservationStatus}
             isCancelable={isCancelable}
             onCancel={onCancel}
+            onEdit={setEditingReservation}
             onMoveToStudyPost={onMoveToStudyPost}
           />
         </div>
@@ -693,6 +736,15 @@ export function ReservationsPage() {
         }}
         onCancel={() => setPlaceModalOpen(false)}
       />
+
+      <ReservationEditModal
+        open={editingReservation != null}
+        reservation={editingReservation}
+        busy={busy}
+        onClose={() => setEditingReservation(null)}
+        onSubmit={onUpdate}
+      />
+      
     </PageContainer>
   )
 }

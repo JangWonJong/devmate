@@ -74,6 +74,7 @@ type ReservationCardProps = {
   getReservationStatus: (date: string, endTime: string) => string
   isCancelable: (date: string, startTime: string) => boolean
   onCancel: (id: number) => void
+  onEdit: (reservation: ReservationResponse) => void
   onMoveToStudyPost: (postId: number | null) => void
 }
 
@@ -85,6 +86,7 @@ export default function ReservationCard({
   getReservationStatus,
   isCancelable,
   onCancel,
+  onEdit,
   onMoveToStudyPost,
 }: ReservationCardProps) {
   const isMine = meId != null && reservation.memberId === meId
@@ -166,14 +168,25 @@ export default function ReservationCard({
           </div>
 
           {isMine && cancelable && (
-            <button
-              type="button"
-              disabled={busy}
-              onClick={() => onCancel(reservation.id)}
-              className="rounded-2xl border border-slate-300 px-4 py-2 text-sm font-semibold text-slate-700 transition hover:bg-slate-50 disabled:opacity-50"
-            >
-              취소
-            </button>
+            <div className="flex items-center gap-2">
+              <button
+                type="button"
+                disabled={busy}
+                onClick={() => onEdit(reservation)}
+                className="rounded-2xl border border-indigo-200 bg-indigo-50 px-4 py-2 text-sm font-semibold text-indigo-700 transition hover:bg-indigo-100"
+              >
+                수정
+              </button>
+
+              <button
+                type="button"
+                disabled={busy}
+                onClick={() => onCancel(reservation.id)}
+                className="rounded-2xl border border-slate-300 px-4 py-2 text-sm font-semibold text-slate-700 transition hover:bg-slate-50 disabled:opacity-50"
+              >
+                취소
+              </button>
+            </div>
           )}
         </div>
 

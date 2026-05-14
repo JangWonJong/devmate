@@ -33,6 +33,14 @@ export type ReservationCreateRequest = {
   placeDetail?: string
 }
 
+export type ReservationUpdateRequest = {
+  date: string
+  startTime: string
+  endTime: string
+  title: string
+  placeDetail?: string
+}
+
 export type ReservationCreateResponse = {
   id: number
 }
@@ -106,6 +114,20 @@ export async function cancelReservation(id: number | string) {
 
   if (!data.success) {
     throw new Error(data.error?.message ?? 'Reservation cancel failed')
+  }
+}
+
+export async function updateReservation(
+  id: number,
+  req: ReservationUpdateRequest
+) {
+  const { data } = await http.patch<ApiResponse<void>>(
+    `/api/reservations/${id}`,
+    req
+  )
+
+  if (!data.success) {
+    throw new Error(data.error?.message ?? 'Reservation update failed')
   }
 }
 

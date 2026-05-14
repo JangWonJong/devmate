@@ -27,4 +27,6 @@ public interface ReservationService {
 
     AvailabilityResponse getAvailability(Long reservationSpaceId, Long memberId, LocalDate date);
 
+    void update(Long memberId, Long reservationId, ReservationUpdateRequest request);
+
 }
