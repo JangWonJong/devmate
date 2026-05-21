@@ -29,61 +29,149 @@ import { NewDevLogPage } from "./pages/devlog/NewDevLogPage"
 import { DevLogDetailPage } from "./pages/devlog/DevLogDetailPage"
 import { DevLogEditPage } from "./pages/devlog/DevLogEditPage"
 import { MemberDevLogPage } from "./pages/devlog/MemberDevLogPage"
+import { PostCommentsPage } from './pages/post/PostCommentsPage'
+import { DevLogCommentsPage } from './pages/devlog/DevLogCommentsPage'
 
 
 export const router = createBrowserRouter([
-    {   
-         path: "/", element: <LandingLayout /> 
-    },
+  {
+    path: '/',
+    element: <LandingLayout />,
+  },
 
-        {
-        element: <AppLayout />,
+  {
+    element: <AppLayout />,
+    children: [
+      { path: '/posts', element: <PostsPage /> },
+
+      { path: '/posts/:id', element: <PostDetailPage /> },
+      { path: '/posts/:id/comments', element: <PostCommentsPage /> },
+      { path: '/members/:memberId', element: <MemberProfilePage /> },
+
+      {
+        path: '/posts/new',
+        element: (
+          <RequireAuth>
+            <NewPostPage />
+          </RequireAuth>
+        ),
+      },
+      {
+        path: '/posts/:id/edit',
+        element: (
+          <RequireAuth>
+            <EditPostPage />
+          </RequireAuth>
+        ),
+      },
+
+      {
+        path: '/devlogs',
+        element: (
+          <RequireAuth>
+            <DevLogListPage />
+          </RequireAuth>
+        ),
+      },
+      {
+        path: '/devlogs/new',
+        element: (
+          <RequireAuth>
+            <NewDevLogPage />
+          </RequireAuth>
+        ),
+      },
+      { path: '/devlogs/:devLogId', element: <DevLogDetailPage /> },
+      { path: '/devlogs/:devLogId/comments', element: <DevLogCommentsPage /> },
+      {
+        path: '/devlogs/:devLogId/edit',
+        element: (
+          <RequireAuth>
+            <DevLogEditPage />
+          </RequireAuth>
+        ),
+      },
+      { path: '/members/:memberId/devlogs', element: <MemberDevLogPage /> },
+
+      { path: '/reservations', element: <ReservationsPage /> },
+
+      {
+        path: '/login',
+        element: (
+          <PublicOnlyRoute>
+            {' '}
+            <LoginPage />
+          </PublicOnlyRoute>
+        ),
+      },
+      {
+        path: '/signup',
+        element: (
+          <PublicOnlyRoute>
+            {' '}
+            <SignupPage />
+          </PublicOnlyRoute>
+        ),
+      },
+      {
+        path: '/mypage',
+        element: (
+          <RequireAuth>
+            <MyPage />
+          </RequireAuth>
+        ),
+      },
+      {
+        path: '/mypage/settings',
+        element: (
+          <RequireAuth>
+            <AccountSettingsPage />
+          </RequireAuth>
+        ),
+      },
+      {
+        path: '/mypage/inquiries',
+        element: (
+          <RequireAuth>
+            <MyInquiriesPage />
+          </RequireAuth>
+        ),
+      },
+
+      {
+        path: '/mystudies',
+        element: (
+          <RequireAuth>
+            <MyStudiesPage />
+          </RequireAuth>
+        ),
+      },
+      {
+        path: '/studies/:studyId/reservation',
+        element: (
+          <RequireAuth>
+            <StudyReservationPage />
+          </RequireAuth>
+        ),
+      },
+    ],
+  },
+
+  {
+    element: <AdminRoute />,
+    children: [
+      {
+        path: '/admin',
+        element: <AdminLayout />,
         children: [
-            
-            { path: "/posts", element: <PostsPage /> },
-
-            { path: "/posts/:id", element: <PostDetailPage /> },
-            { path: "/members/:memberId", element: <MemberProfilePage /> },
-
-            { path: "/posts/new", element: <RequireAuth><NewPostPage /></RequireAuth> },
-            { path: "/posts/:id/edit", element: <RequireAuth><EditPostPage /></RequireAuth> },
-
-            { path: "/devlogs", element: <RequireAuth><DevLogListPage /></RequireAuth> },
-            { path: "/devlogs/new", element: <RequireAuth><NewDevLogPage /></RequireAuth> },
-            { path: "/devlogs/:devLogId", element: <DevLogDetailPage /> },
-            { path: "/devlogs/:devLogId/edit", element: <RequireAuth><DevLogEditPage /></RequireAuth> },
-            { path: "/members/:memberId/devlogs", element: <MemberDevLogPage /> },
-
-            { path: "/reservations", element: <ReservationsPage /> },
-
-            { path: "/login", element: <PublicOnlyRoute> <LoginPage /></PublicOnlyRoute> },
-            { path: "/signup", element: <PublicOnlyRoute> <SignupPage /></PublicOnlyRoute> },
-            { path: "/mypage", element: <RequireAuth><MyPage /></RequireAuth> },
-            { path: "/mypage/settings", element: <RequireAuth><AccountSettingsPage /></RequireAuth> },
-            { path: "/mypage/inquiries", element: <RequireAuth><MyInquiriesPage /></RequireAuth> },
-
-            { path: "/mystudies", element:  <RequireAuth><MyStudiesPage /></RequireAuth> },
-            { path: "/studies/:studyId/reservation", element:  <RequireAuth><StudyReservationPage /></RequireAuth> },
-            
-        ]
-    },
-
-    {
-        element: <AdminRoute />,
-        children: [
-        {
-            path: "/admin",
-            element: <AdminLayout />,
-            children: [
-            { index: true, element: <AdminDashboardPage /> },
-            { path: "inquiries", element: <AdminSupportPage /> },
-            { path: "inquiries/:inquiryId", element: <AdminSupportDetailPage /> },
-            { path: "members", element: <AdminMembersPage /> },
-            { path: "members/:memberId", element: <AdminMemberDetailPage /> },
-            { path: "logs", element: <AdminActionLogPage /> },
-
-            ],
-        },
+          { index: true, element: <AdminDashboardPage /> },
+          { path: 'inquiries', element: <AdminSupportPage /> },
+          { path: 'inquiries/:inquiryId', element: <AdminSupportDetailPage /> },
+          { path: 'members', element: <AdminMembersPage /> },
+          { path: 'members/:memberId', element: <AdminMemberDetailPage /> },
+          { path: 'logs', element: <AdminActionLogPage /> },
         ],
-    },
+      },
+    ],
+  },
 ])

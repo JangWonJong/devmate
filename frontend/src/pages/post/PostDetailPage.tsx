@@ -16,6 +16,7 @@ import { usePostStudySection } from '../../hooks/post/usePostStudySection'
 import { PageContainer } from '../../layouts/PageContainer'
 import { StudyCreateModal } from '../../components/study/modal/StudyCreateModal'
 import { PlaceSelectModal } from '../../components/common/map/PlaceSelectModal'
+import CommentPreviewSection from '../../components/comments/comment/CommentPreviewSection'
 
 export function PostDetailPage() {
   const nav = useNavigate()
@@ -226,27 +227,13 @@ export function PostDetailPage() {
           onUpdatePlace={onUpdatePlace}
         />
       )}
-
-      <CommentSection
-        loggedIn={loggedIn}
-        meId={meId}
-        isMine={isMine}
-        commentErr={commentErr}
-        comments={comments}
-        commentInput={commentInput}
-        setCommentInput={setCommentInput}
-        editingCommentId={editingCommentId}
-        editingContent={editingContent}
-        setEditingCommentId={setEditingCommentId}
-        setEditingContent={setEditingContent}
-        onCreateComment={onCreateComment}
-        onDeleteComment={onDeleteComment}
-        onUpdateComment={onUpdateComment}
-        onAdoptComment={onAdoptComment}
-        commentLikedMap={commentLikedMap}
-        commentLikeCountMap={commentLikeCountMap}
-        commentLikeLoadingMap={commentLikeLoadingMap}
-        onToggleCommentLike={onToggleCommentLike}
+      <CommentPreviewSection
+        comments={[...comments].sort((a, b) => {
+          if (a.adopted === b.adopted) return 0
+          return a.adopted ? -1 : 1
+        })}
+        totalCount={comments.length}
+        viewAllTo={`/posts/${post.id}/comments`}
       />
 
       <ConfirmModal

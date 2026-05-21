@@ -15,6 +15,7 @@ import { appToast } from '../../lib/toast'
 import { buildPostDraftFromDevLog } from '../../utils/devlog/buildPostDraftFromDevLog'
 import { apiErrorMessage } from '../../utils/error'
 import { fileUrl } from '../../utils/file'
+import CommentPreviewSection from '../../components/comments/comment/CommentPreviewSection'
 
 function DevLogSection({
   title,
@@ -292,25 +293,12 @@ export function DevLogDetailPage() {
       <DevLogSection title="📚 참고 코드 / 개념" content={devLog.reference} />
       <DevLogSection title="💡 회고" content={devLog.retrospective} />
 
-      <DevLogCommentSection
-        loggedIn={loggedIn}
-        meId={meId}
-        commentErr={commentErr}
+      <CommentPreviewSection
         comments={comments}
-        commentInput={commentInput}
-        setCommentInput={setCommentInput}
-        editingCommentId={editingCommentId}
-        editingContent={editingContent}
-        setEditingCommentId={setEditingCommentId}
-        setEditingContent={setEditingContent}
-        onCreateComment={onCreateComment}
-        onDeleteComment={onDeleteComment}
-        onUpdateComment={onUpdateComment}
-        commentLikedMap={commentLikedMap}
-        commentLikeCountMap={commentLikeCountMap}
-        commentLikeLoadingMap={commentLikeLoadingMap}
-        onToggleCommentLike={onToggleCommentLike}
+        totalCount={comments.length}
+        viewAllTo={`/devlogs/${devLog.id}/comments`}
       />
+      
       {selectedImageIndex !== null && (
         <ImageGalleryModal
           images={devLog.attachments}

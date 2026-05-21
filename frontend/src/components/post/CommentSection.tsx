@@ -1,5 +1,6 @@
 import { Link, useLocation } from "react-router-dom"
 import { actionButtonClass } from "../../utils/button"
+import { toast } from "sonner"
 
 type CommentItem = {
   id: number
@@ -25,13 +26,13 @@ function ActionButton({
   className?: string
 }) {
   const base =
-    variant === "primary"
-      ? "bg-slate-900 text-white hover:bg-slate-800"
-      : variant === "danger"
-      ? "bg-red-600 text-white hover:bg-red-700"
-      : variant === "success"
-      ? "bg-emerald-600 text-white hover:bg-emerald-500"
-      : "border border-slate-300 bg-white text-slate-700 hover:bg-slate-50"
+    variant === 'primary'
+      ? 'border border-indigo-200 bg-indigo-50 text-indigo-600 hover:bg-indigo-100'
+      : variant === 'danger'
+        ? 'bg-red-600 text-white hover:bg-red-700'
+        : variant === 'success'
+          ? 'bg-emerald-600 text-white hover:bg-emerald-500'
+          : 'border border-slate-300 bg-white text-slate-700 hover:bg-slate-50'
 
   return (
     <button
@@ -91,14 +92,19 @@ export default function CommentSection({
   const location = useLocation()
 
   const sortedComments = [...comments].sort((a, b) => {
-    if (a.adopted === b.adopted) return 0
-    return a.adopted ? -1 : 1
+    if (a.adopted !== b.adopted) {
+      return a.adopted ? -1 : 1
+    }
+
+    return b.id - a.id
   })
 
   return (
     <section className="rounded-[28px] border border-slate-200 bg-white p-8 shadow-sm">
       <div className="mb-6 flex items-center justify-between gap-3">
-        <h2 className="text-3xl font-bold tracking-tight text-slate-900">댓글</h2>
+        <h2 className="text-3xl font-bold tracking-tight text-slate-900">
+          댓글
+        </h2>
         <span className="text-sm text-slate-400">{comments.length}개</span>
       </div>
 
@@ -110,22 +116,44 @@ export default function CommentSection({
 
       {loggedIn ? (
         <form
+          id="comment-form"
           onSubmit={(e) => {
             e.preventDefault()
             onCreateComment()
           }}
-          className="mb-6 flex flex-col gap-3 sm:flex-row"
+          className="mb-8 rounded-3xl border border-slate-200 bg-slate-50 p-4"
         >
-          <input
+          <textarea
             value={commentInput}
             onChange={(e) => setCommentInput(e.target.value)}
+            onKeyDown={(e) => {
+              if (e.key === 'Enter' && !e.shiftKey) {
+                e.preventDefault()
+
+                if (!commentInput.trim()) {
+                  return
+                }
+
+                toast('댓글을 등록하시겠습니까?', {
+                  action: {
+                    label: '등록',
+                    onClick: () => {
+                      onCreateComment()
+                    },
+                  },
+                })
+              }
+            }}
             placeholder="댓글을 입력하세요"
-            className="h-12 flex-1 rounded-2xl border border-slate-300 bg-white px-4 text-sm text-slate-900 outline-none transition placeholder:text-slate-400 focus:border-slate-400"
+            rows={4}
+            className="min-h-28 w-full resize-none rounded-2xl border border-slate-200 bg-white px-4 py-3 text-sm leading-6 text-slate-900 outline-none transition placeholder:text-slate-400 focus:border-indigo-200"
           />
 
-          <ActionButton type="submit" variant="primary">
-            작성
-          </ActionButton>
+          <div className="mt-3 flex justify-end">
+            <ActionButton type="submit" variant="primary">
+              작성
+            </ActionButton>
+          </div>
         </form>
       ) : (
         <div className="mb-4 rounded-2xl border border-slate-200 bg-slate-50 px-4 py-3 text-sm text-slate-500">
@@ -148,15 +176,18 @@ export default function CommentSection({
               <div
                 id={`comment-${c.id}`}
                 key={c.id}
-                className={`scroll-mt-24 rounded-3xl border p-5 transition ${
+                className={`scroll-mt-24 rounded-3xl border p-6 transition ${
                   c.adopted
-                    ? "border-emerald-300 bg-emerald-50"
-                    : "border-slate-200 bg-slate-50"
-                } ${isTargetComment ? "ring-2 ring-indigo-300 ring-offset-2" : ""}`}
+                    ? 'border-emerald-300 bg-emerald-50'
+                    : 'border-slate-200 bg-slate-50'
+                } ${isTargetComment ? 'ring-2 ring-indigo-300 ring-offset-2' : ''}`}
               >
                 <div className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
                   <div className="flex flex-wrap items-center gap-2 text-sm text-slate-500">
-                    <Link to={`/members/${c.memberId}`} className="font-medium text-slate-700 hover:underline">
+                    <Link
+                      to={`/members/${c.memberId}`}
+                      className="font-medium text-slate-700 hover:underline"
+                    >
                       {c.authorNickname}
                     </Link>
 
@@ -171,7 +202,7 @@ export default function CommentSection({
                     {isMine && !c.adopted && (
                       <button
                         onClick={() => onAdoptComment(c.id)}
-                        className={actionButtonClass("success")}
+                        className={actionButtonClass('success')}
                       >
                         채택
                       </button>
@@ -184,14 +215,14 @@ export default function CommentSection({
                             setEditingCommentId(c.id)
                             setEditingContent(c.content)
                           }}
-                          className={actionButtonClass("default")}
+                          className={actionButtonClass('default')}
                         >
                           수정
                         </button>
 
                         <button
                           onClick={() => onDeleteComment(c.id)}
-                          className={actionButtonClass("danger")}
+                          className={actionButtonClass('danger')}
                         >
                           삭제
                         </button>
@@ -202,15 +233,35 @@ export default function CommentSection({
 
                 {isEditing ? (
                   <div className="mt-4 space-y-3">
-                    <input
-                      value={editingContent}
-                      onChange={(e) => setEditingContent(e.target.value)}
-                      className="h-12 w-full rounded-2xl border border-slate-300 bg-white px-4 text-sm text-slate-900 outline-none transition focus:border-slate-400"
+                    <textarea
+                      value={commentInput}
+                      onChange={(e) => setCommentInput(e.target.value)}
+                      onKeyDown={(e) => {
+                        if (e.key === 'Enter' && !e.shiftKey) {
+                          e.preventDefault()
+
+                          if (!commentInput.trim()) {
+                            return
+                          }
+
+                          toast('댓글을 수정하시겠습니까?', {
+                            action: {
+                              label: '수정',
+                              onClick: () => {
+                                onCreateComment()
+                              },
+                            },
+                          })
+                        }
+                      }}
+                      placeholder="댓글을 입력하세요"
+                      rows={4}
+                      className="min-h-28 w-full resize-none rounded-2xl border border-slate-200 bg-white px-4 py-3 text-sm leading-6 text-slate-900 outline-none transition placeholder:text-slate-400 focus:border-indigo-200"
                     />
                     <div className="flex flex-wrap gap-2">
                       <button
                         onClick={() => onUpdateComment(c.id)}
-                        className={actionButtonClass("default")}
+                        className={actionButtonClass('default')}
                       >
                         저장
                       </button>
@@ -218,9 +269,9 @@ export default function CommentSection({
                       <button
                         onClick={() => {
                           setEditingCommentId(null)
-                          setEditingContent("")
+                          setEditingContent('')
                         }}
-                        className={actionButtonClass("subtle")}
+                        className={actionButtonClass('subtle')}
                       >
                         취소
                       </button>
@@ -239,11 +290,11 @@ export default function CommentSection({
                         disabled={commentLikeLoadingMap[c.id]}
                         className={`inline-flex items-center gap-1 rounded-xl border px-3 py-1 text-xs font-medium transition ${
                           commentLikedMap[c.id]
-                            ? "border-red-200 bg-red-50 text-red-600"
-                            : "border-slate-200 bg-white text-slate-600"
+                            ? 'border-red-200 bg-red-50 text-red-600'
+                            : 'border-slate-200 bg-white text-slate-600'
                         }`}
                       >
-                        <span>{commentLikedMap[c.id] ? "❤️" : "🤍"}</span>
+                        <span>{commentLikedMap[c.id] ? '❤️' : '🤍'}</span>
                         <span>{commentLikeCountMap[c.id] ?? 0}</span>
                       </button>
                     </div>
