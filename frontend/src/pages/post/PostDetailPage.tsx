@@ -2,7 +2,6 @@ import { useCallback } from 'react'
 import { useNavigate, useParams } from 'react-router-dom'
 import { ConfirmModal } from '../../components/common/modal/ConfirmModal'
 import { InputModal } from '../../components/common/modal/InputModal'
-import CommentSection from '../../components/post/CommentSection'
 import PostDetailHeader from '../../components/post/PostDetailHeader'
 import StudyInfoSection from '../../components/study/detail/StudyInfoSection'
 import { useAuthState } from '../../hooks/auth/useAuthState'
@@ -103,22 +102,7 @@ export function PostDetailPage() {
   })
 
   const {
-    commentErr,
     comments,
-    commentInput,
-    setCommentInput,
-    editingCommentId,
-    editingContent,
-    setEditingCommentId,
-    setEditingContent,
-    commentLikedMap,
-    commentLikeCountMap,
-    commentLikeLoadingMap,
-    onCreateComment,
-    onDeleteComment,
-    onUpdateComment,
-    onAdoptComment,
-    onToggleCommentLike,
   } = usePostComments({
     postId: id,
     loggedIn,

@@ -4,7 +4,6 @@ import { deleteDevLog } from '../../api/devlog/devlog'
 import { ImageGalleryModal } from '../../components/common/image/ImageGalleryModal'
 import { MarkdownViewer } from '../../components/common/markdown/MarkdownViewer'
 import { ConfirmModal } from '../../components/common/modal/ConfirmModal'
-import DevLogCommentSection from '../../components/devlog/DevLogCommentSection'
 import { useAuthState } from '../../hooks/auth/useAuthState'
 import { useConfirm } from '../../hooks/common/useConfirm'
 import { useDevLogComments } from '../../hooks/devlog/useDevLogComments'
@@ -71,24 +70,7 @@ export function DevLogDetailPage() {
     })
 
   const {
-    commentErr,
     comments,
-    commentInput,
-    setCommentInput,
-
-    editingCommentId,
-    editingContent,
-    setEditingCommentId,
-    setEditingContent,
-
-    commentLikedMap,
-    commentLikeCountMap,
-    commentLikeLoadingMap,
-
-    onCreateComment,
-    onDeleteComment,
-    onUpdateComment,
-    onToggleCommentLike,
   } = useDevLogComments({
     devLogId: id,
     confirm: openConfirm,

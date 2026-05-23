@@ -77,7 +77,6 @@ export default function CommentSection({
   commentInput,
   setCommentInput,
   editingCommentId,
-  editingContent,
   setEditingCommentId,
   setEditingContent,
   onCreateComment,
